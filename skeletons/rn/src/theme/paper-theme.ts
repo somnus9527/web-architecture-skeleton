@@ -1,6 +1,6 @@
 import { MD3LightTheme } from 'react-native-paper';
 
-import { tokens } from '@/domain/theme/tokens';
+import { tokens } from '@/theme/tokens';
 
 /**
  * React Native Paper 主题，取值来自 tokens。

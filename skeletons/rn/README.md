@@ -34,6 +34,8 @@ pnpm lint           # eslint，含 I 前缀 interface 与 no-console
 pnpm test           # jest + jest-expo + @testing-library/react-native
 pnpm format:check
 pnpm check:hygiene  # 仓库卫生：env、密钥、体积、包管理器混用
+pnpm check:gates    # 门禁自检：脚本、CI、架构测试、变体绑定
+pnpm quality:check  # 一键跑完全部门禁
 ```
 
 测试约定：
@@ -43,9 +45,21 @@ pnpm check:hygiene  # 仓库卫生：env、密钥、体积、包管理器混用
 - `@testing-library/react-native` v14 的 `render` 是 **async**，必须 `await`，否则 `screen` 不会被绑定。
 - Query 测试里把 `retry` 关掉、`gcTime` 设为 `Infinity`，避免残留定时器让 Jest 无法退出。
 
+## 架构守卫
+
+`src/test/architecture/layering.test.ts` 用静态扫描守住分层契约，违反即测试失败：
+
+| 约束                   | 检查方式                                                                     |
+| ---------------------- | ---------------------------------------------------------------------------- |
+| `app/` 只做路由壳      | 禁止导入 `@/api`、`@/storage`，禁止出现 `fetch(`                             |
+| `src/domain/` 不碰视图 | 禁止导入 `react-native`、`react-native-paper`、`expo-router`、`@/components` |
+| `src/api/` 只依赖契约  | 允许 `@/domain/contracts`，禁止其它 `@/domain`、UI、storage                  |
+| storage 边界唯一       | 只有 `src/storage/**` 可导入 `expo-secure-store` 与 `async-storage`          |
+| 组件不直接取数         | `src/components/**` 禁止 `fetch(`                                            |
+
+写这套测试时它当场抓到一个真实违规：`src/domain/theme/paper-theme.ts` 导入了 `react-native-paper`，
+按规则主题映射应放 `src/theme/`——已搬迁。
+
 ## 尚未完成
 
-- **`check:gates`**：`verify-gates.mjs` 依赖架构测试目录与 SPA/SSR 的 ESLint 规则，RN 尚未适配。
-- **架构测试**：`shared-assets` 的架构测试基于 Vite/Next 目录结构，RN 需要按
-  `src/components / src/domain / src/api` 分层另写一套。
 - **初始化技能**：`initialize-rn-project` 未建，当前需手工改 `package.json` 与 `app.json` 的应用名。

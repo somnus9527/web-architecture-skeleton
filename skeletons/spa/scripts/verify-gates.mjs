@@ -93,22 +93,27 @@ const preCommit = existsSync(join(ROOT, '.husky/pre-commit'))
   : '';
 check('pre-commit 调用卫生检查', /check-repo-hygiene/u.test(preCommit));
 
+const gateConfig = readJson('.repo-gates.json') ?? {};
+const ciCommands = gateConfig.ciCommands ?? ['check:hygiene', 'check:gates', 'test', 'build'];
+
 const workflows = listFiles('.github/workflows', /\.ya?ml$/u);
 const workflowText = workflows.map((file) => readFileSync(join(ROOT, file), 'utf8')).join('\n');
 check('存在 CI workflow', workflows.length > 0);
-for (const command of ['check:hygiene', 'check:gates', 'test', 'build']) {
+for (const command of ciCommands) {
   check(`CI 包含 ${command}`, workflowText.includes(`pnpm ${command}`));
 }
 
 const eslintConfig = ['eslint.config.js', 'eslint.config.mjs'].find((file) => existsSync(join(ROOT, file)));
 check('存在 ESLint 配置', Boolean(eslintConfig));
-check(
-  'ESLint 仍将 no-explicit-any 设为 error',
-  Boolean(eslintConfig) &&
-    /'@typescript-eslint\/no-explicit-any':\s*'error'/u.test(readFileSync(join(ROOT, eslintConfig), 'utf8')),
-);
+if (gateConfig.requireExplicitAnyRule !== false) {
+  check(
+    'ESLint 仍将 no-explicit-any 设为 error',
+    Boolean(eslintConfig) &&
+      /'@typescript-eslint\/no-explicit-any':\s*'error'/u.test(readFileSync(join(ROOT, eslintConfig), 'utf8')),
+  );
+}
 
-const architectureTests = listFiles('src/test/architecture', /\.test\.ts$/u);
+const architectureTests = listFiles('src/test/architecture', /\.test\.tsx?$/u);
 check('存在架构测试', architectureTests.length > 0);
 
 const rules = listFiles('docs/rules', /\.md$/u);

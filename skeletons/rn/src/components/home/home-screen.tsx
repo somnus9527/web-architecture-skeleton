@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 import { useHomeSummary } from '@/components/home/use-home-summary';
 import { Screen } from '@/components/ui/screen';
-import { tokens } from '@/domain/theme/tokens';
+import { tokens } from '@/theme/tokens';
 
 /**
  * 工作台首页：三态渲染 + 列表。

@@ -5,17 +5,19 @@
   "main": "expo-router/entry",
   "packageManager": "pnpm@11.9.0",
   "scripts": {
-    "start": "expo start",
     "android": "expo start --android",
-    "ios": "expo start --ios",
-    "typecheck": "tsc --noEmit",
-    "lint": "eslint . --max-warnings=0",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "check:gates": "node scripts/verify-gates.mjs",
     "check:hygiene": "node scripts/check-repo-hygiene.mjs --tracked",
     "env:init": "node scripts/init-local-env.mjs",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "ios": "expo start --ios",
+    "lint": "eslint . --max-warnings=0",
     "prepare": "husky",
-    "test": "jest --ci"
+    "quality:check": "pnpm check:gates && pnpm typecheck && pnpm lint && pnpm check:hygiene && pnpm test && pnpm format:check",
+    "start": "expo start",
+    "test": "jest --ci",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^3.1.1",

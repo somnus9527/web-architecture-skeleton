@@ -3,7 +3,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { PaperProvider } from 'react-native-paper';
 import { StatusBar } from 'expo-status-bar';
 
-import { paperTheme } from '@/domain/theme/paper-theme';
+import { paperTheme } from '@/theme/paper-theme';
 
 import type { PropsWithChildren } from 'react';
 

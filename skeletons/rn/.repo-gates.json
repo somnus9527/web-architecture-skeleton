@@ -1,0 +1,4 @@
+{
+  "ciCommands": ["check:hygiene", "check:gates", "typecheck", "lint", "format:check", "test"],
+  "requireExplicitAnyRule": true
+}

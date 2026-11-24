@@ -15,6 +15,7 @@ export default [
         { selector: 'typeAlias', format: ['PascalCase'] },
       ],
       'no-console': 'error',
+      '@typescript-eslint/no-explicit-any': 'error',
     },
   },
 ];
