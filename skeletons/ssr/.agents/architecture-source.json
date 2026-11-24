@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
   "variant": "ssr",
-  "repository": "git@github.com:somnus9527/web-architecture-sekleton.git",
+  "repository": "git@github.com:somnus9527/web-architecture-skeleton.git",
   "ref": "main"
 }
