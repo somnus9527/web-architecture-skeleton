@@ -1,0 +1,10 @@
+node_modules
+.expo
+dist
+web-build
+coverage
+pnpm-lock.yaml
+expo-env.d.ts
+
+# 物化产物：格式由 rules/ 源保证
+docs/rules/

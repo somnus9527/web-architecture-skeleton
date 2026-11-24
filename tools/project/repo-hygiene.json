@@ -18,9 +18,11 @@
     "^SESSION_COOKIE_[A-Z0-9_]+$",
     "^CSRF_ENABLED$",
     "^PROJECT_ID$",
-    "^NEXT_SERVER_ACTIONS_ENCRYPTION_KEY$"
+    "^NEXT_SERVER_ACTIONS_ENCRYPTION_KEY$",
+    "^EXPO_PUBLIC_[A-Z0-9_]+$"
   ],
   "binaryAllowList": ["public/", "docs/"],
   "lockFile": "pnpm-lock.yaml",
-  "conflictingLockFile": "package-lock.json"
+  "conflictingLockFile": "package-lock.json",
+  "secretAllowPatterns": ["^docs/rules/"]
 }

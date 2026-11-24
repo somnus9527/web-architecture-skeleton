@@ -1,0 +1,27 @@
+{
+  "variant": "rn",
+  "kind": "project",
+  "ruleLayers": ["rn"],
+  "variantLayerTarget": "rn",
+  "substitutions": {
+    "mockDir": "mock"
+  },
+  "sharedAssets": {
+    "hooks": false,
+    "components": false,
+    "architectureTests": false,
+    "hookTests": false
+  },
+  "projectScripts": ["check-repo-hygiene.mjs", "init-local-env.mjs"],
+  "skills": ["sync-architecture-rules"],
+  "gates": ["hygiene"],
+  "mustRead": [
+    "rn/architecture.md",
+    "rn/routing.md",
+    "rn/state-management.md",
+    "rn/api.md",
+    "rn/ui-components.md",
+    "rn/security.md"
+  ],
+  "allowUnknownPlaceholders": true
+}

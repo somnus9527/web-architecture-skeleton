@@ -15,5 +15,6 @@
 - 变体补段必须命名为 `<同名文档>-variant.md`，物化时追加到对应通用文档末尾。
 - `{{placeholder}}` 由 manifest 的 `substitutions` 替换（例如 `{{mockDir}}`）。
 - 直接改 `skeletons/*/docs/rules/` 会被 CI 打回：先生成、后提交。
-- RN 需要专属的层映射：它的规则落点是 `docs/rules/rn/`，而模板要进 `docs/rules/rn/templates/`。
-  当前 `materialize` 把变体层文件写到 `docs/rules/frontend/`，建 `skeletons/rn` 前要先补这条映射。
+- 变体层落点由 manifest 的 `variantLayerTarget` 决定：SPA/SSR 是 `frontend`，RN 是 `rn`（保留
+  `templates/` 子目录）。
+- 共享层由 `ruleLayers` 决定：RN 只声明 `["rn"]`，因此不继承 `shared/` 与 `frontend/`。

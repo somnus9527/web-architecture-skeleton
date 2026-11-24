@@ -9,6 +9,7 @@
 skeletons/      工程级模板：复制一个目录即得到完整项目
   spa/          Vite + React SPA
   ssr/          Next.js SSR（BACKEND_MODE=bff-only）
+  rn/           Expo + expo-router 最小可运行工程
 rules/          规则单源，物化进各 skeleton 的 docs/rules/
   shared/       跨端共用
   frontend/     SPA / SSR 通用

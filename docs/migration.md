@@ -50,8 +50,8 @@
 3. **技能仍在 skeleton 内**：`initialize-spa-project`、`initialize-ssr-project`、`sync-architecture-rules`
    尚未上提到仓库根的 `skills/`。
 4. **RN 骨架不存在**：本机无 RN / Expo 工程，`skeletons/rn` 需按原 RN 规则与模板新建。
-5. **RN 只迁了规则与模板，还没有可运行骨架**：`rules/rn/`（30 份规则 + 19 份模板）已就位，
-   但 `skeletons/rn` 尚未建立；`materialize` 目前不认识 rn 层（会把变体层文件写进
-   `docs/rules/frontend/`），建骨架前需要先补 rn 的层映射。
+5. **RN 骨架已建立，但门禁不完整**：`skeletons/rn` 是可运行的 Expo 工程，`docs/rules/rn/` 由物化生成。
+   未接 `check:gates`（`verify-gates` 依赖架构测试目录与 SPA/SSR 的 ESLint 规则），测试栈（`jest-expo`
+   - RNTL）也尚未引入，因此 `pnpm test` 目前不可用。
 6. **`templates/monorepo` 尚未落地**。
-7. **`skeletons/rn` 未建**：本机无 RN / Expo 工程，需要按 `rules/rn/` 的规则与模板新建。
+7. **`initialize-rn-project` 未建**：RN 项目初始化仍需手工改 `package.json` 与 `app.json`。

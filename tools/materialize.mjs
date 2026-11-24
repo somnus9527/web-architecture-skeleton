@@ -14,7 +14,7 @@ import process from 'node:process';
 
 const ROOT = process.cwd();
 const COMMON_LAYERS = ['shared', 'frontend'];
-const VARIANT_SOURCE_LAYER = 'frontend';
+const DEFAULT_VARIANT_TARGET_LAYER = 'frontend';
 
 /**
  * 读取并解析 manifest。
@@ -61,12 +61,16 @@ function listMarkdown(dir) {
  * @param {Record<string, string>} substitutions - 占位与取值。
  * @returns {string} 替换后的文本。
  */
-function substitute(text, substitutions) {
+function substitute(text, substitutions, allowUnknown = false) {
   return text.replace(/\{\{(\w+)\}\}/gu, (match, key) => {
-    if (!(key in substitutions)) {
-      throw new Error(`未声明的占位 ${match}，请在 manifest 的 substitutions 中补充。`);
+    if (key in substitutions) {
+      return substitutions[key];
     }
-    return substitutions[key];
+    if (allowUnknown) {
+      // 文档自身的占位（如 {{latestVersion}}）需要原样保留给读者。
+      return match;
+    }
+    throw new Error(`未声明的占位 ${match}，请在 manifest 的 substitutions 中补充。`);
   });
 }
 
@@ -122,7 +126,7 @@ function materialize(variant) {
   const writeDoc = (layer, name, body) => {
     const target = join(outRoot, layer, name);
     mkdirSync(dirname(target), { recursive: true });
-    writeFileSync(target, substitute(body, manifest.substitutions));
+    writeFileSync(target, substitute(body, manifest.substitutions, manifest.allowUnknownPlaceholders === true));
     entries.push({
       layer,
       file: `${layer}/${name}`,
@@ -138,7 +142,9 @@ function materialize(variant) {
     return line ? line.slice(2).trim() : name;
   };
 
-  for (const layer of COMMON_LAYERS) {
+  const commonLayers = (manifest.ruleLayers ?? COMMON_LAYERS).filter((layer) => layer !== variant);
+
+  for (const layer of commonLayers) {
     for (const rel of listMarkdown(`rules/${layer}`)) {
       const name = rel.slice(`rules/${layer}/`.length);
       const body = readFileSync(join(ROOT, rel), 'utf8');
@@ -150,13 +156,14 @@ function materialize(variant) {
     }
   }
 
+  const variantTarget = manifest.variantLayerTarget ?? DEFAULT_VARIANT_TARGET_LAYER;
   for (const rel of listMarkdown(`rules/${variant}`)) {
     const name = rel.slice(`rules/${variant}/`.length);
     if (name.endsWith('-variant.md')) {
       continue;
     }
     const body = readFileSync(join(ROOT, rel), 'utf8');
-    writeDoc(VARIANT_SOURCE_LAYER, name, body);
+    writeDoc(variantTarget, name, body);
   }
 
   const frontendEntries = entries.filter((entry) => entry.layer === 'frontend');
@@ -165,36 +172,42 @@ function materialize(variant) {
 
   writeFileSync(
     join(outRoot, 'README.md'),
-    renderIndex('Rules', [...entries.filter((entry) => entry.layer === 'shared'), ...frontendEntries], '', {
+    renderIndex('Rules', [...entries], '', {
       intro,
       mustRead,
     }),
   );
-  writeFileSync(
-    join(outRoot, 'frontend', 'README.md'),
-    renderIndex(
-      'Frontend Rules',
-      frontendEntries
-        .filter((entry) => entry.file !== 'frontend/README.md')
-        .map((entry) => ({
-          ...entry,
-          file: entry.file.replace(/^frontend\//u, ''),
-        })),
-      '',
-      {
-        intro: '前端规则分两档：必读用于任何前端改动，其余按任务检索。',
-        mustRead: mustRead
-          .filter((path) => path.startsWith('frontend/'))
-          .map((path) => path.replace(/^frontend\//u, '')),
-      },
-    ),
-  );
+  if (frontendEntries.length > 0) {
+    writeFileSync(
+      join(outRoot, 'frontend', 'README.md'),
+      renderIndex(
+        'Frontend Rules',
+        frontendEntries
+          .filter((entry) => entry.file !== 'frontend/README.md')
+          .map((entry) => ({
+            ...entry,
+            file: entry.file.replace(/^frontend\//u, ''),
+          })),
+        '',
+        {
+          intro: '前端规则分两档：必读用于任何前端改动，其余按任务检索。',
+          mustRead: mustRead
+            .filter((path) => path.startsWith('frontend/'))
+            .map((path) => path.replace(/^frontend\//u, '')),
+        },
+      ),
+    );
+  }
+
+  const sharedAssets = manifest.sharedAssets ?? {};
 
   const sharedHooks = join(ROOT, 'shared-assets', 'src', 'shared', 'hooks');
   const hookTarget = join(ROOT, 'skeletons', variant, 'src', 'shared', 'hooks');
-  mkdirSync(hookTarget, { recursive: true });
-  for (const name of readdirSync(sharedHooks)) {
-    cpSync(join(sharedHooks, name), join(hookTarget, name));
+  if (sharedAssets.hooks !== false) {
+    mkdirSync(hookTarget, { recursive: true });
+    for (const name of readdirSync(sharedHooks)) {
+      cpSync(join(sharedHooks, name), join(hookTarget, name));
+    }
   }
 
   const sharedDocs = join(ROOT, 'shared-assets', 'docs');
@@ -202,25 +215,32 @@ function materialize(variant) {
     cpSync(sharedDocs, join(ROOT, 'skeletons', variant, 'docs'), { recursive: true });
   }
 
-  const sharedComponents = join(ROOT, 'shared-assets', 'src', 'shared', 'components');
-  cpSync(sharedComponents, join(ROOT, 'skeletons', variant, 'src', 'shared', 'components'), { recursive: true });
+  if (sharedAssets.components !== false) {
+    const sharedComponents = join(ROOT, 'shared-assets', 'src', 'shared', 'components');
+    cpSync(sharedComponents, join(ROOT, 'skeletons', variant, 'src', 'shared', 'components'), { recursive: true });
+  }
 
-  const sharedArchTests = join(ROOT, 'shared-assets', 'src', 'test', 'architecture');
-  const archTestTarget = join(ROOT, 'skeletons', variant, 'src', 'test', 'architecture');
-  mkdirSync(archTestTarget, { recursive: true });
-  cpSync(sharedArchTests, archTestTarget, { recursive: true });
+  if (sharedAssets.architectureTests !== false) {
+    const sharedArchTests = join(ROOT, 'shared-assets', 'src', 'test', 'architecture');
+    const archTestTarget = join(ROOT, 'skeletons', variant, 'src', 'test', 'architecture');
+    mkdirSync(archTestTarget, { recursive: true });
+    cpSync(sharedArchTests, archTestTarget, { recursive: true });
+  }
 
-  const sharedHookTests = join(ROOT, 'shared-assets', 'src', 'test', 'shared');
-  const hookTestTarget = join(ROOT, 'skeletons', variant, 'src', 'test', 'shared');
-  mkdirSync(hookTestTarget, { recursive: true });
-  for (const name of readdirSync(sharedHookTests)) {
-    cpSync(join(sharedHookTests, name), join(hookTestTarget, name));
+  if (sharedAssets.hookTests !== false) {
+    const sharedHookTests = join(ROOT, 'shared-assets', 'src', 'test', 'shared');
+    const hookTestTarget = join(ROOT, 'skeletons', variant, 'src', 'test', 'shared');
+    mkdirSync(hookTestTarget, { recursive: true });
+    for (const name of readdirSync(sharedHookTests)) {
+      cpSync(join(sharedHookTests, name), join(hookTestTarget, name));
+    }
   }
 
   const projectScripts = join(ROOT, 'tools', 'project', 'scripts');
   const scriptTarget = join(ROOT, 'skeletons', variant, 'scripts');
+  const allowedScripts = manifest.projectScripts ?? readdirSync(projectScripts);
   mkdirSync(scriptTarget, { recursive: true });
-  for (const name of readdirSync(projectScripts)) {
+  for (const name of allowedScripts) {
     cpSync(join(projectScripts, name), join(scriptTarget, name));
   }
   cpSync(join(ROOT, 'tools', 'project', 'repo-hygiene.json'), join(ROOT, 'skeletons', variant, '.repo-hygiene.json'));
