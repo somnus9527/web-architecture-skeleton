@@ -2,6 +2,11 @@
 
 > 本文件由 `rules/rn/` 物化时同步维护；改规则请改 `rules/rn/`，不要直接改这里。
 
+## 骨架状态
+
+- 本仓库是可复制的 Expo RN 项目骨架，不是正式业务应用。
+- 新应用复制后，必须先完成项目身份初始化，不得直接开始业务开发。
+
 ## Always-on
 
 - 始终使用简体中文回复。
@@ -13,6 +18,9 @@
 ## Routing
 
 开始任何开发、评审、修复或新功能前，按下表读取相关规则；不要凭历史经验绕过规则。
+
+- 初始化项目身份：`.agents/skills/initialize-rn-project/SKILL.md`。
+- 检查或同步上游架构规范：`.agents/skills/sync-architecture-rules/SKILL.md`，不得直接合并骨架分支。
 
 ### 架构基础
 

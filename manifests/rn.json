@@ -20,6 +20,7 @@
     "verify-gates.mjs"
   ],
   "skills": [
+    "initialize-rn-project",
     "sync-architecture-rules"
   ],
   "gates": [

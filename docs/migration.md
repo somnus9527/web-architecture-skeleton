@@ -54,4 +54,4 @@
    未接 `check:gates`（`verify-gates` 依赖架构测试目录与 SPA/SSR 的 ESLint 规则），测试栈（`jest-expo`
    - RNTL）也尚未引入，因此 `pnpm test` 目前不可用。
 6. **`templates/monorepo` 尚未落地**。
-7. **`initialize-rn-project` 未建**：RN 项目初始化仍需手工改 `package.json` 与 `app.json`。
+7. **RN 原生工程未生成**：`android/` 与 `ios/` 需要在上架或原生定制时再 `expo prebuild`。

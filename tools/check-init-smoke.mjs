@@ -37,6 +37,10 @@ const VARIANTS = {
     script: 'initialize-ssr-project/scripts/initialize-ssr-project.mjs',
     args: ['--backend-mode', 'bff-only', '--no-backend', PROJECT_ID],
   },
+  rn: {
+    script: 'initialize-rn-project/scripts/initialize-rn-project.mjs',
+    args: [PROJECT_ID],
+  },
 };
 
 /**

@@ -12,6 +12,19 @@ src/test/           测试（尚未引入）
 docs/rules/rn/      规范与代码模板
 ```
 
+## 初始化
+
+复制骨架后先跑项目身份初始化，再开始业务开发：
+
+```bash
+node .agents/skills/initialize-rn-project/scripts/initialize-rn-project.mjs --dry-run <project-id>
+node .agents/skills/initialize-rn-project/scripts/initialize-rn-project.mjs <project-id>
+```
+
+它会改写 `package.json` 的 name、`app.json` 的 name / slug / scheme、两份 i18n 的 `app.title`，生成
+`.agents/rn-project.md`，并把 AGENTS 的骨架状态切成项目状态。清单见
+`docs/initialization/rn-app-initialization.md`。
+
 ## 运行
 
 ```bash
@@ -62,4 +75,4 @@ pnpm quality:check  # 一键跑完全部门禁
 
 ## 尚未完成
 
-- **初始化技能**：`initialize-rn-project` 未建，当前需手工改 `package.json` 与 `app.json` 的应用名。
+- **原生工程未生成**：`android/` 与 `ios/` 尚未 `expo prebuild`，需要原生定制或上架前再生成。
