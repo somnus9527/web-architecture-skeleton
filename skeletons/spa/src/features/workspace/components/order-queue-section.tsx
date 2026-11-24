@@ -1,6 +1,7 @@
 import { Search } from 'lucide-react';
 
 import type { IOrderQueueItem, IOrderQueueQuery, IStatusOption } from '@/features/workspace/types/workspace.types';
+import { ORDER_STATUS_TONE } from '@/features/workspace/utils/workspace.config';
 import { t } from '@/locale';
 import { StatusPill } from '@/shared/components/ui/status-pill';
 
@@ -148,7 +149,9 @@ export function OrderQueueSection({
                     <p className="mt-1 truncate text-xs text-slate-500">{order.productName}</p>
                   </div>
                   <div>
-                    <StatusPill status={order.status} />
+                    <StatusPill tone={ORDER_STATUS_TONE[order.status]}>
+                      {t(`dashboard.status.${order.status}`)}
+                    </StatusPill>
                     <p className="mt-2 text-xs text-slate-500">{order.nextStep}</p>
                   </div>
                   {/* 推进按钮暴露 pending 态，避免重复点击。 */}

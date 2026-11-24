@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useState } from 'react';
 
 import { advanceOrderStatus, getWorkspaceDashboard } from '@/features/workspace/services/workspace-service';
 import { t } from '@/locale';
+import { useAsyncAction } from '@/shared/hooks/use-async-action';
+import { useRequest } from '@/shared/hooks/use-request';
 import { logger } from '@/shared/services/logger';
 
 import type {
@@ -69,100 +71,64 @@ const INITIAL_QUERY: IOrderQueueQuery = {
 /**
  * 维护工作台数据、筛选条件和订单推进动作。
  *
+ * 数据读取与写操作都组合共享原语：读取交给 useRequest，推进交给 useAsyncAction。
+ * 文案与日志事件名留在本层，原语不感知业务。
+ *
  * @returns 工作台页面需要的状态与事件。
  */
 export function useWorkspaceDashboard(): IUseWorkspaceDashboardResult {
-  const [dashboard, setDashboard] = useState<IWorkspaceDashboard | null>(null);
   const [query, setQuery] = useState<IOrderQueueQuery>(INITIAL_QUERY);
-  const [loadState, setLoadState] = useState<DashboardLoadState>('loading');
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [refreshKey, setRefreshKey] = useState(0);
-  const [actioningOrderId, setActioningOrderId] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
-  useEffect(() => {
-    let isActive = true;
+  const fetchDashboard = useCallback(() => getWorkspaceDashboard(query), [query]);
+  const request = useRequest(fetchDashboard, {
+    deps: [query],
+    formatError: () => t('common.error.description'),
+    onError: (error) => logger.error('workspace_dashboard_load_failed', { error }),
+  });
 
-    /**
-     * 加载工作台数据，并把 API 错误映射成页面错误态。
-     */
-    async function loadDashboard(): Promise<void> {
-      setLoadState('loading');
-      setErrorMessage(null);
-
-      try {
-        const nextDashboard = await getWorkspaceDashboard(query);
-
-        if (isActive) {
-          setDashboard(nextDashboard);
-          setLoadState('success');
-        }
-      } catch (error) {
-        logger.error('workspace_dashboard_load_failed', { error });
-
-        if (isActive) {
-          setErrorMessage(t('common.error.description'));
-          setLoadState('error');
-        }
-      }
-    }
-
-    void loadDashboard();
-
-    return () => {
-      isActive = false;
-    };
-  }, [query, refreshKey]);
-
-  const result = useMemo<IUseWorkspaceDashboardResult>(
-    () => ({
-      loadState,
-      errorMessage,
-      dashboard,
-      query,
-      actioningOrderId,
-      notice,
-      updateKeyword: (keyword: string) => {
-        setNotice(null);
-        setQuery((current) => ({ ...current, keyword }));
-      },
-      updateStatus: (status: IOrderQueueQuery['status']) => {
-        setNotice(null);
-        setQuery((current) => ({ ...current, status }));
-      },
-      reload: () => {
-        setRefreshKey((current) => current + 1);
-      },
-      advanceOrder: async (order: IOrderQueueItem) => {
-        setActioningOrderId(order.id);
-        setNotice(null);
-
-        try {
-          const nextStatus = await advanceOrderStatus(order.id, order.status);
-
-          setDashboard((current) => {
-            if (!current) {
-              return current;
-            }
-
-            return {
+  const advance = useAsyncAction((order: IOrderQueueItem) => advanceOrderStatus(order.id, order.status), {
+    keyOf: (order) => order.id,
+    formatError: () => t('common.error.description'),
+    onError: (error) => logger.error('workspace_order_advance_failed', { error }),
+    onSuccess: (nextStatus, order) => {
+      request.mutate((current) =>
+        current
+          ? {
               ...current,
               orders: current.orders.map((currentOrder) =>
                 currentOrder.id === order.id ? { ...currentOrder, status: nextStatus } : currentOrder,
               ),
-            };
-          });
-          setNotice(t('dashboard.notice.advanced'));
-        } catch (error) {
-          logger.error('workspace_order_advance_failed', { error, orderId: order.id });
-          setErrorMessage(t('common.error.description'));
-        } finally {
-          setActioningOrderId(null);
-        }
-      },
-    }),
-    [actioningOrderId, dashboard, errorMessage, loadState, notice, query],
-  );
+            }
+          : current,
+      );
+      setNotice(t('dashboard.notice.advanced'));
+    },
+  });
 
-  return result;
+  const loadState: DashboardLoadState = request.loading ? 'loading' : request.error !== null ? 'error' : 'success';
+
+  return {
+    loadState,
+    errorMessage: request.errorMessage,
+    dashboard: request.data,
+    query,
+    actioningOrderId: advance.pending ? advance.pendingKey : null,
+    notice,
+    updateKeyword: (keyword) => {
+      setNotice(null);
+      setQuery((current) => ({ ...current, keyword }));
+    },
+    updateStatus: (status) => {
+      setNotice(null);
+      setQuery((current) => ({ ...current, status }));
+    },
+    reload: () => {
+      void request.refetch();
+    },
+    advanceOrder: async (order) => {
+      setNotice(null);
+      await advance.run(order);
+    },
+  };
 }

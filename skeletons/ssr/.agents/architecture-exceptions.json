@@ -1,0 +1,12 @@
+[
+  {
+    "path": "src/features/showcase/showcase-page.tsx",
+    "reason": "存量：showcase 直接引用 locale-switcher 的公共组件，待其上升到 shared 后移除",
+    "expiresAt": "2027-03-31"
+  },
+  {
+    "path": "src/bff/shared/http-client.ts",
+    "reason": "存量：HTTP 客户端 637 行超过 other 阈值 500，待按超时/重试/解析拆分",
+    "expiresAt": "2027-03-31"
+  }
+]

@@ -1,35 +1,45 @@
-import type { OrderStatus } from '@/features/workspace/types/workspace.types';
-import { t } from '@/locale';
+import type { ReactNode } from 'react';
 
 /**
- * 状态标签组件参数。
+ * 状态胶囊的语义色调。
  */
-interface IStatusPillProps {
+export type StatusTone = 'success' | 'warning' | 'danger' | 'info' | 'neutral';
+
+/**
+ * 状态胶囊参数。
+ */
+export interface IStatusPillProps {
   /**
-   * 订单履约状态。
+   * 语义色调，由调用方按业务状态映射。
    */
-  status: OrderStatus;
+  tone: StatusTone;
+  /**
+   * 展示文案，由调用方负责 i18n。
+   */
+  children: ReactNode;
 }
 
-const STATUS_CLASS_BY_STATUS: Record<OrderStatus, string> = {
-  pending: 'border-amber-200 bg-amber-50 text-amber-800',
-  reviewing: 'border-rose-200 bg-rose-50 text-rose-800',
-  fulfilling: 'border-blue-200 bg-blue-50 text-blue-800',
-  completed: 'border-emerald-200 bg-emerald-50 text-emerald-800',
+const TONE_CLASS: Record<StatusTone, string> = {
+  success: 'border-emerald-200 bg-emerald-50 text-emerald-800',
+  warning: 'border-amber-200 bg-amber-50 text-amber-800',
+  danger: 'border-rose-200 bg-rose-50 text-rose-800',
+  info: 'border-blue-200 bg-blue-50 text-blue-800',
+  neutral: 'border-slate-200 bg-slate-50 text-slate-700',
 };
 
 /**
- * 以稳定视觉语义展示订单状态。
+ * 以稳定视觉语义展示短文本状态。
  *
- * @param props - 状态标签组件参数。
+ * 组件不认识业务枚举，也不调用 i18n：业务状态到 tone 的映射留在 feature，
+ * 文案由调用方传入。这样同一组件可被任意业务域复用。
+ *
+ * @param props - 状态胶囊参数。
  * @returns 状态标签节点。
  */
-export function StatusPill({ status }: IStatusPillProps) {
+export function StatusPill({ tone, children }: IStatusPillProps) {
   return (
-    <span
-      className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${STATUS_CLASS_BY_STATUS[status]}`}
-    >
-      {t(`dashboard.status.${status}`)}
+    <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${TONE_CLASS[tone]}`}>
+      {children}
     </span>
   );
 }

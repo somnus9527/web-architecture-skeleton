@@ -1,79 +1,59 @@
-import { readFileSync, readdirSync, statSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-/**
- * 文件规模扫描结果。
- */
-interface IFileSizeEntry {
-  /**
-   * 相对仓库根目录的文件路径。
-   */
-  path: string;
-  /**
-   * 文件物理行数。
-   */
-  lineCount: number;
-}
+import { isGenerated, listSourceFiles, readExceptions } from '@/test/architecture/support/scan';
 
 const SOURCE_ROOT = join(process.cwd(), 'src');
-const HANDWRITTEN_SOURCE_PATTERN = /\.(ts|tsx)$/;
-const PAGE_FILE_PATTERN = /(screen|page)\.tsx$/;
-const GENERAL_SOFT_LIMIT = 1500;
-const PAGE_LIMIT = 450;
 
 /**
- * 递归读取手写源码文件的路径和行数。
- *
- * @param dir - 当前扫描目录。
- * @returns 文件规模扫描结果。
+ * 分类阈值（行数）。
  */
-function readFileSizeEntries(dir: string): IFileSizeEntry[] {
-  return readdirSync(dir).flatMap((entry) => {
-    const absolutePath = join(dir, entry);
-    const stats = statSync(absolutePath);
+const LIMITS: Array<{ name: string; pattern: RegExp; limit: number }> = [
+  { name: 'page', pattern: /(?:page|screen)\.tsx$/u, limit: 400 },
+  { name: 'hook', pattern: /\/hooks\//u, limit: 200 },
+  { name: 'service', pattern: /\/services\//u, limit: 200 },
+  { name: 'component', pattern: /\/components\//u, limit: 300 },
+  { name: 'test', pattern: /^test\//u, limit: 600 },
+];
 
-    if (stats.isDirectory()) {
-      return readFileSizeEntries(absolutePath);
-    }
-
-    if (!HANDWRITTEN_SOURCE_PATTERN.test(entry)) {
-      return [];
-    }
-
-    return [
-      {
-        path: relative(process.cwd(), absolutePath),
-        lineCount: countLines(absolutePath),
-      },
-    ];
-  });
-}
+const HARD_LIMIT = 800;
 
 /**
- * 读取文件行数；单独封装便于后续排除自动生成文件。
+ * 命中某条分类规则。
  *
- * @param absolutePath - 文件绝对路径。
- * @returns 文件物理行数。
+ * @param srcPath - 相对 src 的路径。
+ * @returns 命中的分类。
  */
-function countLines(absolutePath: string): number {
-  const source = readFileSync(absolutePath, 'utf8');
+function classify(srcPath: string): { name: string; limit: number } {
+  const matched = LIMITS.find((entry) => entry.pattern.test(srcPath));
 
-  return source.length === 0 ? 0 : source.split('\n').length;
+  return matched ?? { name: 'other', limit: 500 };
 }
 
 describe('file split boundary', () => {
-  it('should keep handwritten source files below the soft split limit', () => {
-    const violations = readFileSizeEntries(SOURCE_ROOT).filter((entry) => entry.lineCount >= GENERAL_SOFT_LIMIT);
+  it('should keep every source file under its category limit', () => {
+    const exceptions = readExceptions();
+    const violations = listSourceFiles(SOURCE_ROOT)
+      .filter((file) => !exceptions.has(file.path) && !isGenerated(file.content))
+      .flatMap((file) => {
+        const lineCount = file.content.split('\n').length;
+        const { name, limit } = classify(file.srcPath);
+
+        return lineCount > limit ? [`${file.srcPath}: ${lineCount} 行超过 ${name} 阈值 ${limit}`] : [];
+      });
 
     expect(violations).toEqual([]);
   });
 
-  it('should keep page and screen components below the orchestration limit', () => {
-    const violations = readFileSizeEntries(SOURCE_ROOT).filter(
-      (entry) => PAGE_FILE_PATTERN.test(entry.path) && entry.lineCount > PAGE_LIMIT,
-    );
+  it('should keep every source file under the hard limit', () => {
+    const violations = listSourceFiles(SOURCE_ROOT)
+      .filter((file) => !isGenerated(file.content))
+      .flatMap((file) => {
+        const lineCount = file.content.split('\n').length;
+
+        return lineCount > HARD_LIMIT ? [`${file.srcPath}: ${lineCount} 行超过硬限 ${HARD_LIMIT}`] : [];
+      });
 
     expect(violations).toEqual([]);
   });

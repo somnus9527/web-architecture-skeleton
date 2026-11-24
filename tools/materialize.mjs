@@ -170,6 +170,14 @@ function materialize(variant) {
     cpSync(join(sharedHooks, name), join(hookTarget, name));
   }
 
+  const sharedComponents = join(ROOT, 'shared-assets', 'src', 'shared', 'components');
+  cpSync(sharedComponents, join(ROOT, 'skeletons', variant, 'src', 'shared', 'components'), { recursive: true });
+
+  const sharedArchTests = join(ROOT, 'shared-assets', 'src', 'test', 'architecture');
+  const archTestTarget = join(ROOT, 'skeletons', variant, 'src', 'test', 'architecture');
+  mkdirSync(archTestTarget, { recursive: true });
+  cpSync(sharedArchTests, archTestTarget, { recursive: true });
+
   const sharedHookTests = join(ROOT, 'shared-assets', 'src', 'test', 'shared');
   const hookTestTarget = join(ROOT, 'skeletons', variant, 'src', 'test', 'shared');
   mkdirSync(hookTestTarget, { recursive: true });

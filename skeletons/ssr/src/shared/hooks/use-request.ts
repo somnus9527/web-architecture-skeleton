@@ -57,7 +57,7 @@ export interface IUseRequestResult<TData, TArgs extends unknown[]> {
   /**
    * 本地更新数据，不触发请求。
    */
-  mutate: (next: TData | ((current: TData | null) => TData)) => void;
+  mutate: (next: TData | null | ((current: TData | null) => TData | null)) => void;
   /**
    * 清空数据、错误与加载态。
    */
@@ -154,8 +154,10 @@ export function useRequest<TData, TArgs extends unknown[] = []>(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enabled, ...deps]);
 
-  const mutate = useCallback((next: TData | ((current: TData | null) => TData)): void => {
-    setData((current) => (typeof next === 'function' ? (next as (value: TData | null) => TData)(current) : next));
+  const mutate = useCallback((next: TData | null | ((current: TData | null) => TData | null)): void => {
+    setData((current) =>
+      typeof next === 'function' ? (next as (value: TData | null) => TData | null)(current) : next,
+    );
   }, []);
 
   const reset = useCallback((): void => {
