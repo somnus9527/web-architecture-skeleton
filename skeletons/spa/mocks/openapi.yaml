@@ -1,0 +1,425 @@
+openapi: 3.1.0
+info:
+  title: SPA Application Mock
+  version: 0.1.0
+  description: |
+    骨架演示契约。本文件中的示例接口（含 /workspace/*、/auth/*）不是业务事实源，仅用于本地 Prism mock
+    与前端联调，字段、错误码和鉴权方式都不代表已确认的后端契约。
+    复制骨架后必须以确认后的契约替换这些路径与 operationId，并按 docs/rules/frontend/api-contracts.md
+    建立 docs/api/<module>.md。
+servers:
+  - url: http://127.0.0.1:4010
+paths:
+  /workspace/dashboard:
+    post:
+      operationId: getWorkspaceDashboard
+      summary: 获取工作台首屏数据
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderQueueQuery'
+            examples:
+              default:
+                value:
+                  keyword: ''
+                  status: all
+      responses:
+        '200':
+          description: 工作台数据
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkspaceDashboardResponse'
+              examples:
+                success:
+                  value:
+                    data:
+                      metrics:
+                        - label: 今日成交额
+                          value: $18,420
+                          delta: +12.4%
+                          tone: success
+                      workflow:
+                        - name: 待确认
+                          count: 18
+                          action: Confirm payment
+                      orders:
+                        - id: TASK-10240
+                          customerName: Northwind Store
+                          productName: Standard delivery request
+                          status: pending
+                          owner: Ava
+                          nextStep: Confirm payment record
+                          updatedAt: '10:42'
+                    code: '200'
+                    codeMsg: null
+        '401':
+          description: 会话缺失或已失效
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                sessionExpired:
+                  value:
+                    data: null
+                    code: auth.session_expired
+                    codeMsg: 登录状态已失效，请重新登录。
+  /workspace/orders/advance:
+    post:
+      operationId: advanceWorkspaceOrder
+      summary: 推进工作台订单状态
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdvanceWorkspaceOrderRequest'
+            examples:
+              default:
+                value:
+                  orderId: TASK-10240
+                  status: pending
+      responses:
+        '200':
+          description: 下一阶段订单状态
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdvanceWorkspaceOrderResponse'
+              examples:
+                success:
+                  value:
+                    data:
+                      status: reviewing
+                    code: '200'
+                    codeMsg: null
+        '401':
+          description: 会话缺失或已失效
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                sessionExpired:
+                  value:
+                    data: null
+                    code: auth.session_expired
+                    codeMsg: 登录状态已失效，请重新登录。
+  /auth/login:
+    post:
+      operationId: login
+      summary: 使用业务账号登录并获取会话 token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            examples:
+              default:
+                value:
+                  username: demo
+                  password: demo
+      responses:
+        '200':
+          description: 登录成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+              examples:
+                success:
+                  value:
+                    data:
+                      token: mock-session-token
+                      user:
+                        id: U-1001
+                        displayName: Demo Operator
+                    code: '200'
+                    codeMsg: null
+        '401':
+          description: 账号或密码错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                invalidCredentials:
+                  value:
+                    data: null
+                    code: auth.invalid_credentials
+                    codeMsg: 账号或密码错误。
+  /auth/logout:
+    post:
+      operationId: logout
+      summary: 注销当前会话并由服务端撤销
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 会话已撤销
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogoutResponse'
+              examples:
+                success:
+                  value:
+                    data:
+                      success: true
+                    code: '200'
+                    codeMsg: null
+        '401':
+          description: 会话已失效
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                sessionExpired:
+                  value:
+                    data: null
+                    code: auth.session_expired
+                    codeMsg: 登录状态已失效，请重新登录。
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    ApiResponseBase:
+      type: object
+      required:
+        - code
+        - codeMsg
+      properties:
+        code:
+          type: string
+        codeMsg:
+          type:
+            - string
+            - 'null'
+    OrderQueueQuery:
+      type: object
+      required:
+        - keyword
+        - status
+      properties:
+        keyword:
+          type: string
+        status:
+          type: string
+          enum:
+            - all
+            - pending
+            - reviewing
+            - fulfilling
+            - completed
+    MetricItem:
+      type: object
+      required:
+        - label
+        - value
+        - delta
+        - tone
+      properties:
+        label:
+          type: string
+        value:
+          type: string
+        delta:
+          type: string
+        tone:
+          type: string
+          enum:
+            - neutral
+            - success
+            - warning
+            - danger
+    WorkflowStage:
+      type: object
+      required:
+        - name
+        - count
+        - action
+      properties:
+        name:
+          type: string
+        count:
+          type: integer
+        action:
+          type: string
+    OrderQueueItem:
+      type: object
+      required:
+        - id
+        - customerName
+        - productName
+        - status
+        - owner
+        - nextStep
+        - updatedAt
+      properties:
+        id:
+          type: string
+        customerName:
+          type: string
+        productName:
+          type: string
+        status:
+          type: string
+          enum:
+            - pending
+            - reviewing
+            - fulfilling
+            - completed
+        owner:
+          type: string
+        nextStep:
+          type: string
+        updatedAt:
+          type: string
+    WorkspaceDashboard:
+      type: object
+      required:
+        - metrics
+        - workflow
+        - orders
+      properties:
+        metrics:
+          type: array
+          items:
+            $ref: '#/components/schemas/MetricItem'
+        workflow:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkflowStage'
+        orders:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderQueueItem'
+    WorkspaceDashboardResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponseBase'
+        - type: object
+          required:
+            - data
+          properties:
+            data:
+              $ref: '#/components/schemas/WorkspaceDashboard'
+    AdvanceWorkspaceOrderRequest:
+      type: object
+      required:
+        - orderId
+        - status
+      properties:
+        orderId:
+          type: string
+        status:
+          type: string
+          enum:
+            - pending
+            - reviewing
+            - fulfilling
+            - completed
+    AdvanceWorkspaceOrderResult:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum:
+            - pending
+            - reviewing
+            - fulfilling
+            - completed
+    AdvanceWorkspaceOrderResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponseBase'
+        - type: object
+          required:
+            - data
+          properties:
+            data:
+              $ref: '#/components/schemas/AdvanceWorkspaceOrderResult'
+    AuthUser:
+      type: object
+      required:
+        - id
+        - displayName
+      properties:
+        id:
+          type: string
+        displayName:
+          type: string
+    LoginRequest:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+    LoginResult:
+      type: object
+      required:
+        - token
+        - user
+      properties:
+        token:
+          type: string
+        user:
+          $ref: '#/components/schemas/AuthUser'
+    LoginResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponseBase'
+        - type: object
+          required:
+            - data
+          properties:
+            data:
+              $ref: '#/components/schemas/LoginResult'
+    LogoutResult:
+      type: object
+      required:
+        - success
+      properties:
+        success:
+          type: boolean
+    LogoutResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponseBase'
+        - type: object
+          required:
+            - data
+          properties:
+            data:
+              $ref: '#/components/schemas/LogoutResult'
+    ApiErrorResponse:
+      type: object
+      required:
+        - code
+        - codeMsg
+      properties:
+        code:
+          type: string
+        codeMsg:
+          type:
+            - string
+            - 'null'
+        data:
+          type:
+            - object
+            - 'null'

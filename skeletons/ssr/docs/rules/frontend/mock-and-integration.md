@@ -1,0 +1,72 @@
+# Mock And Integration
+
+> **Scope**: This file provides the shared Prism/OpenAPI baseline. This template's Next.js SSR/BFF runtime uses the
+> server-side gateway rules in [`ssr-contracts-and-mock.md`](./ssr-contracts-and-mock.md) and
+> [`ssr-runtime-config.md`](./ssr-runtime-config.md).
+
+## Prism And OpenAPI
+
+- New projects use Prism + OpenAPI as the primary mock system.
+- Create `mock/openapi.yaml` as the Prism entry relative to the single-app root or owning app root.
+- Split contract details under `mock/components/` for schemas, parameters, responses, and requestBodies.
+- Split example payloads under `mock/examples/`.
+- Use `$ref` from the owning app's `mock/openapi.yaml`; do not pile every schema and example into the entry file.
+- All frontend service methods must map to a path + operation in the owning app's `mock/openapi.yaml`.
+- Existing projects keep their current mock system unless the user approves migration.
+- If a project has Prism/OpenAPI mock support, Prism is the only runtime mock path. Service, hook, page, APIClient, or component code must not return hardcoded mock response objects for HTTP/mock endpoints.
+- Treat the owning app's `mock/openapi.yaml` as the source of truth for implemented frontend/API contracts. API docs may include future endpoints only when they are marked `Planned`, `Not implemented in frontend`, or `Not available in Prism mock`.
+- Frontend-consumed schemas must define nested object fields and array item fields explicitly. Avoid broad `type: object` with `additionalProperties: true` for consumed data unless the field is intentionally an extension bag and the reason is documented.
+
+## Mock Coverage
+
+Prism examples must cover relevant workflow states:
+
+- Normal data.
+- Empty data.
+- Business error.
+- Form validation error.
+- Illegal state transition.
+- Permission or login-state failure.
+
+Mock records, OpenAPI schemas, DTOs, API docs, service fields, and SQL semantics must use the same field meanings.
+Required fields, optional fields, enums, state values, error codes, and example payloads must match across OpenAPI, DTOs, service payloads, API docs, and UI handling.
+
+## Unified API Wrapper
+
+`{ data, code, codeMsg }` 包装契约(string `code`、`code === "200"` 读 `data`、`code !== "200"` 直接显示 `codeMsg`、缺包装即契约错误、不得平行包装)权威定义见 [`./api-contracts.md`](./api-contracts.md),本文不重复。Mock 响应与 API 文档必须使用同一包装;分页优先复用既有模型如 `JaPageRespDTO`。
+
+## Service Layer
+
+- Put all mock or real API-facing methods in the service layer.
+- Keep method names use-case-oriented and stable, such as `listResources`, `submitAction`, or `updateStatus`.
+- In new projects, service methods call `src/shared/tools/APIClient` and never call `fetch` directly.
+- In existing projects, use the existing request wrapper unless the user approves a migration.
+- Simulate realistic loading and error states through Prism examples and UI state; do not hide contract errors in page components.
+- Return error wrappers for validation failures, illegal state transitions, or mock exception scenarios.
+- Use functional state updates in React when callbacks depend on previous state.
+- Fixtures may remain for tests, stories, static examples, or OpenAPI example generation. They must not be imported by the runtime service path as a mock-mode fallback when Prism/OpenAPI mock support exists.
+
+## Switching From Mock To Real API
+
+Provide handoff steps when delivering a project:
+
+1. Switch through the project's environment loader and server-side gateway configuration, not scattered code branches.
+   For this template, follow [`ssr-contracts-and-mock.md`](./ssr-contracts-and-mock.md) and
+   [`ssr-runtime-config.md`](./ssr-runtime-config.md).
+2. Keep service method names, adapter mappings, gateway boundaries, and TypeScript DTOs stable while replacing mock
+   upstreams with real APIs.
+3. Preserve the unified `{ data, code, codeMsg }` handling (canonical in [`./api-contracts.md`](./api-contracts.md)).
+4. Keep browser session credentials in the approved HttpOnly cookie flow and keep BFF-to-backend credentials
+   server-side. Never commit real tokens, cookies, assertions, or production credentials.
+5. Re-run OpenAPI validation, frontend checks, and manual tests for loading, success, failure, empty, validation error, and illegal transition states.
+
+## Env Scripts
+
+New projects should provide:
+
+- `mock:serve` for Prism.
+- `mock:check` or `openapi:check` for OpenAPI validation.
+- `dev` or `dev:mock` to run Prism and the SSR application together with `.env.mock`.
+- Environment-specific check/build commands aligned with `.env.dev`, `.env.test`, and `.env.prod`.
+
+When a user asks to start the frontend project, use `dev:mock` by default if Prism/OpenAPI mock support exists and the script is available. After startup, if multiple `.env.*` files and matching dev scripts exist, report each environment's command to the caller, such as `mock -> pnpm dev:mock`, `dev -> pnpm dev:dev`, and `test -> pnpm dev:test`, and state which one is currently running.

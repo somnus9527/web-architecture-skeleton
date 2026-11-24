@@ -1,0 +1,10 @@
+node_modules
+.next
+build
+dist
+out
+output
+coverage
+pnpm-lock.yaml
+tsconfig.tsbuildinfo
+.playwright-cli

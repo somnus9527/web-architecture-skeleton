@@ -1,0 +1,27 @@
+node_modules
+.pnpm-store
+dist
+.next
+out
+output
+coverage
+tsconfig.tsbuildinfo
+
+# Next.js 会按当前 dev/build 缓存重写该类型入口，避免跨分支切换产生无关差异。
+next-env.d.ts
+
+.playwright-cli
+.DS_Store
+.idea/
+
+# 本地 Docker 预览：仅本机使用，不作为骨架交付物入库。
+.local-docker/
+.dockerignore
+
+# 环境配置：仅 .env.example 与 .env.mock 入库；真实环境值不入库（部署期注入）。
+.env
+.env.local
+.env.dev
+.env.test
+.env.prod
+.env.*.local

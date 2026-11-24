@@ -1,0 +1,74 @@
+name: check
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.9.0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Dependency vulnerability audit
+        run: pnpm audit --audit-level=high
+
+      - name: Secret scan
+        run: |
+          GITLEAKS_VERSION=8.18.4
+          curl -sSL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" | tar -xz gitleaks
+          ./gitleaks detect --redact --exit-code 1
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Format check
+        run: pnpm format:check
+
+      - name: Mock contract check
+        run: pnpm mock:check
+
+      - name: Create CI prod env
+        run: |
+          cat > .env.prod <<'EOF'
+          APP_ENV=prod
+          VITE_APP_TITLE=SPA Application
+          VITE_APP_BASE_PATH=/spa-app/
+          VITE_API_MODE=prod
+          VITE_API_BASE_URL=/api
+          EOF
+
+      - name: Test
+        run: pnpm test
+
+      - name: Build production assets
+        run: pnpm build:prod
+
+      - name: Validate production assets and reload entrypoint
+        run: |
+          test -f dist/index.html
+          test -f dist/version.json
+          bash -n scripts/deploy.sh

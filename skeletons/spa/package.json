@@ -1,0 +1,80 @@
+{
+  "name": "spa-app-web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.9.0",
+  "scripts": {
+    "dev": "pnpm dev:mock",
+    "dev:mock": "concurrently -k -n mock,vite -c magenta,green \"pnpm mock:dev\" \"node --env-file=.env.mock scripts/start-vite-mock.mjs\"",
+    "dev:vite": "pnpm dev:dev",
+    "dev:dev": "vite --host 127.0.0.1 --mode dev",
+    "dev:test": "vite --host 127.0.0.1 --mode test",
+    "mock:dev": "node --env-file=.env.mock scripts/start-prism-mock.mjs",
+    "mock:serve": "node --env-file=.env.mock scripts/start-prism-mock.mjs",
+    "mock:check": "node scripts/check-openapi-mock.mjs",
+    "typecheck": "tsc -b --pretty false",
+    "lint": "eslint . --max-warnings=0",
+    "lint-staged": "lint-staged",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "test:architecture": "vitest run src/test/architecture",
+    "test:watch": "vitest",
+    "build": "pnpm build:prod",
+    "build:dev": "pnpm typecheck && node scripts/run-vite-with-env.mjs .env.dev build --mode dev",
+    "build:test": "pnpm typecheck && node scripts/run-vite-with-env.mjs .env.test build --mode test",
+    "build:prod": "pnpm typecheck && node scripts/run-vite-with-env.mjs .env.prod build --mode prod",
+    "preview": "vite preview",
+    "quality:check": "pnpm typecheck && pnpm lint && pnpm mock:check && pnpm test && pnpm format:check && pnpm build:prod",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{js,mjs,cjs,ts,mts,cts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{css,html,json,md,yaml,yml}": [
+      "prettier --write"
+    ]
+  },
+  "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/material": "^9.0.1",
+    "@tailwindcss/vite": "^4.3.0",
+    "i18next": "^25.6.3",
+    "lucide-react": "^1.14.0",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "react-i18next": "^16.4.0",
+    "react-router": "^7.10.1",
+    "tailwindcss": "^4.3.0",
+    "zustand": "^5.0.9"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^20.4.3",
+    "@commitlint/config-conventional": "^20.4.3",
+    "@eslint/js": "^9.39.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
+    "@stoplight/prism-cli": "^5.14.2",
+    "@types/node": "^24.10.1",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
+    "concurrently": "^9.2.1",
+    "eslint": "^9.39.1",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.4.24",
+    "husky": "^9.1.7",
+    "jsdom": "^27.2.0",
+    "lint-staged": "^16.2.4",
+    "prettier": "^3.8.4",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.48.0",
+    "vite": "^8.0.12",
+    "vitest": "^4.0.15",
+    "yaml": "^2.8.2"
+  }
+}

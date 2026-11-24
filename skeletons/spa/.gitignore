@@ -1,0 +1,16 @@
+node_modules
+.next
+.pnpm-store
+dist
+build
+coverage
+.vite
+*.tsbuildinfo
+.DS_Store
+.env
+.env.dev
+.env.test
+.env.prod
+.env.local
+.env.*.local
+.idea/

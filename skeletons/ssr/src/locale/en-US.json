@@ -1,0 +1,57 @@
+{
+  "metadata": {
+    "siteName": "SSR Application Skeleton",
+    "description": "A production-oriented SSR and BFF application foundation.",
+    "home": {
+      "title": "SSR Application Skeleton",
+      "description": "A production-oriented SSR and BFF foundation whose public pages use locale-routed URLs for zh-CN and en-US."
+    }
+  },
+  "showcase": {
+    "title": "SSR Application Skeleton",
+    "subtitle": "A neutral vertical slice for SSR, BFF, OpenAPI and release verification.",
+    "empty": "No showcase entries are available.",
+    "updated": "Updated {date}",
+    "categories": {
+      "rendering": "Rendering",
+      "architecture": "Architecture"
+    }
+  },
+  "localeSwitcher": {
+    "label": "Language",
+    "english": "English",
+    "chinese": "简体中文"
+  },
+  "auth": {
+    "title": "Sign in placeholder",
+    "description": "Replace this controlled placeholder with the application authentication flow.",
+    "backHome": "Back to public page"
+  },
+  "console": {
+    "title": "Authenticated area placeholder",
+    "description": "This route verifies the no-store and session boundary before a real feature is added.",
+    "refresh": "Refresh showcase",
+    "signedOut": "No session cookie was found."
+  },
+  "errors": {
+    "generic": "Something went wrong.",
+    "retry": "Try again",
+    "pages": {
+      "notFound": {
+        "title": "Page not found",
+        "description": "The requested page does not exist.",
+        "backHome": "Back to public page"
+      },
+      "routeUnavailable": {
+        "title": "Page temporarily unavailable",
+        "description": "The page could not be rendered. Please try again later.",
+        "retry": "Try again"
+      },
+      "globalUnavailable": {
+        "title": "Application temporarily unavailable",
+        "description": "The application could not be initialized. Please try again later.",
+        "retry": "Try again"
+      }
+    }
+  }
+}

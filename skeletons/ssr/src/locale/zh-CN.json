@@ -1,0 +1,57 @@
+{
+  "metadata": {
+    "siteName": "SSR 应用骨架",
+    "description": "面向生产交付的 SSR 与 BFF 应用基础骨架。",
+    "home": {
+      "title": "SSR 应用骨架",
+      "description": "面向生产交付的 SSR 与 BFF 应用基础骨架，公开页使用 /zh-CN 与 /en-US 语言路由。"
+    }
+  },
+  "showcase": {
+    "title": "SSR 应用骨架",
+    "subtitle": "用于验证 SSR、BFF、OpenAPI 和发布链路的中性竖切示例。",
+    "empty": "暂无 showcase 条目。",
+    "updated": "更新于 {date}",
+    "categories": {
+      "rendering": "渲染",
+      "architecture": "架构"
+    }
+  },
+  "localeSwitcher": {
+    "label": "语言",
+    "english": "English",
+    "chinese": "简体中文"
+  },
+  "auth": {
+    "title": "登录占位页",
+    "description": "正式应用接入认证流程前，先使用此受控占位页验证路由边界。",
+    "backHome": "返回公开首页"
+  },
+  "console": {
+    "title": "登录后区域占位页",
+    "description": "该路由用于验证 no-store 和 session 边界，正式功能接入后替换。",
+    "refresh": "刷新 showcase",
+    "signedOut": "未找到会话 cookie。"
+  },
+  "errors": {
+    "generic": "发生未知错误。",
+    "retry": "重试",
+    "pages": {
+      "notFound": {
+        "title": "页面不存在",
+        "description": "请求的页面不存在。",
+        "backHome": "返回公开首页"
+      },
+      "routeUnavailable": {
+        "title": "页面暂时不可用",
+        "description": "页面处理失败，请稍后重试。",
+        "retry": "重试"
+      },
+      "globalUnavailable": {
+        "title": "应用暂时不可用",
+        "description": "应用初始化失败，请稍后重试。",
+        "retry": "重试"
+      }
+    }
+  }
+}

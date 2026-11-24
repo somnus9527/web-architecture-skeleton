@@ -1,0 +1,74 @@
+name: check
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.7.1
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Dependency vulnerability audit
+        run: pnpm audit --audit-level=high
+
+      - name: Secret scan
+        run: |
+          GITLEAKS_VERSION=8.18.4
+          curl -sSL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" | tar -xz gitleaks
+          ./gitleaks detect --redact --exit-code 1
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Format check
+        run: pnpm format:check
+
+      - name: Mock contract check
+        run: pnpm mock:check
+
+      - name: Create CI prod env
+        run: |
+          cat > .env.prod <<'EOF'
+          APP_ENV=prod
+          APP_ORIGIN=https://distribution.example.com
+          BACKEND_API_BASE_URL=https://api.example.com
+          PRISM_MOCK_BASE_URL=http://127.0.0.1:4011
+          LOG_LEVEL=info
+          SESSION_COOKIE_NAME=distribution_auth
+          SESSION_COOKIE_SECURE=true
+          CSRF_ENABLED=true
+          NEXT_PUBLIC_APP_ENV=prod
+          NEXT_PUBLIC_APP_ORIGIN=https://distribution.example.com
+          NEXT_SERVER_ACTIONS_ENCRYPTION_KEY=MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=
+          EOF
+
+      - name: Build
+        run: pnpm build:prod
+
+      - name: Test
+        run: pnpm test
