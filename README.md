@@ -42,3 +42,15 @@ rm -rf .git
 | `docs/rules/backend`、`docs/rules/next-backend` | 已按决策剔除，不再分发                                                         |
 
 `skeletons/*/docs/rules/` 现在是物化产物，不要手改；改规则请改 `rules/` 后运行 `node tools/materialize.mjs`。
+
+## 自检
+
+仓库自身有两条检查，CI 会跑：
+
+```bash
+node tools/materialize.mjs && git diff --exit-code   # 物化产物与源一致
+node tools/check-init-smoke.mjs                      # 两个变体能初始化且无死链
+```
+
+第一条防止有人手改 `skeletons/*/docs/rules`；第二条防止改文档时破坏初始化脚本的替换锚点——
+这是改 AGENTS/README 时最容易踩的坑。
