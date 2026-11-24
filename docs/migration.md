@@ -53,5 +53,6 @@
 5. **RN 骨架已建立，但门禁不完整**：`skeletons/rn` 是可运行的 Expo 工程，`docs/rules/rn/` 由物化生成。
    未接 `check:gates`（`verify-gates` 依赖架构测试目录与 SPA/SSR 的 ESLint 规则），测试栈（`jest-expo`
    - RNTL）也尚未引入，因此 `pnpm test` 目前不可用。
-6. **`templates/monorepo` 尚未落地**。
+6. **`templates/monorepo` 已落地但未接 Turbo**：按规则「两个以上信号才引入」，当前 1 app + 3 package
+   用 `pnpm -r` 足够；真实项目达到多 app + 缓存需求时再补 `turbo.json`。
 7. **RN 原生工程未生成**：`android/` 与 `ios/` 需要在上架或原生定制时再 `expo prebuild`。

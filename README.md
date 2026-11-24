@@ -15,7 +15,9 @@ rules/          规则单源，物化进各 skeleton 的 docs/rules/
   frontend/     SPA / SSR 通用
   spa/ ssr/     变体专属与变体补段
   rn/           RN 规则，模板同层放在 rules/rn/templates/
-templates/      文件级模板：单文件 / 单模块骨架（当前仅 frontend）
+templates/      文件级模板：单文件 / 单模块骨架
+  frontend/     业务模块参考模板
+  monorepo/     pnpm workspace 架构骨架（含边界校验）
 skills/         initialize-*、sync-architecture-rules、audit-derived-repo
 tools/          check-repo-hygiene、verify-gates、materialize、audit
 manifests/      每个变体消费的规则层、技能与门禁

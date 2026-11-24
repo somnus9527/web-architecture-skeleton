@@ -25,3 +25,7 @@ jobs:
 
       - name: Init smoke test
         run: node tools/check-init-smoke.mjs
+
+      - name: Monorepo template boundaries
+        working-directory: templates/monorepo
+        run: node scripts/check-workspace.mjs
