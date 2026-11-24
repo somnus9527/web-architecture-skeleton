@@ -18,7 +18,7 @@
 
 ```tsx
 // state/props 一次性切 class 或 data-属性 → CSS transition/@keyframes 负责动
-<div className={isOpen ? "panel panelOpen" : "panel"} />
+<div className={isOpen ? 'panel panelOpen' : 'panel'} />
 // .panel { transition: transform .2s ease, opacity .2s ease }
 // .panelOpen { transform: translateX(0); opacity: 1 }
 ```
@@ -52,16 +52,10 @@ const el = ref.current;
 const first = el.getBoundingClientRect();
 // ...布局变化...
 const last = el.getBoundingClientRect();
-el.animate(
-  [
-    { transform: `translate(${first.x - last.x}px, ${first.y - last.y}px)` },
-    { transform: "none" },
-  ],
-  {
-    duration: 200,
-    easing: "ease",
-  },
-);
+el.animate([{ transform: `translate(${first.x - last.x}px, ${first.y - last.y}px)` }, { transform: 'none' }], {
+  duration: 200,
+  easing: 'ease',
+});
 ```
 
 > 确认流程:在动手前一句话说明「要做什么动画 / 为什么必须 JS 测量 / 用哪种逃生舱」,拿到确认再写。默认倾向是**不做**或降级为纯 CSS 版本。

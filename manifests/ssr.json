@@ -2,7 +2,9 @@
   "variant": "ssr",
   "kind": "project",
   "ruleLayers": ["shared", "frontend", "ssr"],
-  "substitutions": { "mockDir": "mock" },
-  "skills": ["initialize-ssr-project", "sync-architecture-rules", "audit-derived-repo"],
+  "substitutions": {
+    "mockDir": "mock"
+  },
+  "skills": ["initialize-ssr-project", "sync-architecture-rules"],
   "gates": ["hygiene", "arch-tests", "quality-check", "ci"]
 }

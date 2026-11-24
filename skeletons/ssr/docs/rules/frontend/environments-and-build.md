@@ -111,12 +111,12 @@
 参考实现 `scripts/copy-standalone-assets.mjs`:
 
 ```js
-import { cpSync, existsSync } from "node:fs";
+import { cpSync, existsSync } from 'node:fs';
 
 /** 将 standalone 默认不打入的静态资源拷进自包含目录(无 CDN,由 Node 服务自伺服)。 */
 const pairs = [
-  [".next/static", ".next/standalone/.next/static"],
-  ["public", ".next/standalone/public"],
+  ['.next/static', '.next/standalone/.next/static'],
+  ['public', '.next/standalone/public'],
 ];
 for (const [from, to] of pairs) {
   if (existsSync(from)) cpSync(from, to, { recursive: true });

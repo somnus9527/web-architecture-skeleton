@@ -285,11 +285,18 @@ function buildSyncPlan(rulesLock, sourceCommit) {
 
     if (baselineHash === null && upstreamFile) {
       if (localHash === null) {
-        actions.push({ kind: 'add', path: relativePath, content: upstreamFile.content });
+        actions.push({
+          kind: 'add',
+          path: relativePath,
+          content: upstreamFile.content,
+        });
       } else if (localHash === upstreamFile.contentHash) {
         adopted.push(relativePath);
       } else {
-        conflicts.push({ path: relativePath, reason: '上游新增文件与本地同名文件内容不同' });
+        conflicts.push({
+          path: relativePath,
+          reason: '上游新增文件与本地同名文件内容不同',
+        });
       }
       continue;
     }
@@ -300,7 +307,10 @@ function buildSyncPlan(rulesLock, sourceCommit) {
       } else if (localHash === baselineHash) {
         actions.push({ kind: 'delete', path: relativePath });
       } else {
-        conflicts.push({ path: relativePath, reason: '上游已删除，但本地文件相对基线有修改' });
+        conflicts.push({
+          path: relativePath,
+          reason: '上游已删除，但本地文件相对基线有修改',
+        });
       }
       continue;
     }
@@ -313,11 +323,18 @@ function buildSyncPlan(rulesLock, sourceCommit) {
     }
 
     if (localHash === baselineHash) {
-      actions.push({ kind: 'update', path: relativePath, content: upstreamFile.content });
+      actions.push({
+        kind: 'update',
+        path: relativePath,
+        content: upstreamFile.content,
+      });
     } else if (localHash === upstreamFile.contentHash) {
       adopted.push(relativePath);
     } else {
-      conflicts.push({ path: relativePath, reason: '本地和上游都修改了该规范' });
+      conflicts.push({
+        path: relativePath,
+        reason: '本地和上游都修改了该规范',
+      });
     }
   }
 

@@ -17,10 +17,10 @@ pnpm add @mui/material @emotion/react @emotion/styled @mui/material-nextjs
 
 ```tsx
 // providers.tsx —— 只承载浏览器安全 provider
-"use client";
-import { AppRouterCacheProvider } from "@mui/material-nextjs/v15-appRouter";
-import { ThemeProvider } from "@mui/material/styles";
-import { theme } from "@/shared/ui/theme";
+'use client';
+import { AppRouterCacheProvider } from '@mui/material-nextjs/v15-appRouter';
+import { ThemeProvider } from '@mui/material/styles';
+import { theme } from '@/shared/ui/theme';
 
 export function AppProviders({ children }) {
   return (
@@ -36,7 +36,7 @@ export function AppProviders({ children }) {
 
 ```css
 /* globals.css —— MUI 与 Tailwind 共存的 layer 顺序 */
-@import "tailwindcss";
+@import 'tailwindcss';
 @layer theme, base, mui, components, utilities;
 ```
 

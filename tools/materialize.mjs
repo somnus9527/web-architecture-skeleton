@@ -8,7 +8,7 @@
  * 复制与追加之后统一做 {{placeholder}} 替换，最后按实际文件生成索引。
  */
 
-import { readdirSync, readFileSync, rmSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
+import { cpSync, readdirSync, readFileSync, rmSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import process from 'node:process';
 
@@ -109,7 +109,11 @@ function materialize(variant) {
     const target = join(outRoot, layer, name);
     mkdirSync(dirname(target), { recursive: true });
     writeFileSync(target, substitute(body, manifest.substitutions));
-    entries.push({ layer, file: `${layer}/${name}`, title: readTitleRelative(layer, name, outRoot) });
+    entries.push({
+      layer,
+      file: `${layer}/${name}`,
+      title: readTitleRelative(layer, name, outRoot),
+    });
     written += 1;
   };
 
@@ -144,10 +148,7 @@ function materialize(variant) {
   const frontendEntries = entries.filter((entry) => entry.layer === 'frontend');
   writeFileSync(
     join(outRoot, 'README.md'),
-    renderIndex('Rules', [
-      ...entries.filter((entry) => entry.layer === 'shared'),
-      ...frontendEntries,
-    ], ''),
+    renderIndex('Rules', [...entries.filter((entry) => entry.layer === 'shared'), ...frontendEntries], ''),
   );
   writeFileSync(
     join(outRoot, 'frontend', 'README.md'),
@@ -155,9 +156,24 @@ function materialize(variant) {
       'Frontend Rules',
       frontendEntries
         .filter((entry) => entry.file !== 'frontend/README.md')
-        .map((entry) => ({ ...entry, file: entry.file.replace(/^frontend\//u, '') })),
+        .map((entry) => ({
+          ...entry,
+          file: entry.file.replace(/^frontend\//u, ''),
+        })),
     ),
   );
+
+  const skillTarget = join(ROOT, 'skeletons', variant, '.agents', 'skills');
+  rmSync(skillTarget, { recursive: true, force: true });
+  mkdirSync(skillTarget, { recursive: true });
+
+  for (const skill of manifest.skills ?? []) {
+    const source = join(ROOT, 'skills', skill);
+    if (!existsSync(source)) {
+      throw new Error(`skills/${skill} 不存在，但 manifest 声明了它。`);
+    }
+    cpSync(source, join(skillTarget, skill), { recursive: true });
+  }
 
   return { written, removed: 0 };
 }
