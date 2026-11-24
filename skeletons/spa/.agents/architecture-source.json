@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 1,
-  "architecture": "spa",
-  "repository": "git@codeup.aliyun.com:639fc284aa32314b151ee0d6/template/web-architecture-skeleton.git",
-  "branch": "feature/spa-skeleton"
+  "schemaVersion": 2,
+  "variant": "spa",
+  "repository": "git@github.com:somnus9527/web-architecture-sekleton.git",
+  "ref": "main"
 }

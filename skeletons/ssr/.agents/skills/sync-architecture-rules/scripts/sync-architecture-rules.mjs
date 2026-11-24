@@ -55,27 +55,40 @@ function validateSourceConfig(value) {
     throw new Error(`${SOURCE_CONFIG_PATH} 必须是 JSON 对象。`);
   }
 
-  const { schemaVersion, architecture, repository, branch } = value;
-  if (schemaVersion !== 1) {
+  const { schemaVersion, variant, architecture, repository, ref, branch } = value;
+  if (schemaVersion !== 1 && schemaVersion !== 2) {
     throw new Error(`${SOURCE_CONFIG_PATH} 使用了不支持的 schemaVersion。`);
   }
-  if (typeof architecture !== 'string' || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(architecture)) {
-    throw new Error(`${SOURCE_CONFIG_PATH} 的 architecture 必须是小写 kebab-case。`);
+
+  const resolvedVariant = schemaVersion === 2 ? variant : architecture;
+  const resolvedRef = schemaVersion === 2 ? ref : branch;
+  if (typeof resolvedVariant !== 'string' || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(resolvedVariant)) {
+    throw new Error(`${SOURCE_CONFIG_PATH} 的 variant 必须是小写 kebab-case。`);
   }
   if (typeof repository !== 'string' || repository.trim() === '' || repository.startsWith('-')) {
     throw new Error(`${SOURCE_CONFIG_PATH} 缺少 repository。`);
   }
   if (
-    typeof branch !== 'string' ||
-    branch.startsWith('-') ||
-    branch.includes('..') ||
-    branch.includes('@{') ||
-    !/^[A-Za-z0-9._/-]+$/u.test(branch)
+    typeof resolvedRef !== 'string' ||
+    resolvedRef.startsWith('-') ||
+    resolvedRef.includes('..') ||
+    resolvedRef.includes('@{') ||
+    !/^[A-Za-z0-9._/-]+$/u.test(resolvedRef)
   ) {
-    throw new Error(`${SOURCE_CONFIG_PATH} 的 branch 不是安全的 Git 分支名。`);
+    throw new Error(`${SOURCE_CONFIG_PATH} 的 ref 不是安全的 Git 引用。`);
   }
 
-  return { schemaVersion, architecture, repository, branch };
+  return { schemaVersion, variant: resolvedVariant, repository, ref: resolvedRef };
+}
+
+/**
+ * 计算上游规则根目录。v2 按变体目录取，v1 沿用旧的 docs/rules 布局。
+ *
+ * @param {{ schemaVersion: number, variant: string }} sourceConfig - 来源配置。
+ * @returns {string} 上游规则根目录（不带尾斜杠）。
+ */
+function resolveUpstreamRoot(sourceConfig) {
+  return sourceConfig.schemaVersion === 2 ? `skeletons/${sourceConfig.variant}/docs/rules` : 'docs/rules';
 }
 
 /**
@@ -108,9 +121,10 @@ function validateRulesLock(value, sourceConfig) {
     throw new Error(`${RULES_LOCK_PATH} 必须是 JSON 对象。`);
   }
 
-  const { schemaVersion, architecture, sourceCommit, syncedAt, files } = value;
-  if (schemaVersion !== 1 || architecture !== sourceConfig.architecture) {
-    throw new Error(`${RULES_LOCK_PATH} 与当前架构来源不匹配。`);
+  const { schemaVersion, variant, architecture, sourceCommit, syncedAt, files } = value;
+  const lockVariant = schemaVersion === 2 ? variant : architecture;
+  if ((schemaVersion !== 1 && schemaVersion !== 2) || lockVariant !== sourceConfig.variant) {
+    throw new Error(`${RULES_LOCK_PATH} 与当前变体不匹配。`);
   }
   if (typeof sourceCommit !== 'string' || !/^[0-9a-f]{40,64}$/u.test(sourceCommit)) {
     throw new Error(`${RULES_LOCK_PATH} 的 sourceCommit 无效。`);
@@ -158,10 +172,10 @@ function runGit(argumentsList) {
  * @returns {string} 最新上游 commit。
  */
 function fetchSourceCommit(sourceConfig) {
-  runGit(['fetch', '--quiet', '--no-tags', sourceConfig.repository, sourceConfig.branch]);
+  runGit(['fetch', '--quiet', '--no-tags', sourceConfig.repository, sourceConfig.ref]);
   const sourceCommit = runGit(['rev-parse', '--verify', 'FETCH_HEAD']).trim();
   if (!/^[0-9a-f]{40,64}$/u.test(sourceCommit)) {
-    throw new Error('无法解析上游分支的 commit。');
+    throw new Error('无法解析上游 ref 的 commit。');
   }
 
   return sourceCommit;
@@ -173,8 +187,9 @@ function fetchSourceCommit(sourceConfig) {
  * @param {string} sourceCommit - 上游 commit。
  * @returns {string[]} 已排序的受管规范路径。
  */
-function listUpstreamRuleFiles(sourceCommit) {
-  const treeOutput = runGit(['ls-tree', '-r', '-z', sourceCommit, '--', 'docs/rules']);
+function listUpstreamRuleFiles(sourceCommit, sourceConfig) {
+  const upstreamRoot = resolveUpstreamRoot(sourceConfig);
+  const treeOutput = runGit(['ls-tree', '-r', '-z', sourceCommit, '--', upstreamRoot]);
   const managedPaths = [];
 
   for (const record of treeOutput.split('\0')) {
@@ -188,18 +203,22 @@ function listUpstreamRuleFiles(sourceCommit) {
     }
 
     const metadata = record.slice(0, separatorIndex).split(' ');
-    const relativePath = record.slice(separatorIndex + 1);
-    if (!isManagedRulePath(relativePath)) {
+    const upstreamPath = record.slice(separatorIndex + 1);
+    const localPath =
+      sourceConfig.schemaVersion === 2 ? `docs/rules/${upstreamPath.slice(upstreamRoot.length + 1)}` : upstreamPath;
+    if (!isManagedRulePath(localPath)) {
       continue;
     }
     if (metadata[0] !== '100644' || metadata[1] !== 'blob') {
-      throw new Error(`上游规范不是普通文件，拒绝同步: ${relativePath}`);
+      throw new Error(`上游规范不是普通文件，拒绝同步: ${upstreamPath}`);
     }
 
-    managedPaths.push(relativePath);
+    managedPaths.push({ localPath, upstreamPath });
   }
 
-  return managedPaths.sort();
+  managedPaths.sort((a, b) => a.localPath.localeCompare(b.localPath));
+
+  return managedPaths;
 }
 
 /**
@@ -261,15 +280,15 @@ function readLocalFileHash(relativePath) {
  *   upstreamHashes: Record<string, string>
  * }} 同步计划。
  */
-function buildSyncPlan(rulesLock, sourceCommit) {
+function buildSyncPlan(rulesLock, sourceCommit, sourceConfig) {
   const upstreamContents = new Map();
   const upstreamHashes = {};
 
-  for (const relativePath of listUpstreamRuleFiles(sourceCommit)) {
-    const content = readUpstreamFile(sourceCommit, relativePath);
+  for (const { localPath, upstreamPath } of listUpstreamRuleFiles(sourceCommit, sourceConfig)) {
+    const content = readUpstreamFile(sourceCommit, upstreamPath);
     const contentHash = hashContent(content);
-    upstreamContents.set(relativePath, { content, contentHash });
-    upstreamHashes[relativePath] = contentHash;
+    upstreamContents.set(localPath, { content, contentHash });
+    upstreamHashes[localPath] = contentHash;
   }
 
   const actions = [];
@@ -370,8 +389,8 @@ function applySyncPlan(sourceConfig, sourceCommit, syncPlan) {
   }
 
   const updatedLock = {
-    schemaVersion: 1,
-    architecture: sourceConfig.architecture,
+    schemaVersion: 2,
+    variant: sourceConfig.variant,
     sourceCommit,
     syncedAt: new Date().toISOString(),
     files: syncPlan.upstreamHashes,
@@ -408,8 +427,8 @@ function writePlanSummary(mode, sourceConfig, rulesLock, sourceCommit, syncPlan)
   const actionLabels = { add: '新增', update: '更新', delete: '删除' };
   process.stdout.write(
     `${mode === 'apply' ? '架构规范同步完成' : '架构规范检查完成'}\n` +
-      `architecture: ${sourceConfig.architecture}\n` +
-      `source-branch: ${sourceConfig.branch}\n` +
+      `variant: ${sourceConfig.variant}\n` +
+      `source-ref: ${sourceConfig.ref}\n` +
       `previous-commit: ${formatCommit(rulesLock.sourceCommit)}\n` +
       `latest-commit: ${formatCommit(sourceCommit)}\n` +
       `file-actions: ${syncPlan.actions.length}\n` +
@@ -439,7 +458,7 @@ function syncArchitectureRules() {
   const sourceConfig = validateSourceConfig(readJsonFile(SOURCE_CONFIG_PATH));
   const rulesLock = validateRulesLock(readJsonFile(RULES_LOCK_PATH), sourceConfig);
   const sourceCommit = fetchSourceCommit(sourceConfig);
-  const syncPlan = buildSyncPlan(rulesLock, sourceCommit);
+  const syncPlan = buildSyncPlan(rulesLock, sourceCommit, sourceConfig);
 
   if (syncPlan.conflicts.length > 0) {
     writePlanSummary('check', sourceConfig, rulesLock, sourceCommit, syncPlan);
