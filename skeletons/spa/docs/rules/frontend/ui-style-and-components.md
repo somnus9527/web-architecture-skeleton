@@ -4,23 +4,51 @@
 
 - 写任何新页面、新前端组件、筛选区、指标区、列表工具栏或控制台工作台。
 - 调整字体、字号、数字展示、时间筛选、进度条、筛选输入框或筛选 select。
-- 新增、修改或复用 `src/shared/ui` 下的公共 UI 组件、样式函数和 design token。
+- 新增、修改或复用 `src/shared/components/ui` 下的公共 UI 组件、样式函数和 design token。
+
+## 骨架已内置
+
+下表是骨架自带、可直接复用且不许在业务里再抄一份的组件。派生项目删除或改名，等同于制造第二套视觉语言。
+
+| 组件         | 位置                                       | 职责                                 |
+| ------------ | ------------------------------------------ | ------------------------------------ |
+| `StatusPill` | `src/shared/components/ui/status-pill.tsx` | 短文本状态胶囊，接受 `tone` 与子节点 |
+| `Button`     | `src/shared/components/ui/button.tsx`      | 统一 pending 语义的按钮              |
+| `AsyncState` | `src/shared/components/ui/async-state.tsx` | 加载/错误/空/内容三态出口            |
+| `EmptyState` | `src/shared/components/ui/empty-state.tsx` | 空数据态布局                         |
+| `PageHeader` | `src/shared/components/ui/page-header.tsx` | 页面标题与操作区                     |
+| `StatCard`   | `src/shared/components/ui/stat-card.tsx`   | 指标卡                               |
+| `FieldRow`   | `src/shared/components/ui/field-row.tsx`   | 只读字段行                           |
+
+`src/shared/components/providers/**` 与 `router/**` 属于应用级共享组件，可以持有文案与路由逻辑；
+`components/ui/**` 下的原语则不许调用 `t()`、不许 import `@/features/**`。
+
+## 派生项目自建
+
+下列控制台视觉组件**不在骨架内**，由派生项目按自身设计系统实现，实现后请在本节登记：
+
+| 组件                                                     | 用途                    |
+| -------------------------------------------------------- | ----------------------- |
+| `ConsoleButton` / `ConsoleModal`                         | 控制台按钮与弹窗外壳    |
+| `ConsoleEmptyState`                                      | 控制台页面级空态        |
+| `DateFilterField` / `AnimatedProgress`                   | 时间筛选与进度条        |
+| `ConsoleListPendingSurface` / `useConsoleListNavigation` | 列表 pending 与列表导航 |
 
 ## 字体规范
 
 - 全站字体入口固定为 CSS 变量,不得在页面或业务组件里随意写散落字体栈。
 - 中文字体使用 `--font-zh`;英文字体使用 `--font-en`;数字、金额、用量、百分比、指标值使用 `--font-number`。
 - 默认正文和 MUI theme 使用 `--font-sans`;`--font-sans` 由 `html[lang]` 切换,中文环境指向 `--font-zh`,英文环境指向 `--font-en`。
-- MUI typography 的字体来源必须经过 `src/shared/ui/design-tokens.ts` 的 `designTokens.fontFamily`,再由 `src/shared/ui/theme.ts` 注入,不得在局部重新创建第二套 theme 字体。
+- MUI typography 的字体来源必须经过 `src/shared/theme/design-tokens.ts` 的 `designTokens.fontFamily`,再由 `src/shared/theme/theme.ts` 注入,不得在局部重新创建第二套 theme 字体。
 - `Inter` 字重引入放在 `src/app/layout.tsx`;`D-DIN-PRO` 的 `@font-face` 声明放在 `src/app/globals.css`。新增字体必须说明用途、加载权重和回退链,并更新本规范。
 - 新页面默认不直接写 `font-family`;确需强调数字字体时,只使用 `font-family: var(--font-number)` 或 MUI `sx={{ fontFamily: 'var(--font-number)' }}`。
 
 ## 公共 UI 复用规则
 
-- `src/shared/ui` 是项目公共视觉资产入口,用于沉淀 theme、design token、可复用组件和跨页面样式函数。
-- 新增同类公共 UI 时优先放入 `src/shared/ui`,保持业务无关;文案、locale、业务数据、颜色语义和埋点由调用方注入。
+- `src/shared/components/ui` 是项目公共视觉资产入口,用于沉淀 theme、design token、可复用组件和跨页面样式函数。
+- 新增同类公共 UI 时优先放入 `src/shared/components/ui`,保持业务无关;文案、locale、业务数据、颜色语义和埋点由调用方注入。
 - 业务页面开发时必须先找可复用对象:公共组件、公共样式函数、公共 style object、公共数据结构、公共格式化工具。只有确认现有对象不能表达当前场景时,才允许新增页面级实现。
-- 有公共对象时优先使用对象本身,不要复制对象里的属性再局部改一份。例如筛选输入、下拉、分页、日期、进度条、反馈提示、表格分页优先复用 `src/shared/ui` 和现有 feature shared 文件,页面只传参数或叠加极小 className。
+- 有公共对象时优先使用对象本身,不要复制对象里的属性再局部改一份。例如筛选输入、下拉、分页、日期、进度条、反馈提示、表格分页优先复用 `src/shared/components/ui` 和现有 feature shared 文件,页面只传参数或叠加极小 className。
 - 页面级特例只能做小范围补充,不得复制一份近似组件或近似样式形成第二套视觉语言。
 - 公共组件命名使用 PascalCase,文件名使用 kebab-case;类型接口继续遵守 `I` 前缀规则。
 - 公共组件必须保留可访问性入口,例如 `aria-label`、`role`、键盘触发和禁用态;不得为了视觉统一牺牲交互语义。
@@ -97,7 +125,7 @@
 
 - 字体是否只通过 `--font-sans`、`--font-zh`、`--font-en`、`--font-number` 或 `designTokens.fontFamily` 进入页面。
 - 数字、金额、指标值是否使用 `--font-number`,且没有硬编码另一套数字字体。
-- 时间筛选、进度条、筛选输入框和筛选 select 是否复用了 `src/shared/ui` 的现有组件或样式函数。
+- 时间筛选、进度条、筛选输入框和筛选 select 是否复用了 `src/shared/components/ui` 的现有组件或样式函数。
 - 输入框、下拉、textarea、筛选触发器的默认态、hover、focus、菜单样式是否一致,没有页面级复制出另一套视觉。
 - 控制台按钮语义是否正确:黑色只做入口/发起动作,提交/保存/发送走蓝紫渐变且无边框线,取消为白底 `#AEB5C5` 描边,危险操作为红色;弹窗动作按钮是否保持 `34px` 高、`14px` 圆角、`13px` 字号;所有控制台按钮是否无投影。
 - 页面工具栏、筛选区的搜索、导出/下载、刷新按钮是否统一使用 `ConsoleButton shape="icon" size="filterIcon"`,保持 `42px × 42px`、全圆角、无 Tooltip/`title`、无文字,且只通过 `aria-label` 暴露名称。

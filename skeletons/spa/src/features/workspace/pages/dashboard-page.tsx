@@ -1,6 +1,7 @@
 import { RefreshCcw } from 'lucide-react';
 
 import { MetricSection } from '@/features/workspace/components/metric-section';
+import { AsyncState } from '@/shared/components/ui/async-state';
 import { OrderQueueSection } from '@/features/workspace/components/order-queue-section';
 import { WorkflowSection } from '@/features/workspace/components/workflow-section';
 import { useWorkspaceDashboard } from '@/features/workspace/hooks/use-workspace-dashboard';
@@ -42,11 +43,19 @@ export function Component() {
         </header>
 
         {isError ? (
-          /* 错误态提供重试入口，避免请求失败时只留下空白区域。 */
-          <section className="rounded-lg border border-red-200 bg-red-50 p-5" data-testid="dashboard-error">
-            <p className="text-sm font-semibold text-red-800">{t('common.error.title')}</p>
-            <p className="mt-2 text-sm text-red-700">{workspace.errorMessage}</p>
-          </section>
+          /* 错误态走共享三态出口，文案与重试入口仍由页面提供。 */
+          <AsyncState
+            loading={false}
+            error
+            errorNode={
+              <section className="rounded-lg border border-red-200 bg-red-50 p-5" data-testid="dashboard-error">
+                <p className="text-sm font-semibold text-red-800">{t('common.error.title')}</p>
+                <p className="mt-2 text-sm text-red-700">{workspace.errorMessage}</p>
+              </section>
+            }
+          >
+            {null}
+          </AsyncState>
         ) : (
           <>
             {/* 指标和流程用于快速扫描工作台健康度。 */}

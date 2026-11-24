@@ -2,6 +2,7 @@ import { LockKeyhole } from 'lucide-react';
 
 import { useLoginForm } from '@/features/auth/hooks/use-login-form';
 import { t } from '@/locale';
+import { Button } from '@/shared/components/ui/button';
 
 /**
  * 登录页面，承载账号密码表单与登录失败反馈。
@@ -56,13 +57,9 @@ export function Component() {
             </p>
           ) : null}
 
-          <button
-            className="inline-flex h-10 items-center justify-center rounded-md bg-slate-900 text-sm font-medium text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-300"
-            type="submit"
-            disabled={form.isSubmitting}
-          >
-            {form.isSubmitting ? t('auth.login.submitting') : t('auth.login.submit')}
-          </button>
+          <Button type="submit" isPending={form.isSubmitting} pendingLabel={t('auth.login.submitting')}>
+            {t('auth.login.submit')}
+          </Button>
         </form>
 
         {/* mock 阶段没有真实账号体系，明确提示可用任意非空凭证登录。 */}

@@ -6,7 +6,7 @@ import { AppRouterCacheProvider } from '@mui/material-nextjs/v16-appRouter';
 import type { ReactNode } from 'react';
 
 import { FrontendVersionWatcher } from '@/shared/runtime/frontend-version-watcher';
-import { theme } from '@/shared/ui/theme';
+import { theme } from '@/shared/theme/theme';
 
 /**
  * 应用级 Provider 入参。

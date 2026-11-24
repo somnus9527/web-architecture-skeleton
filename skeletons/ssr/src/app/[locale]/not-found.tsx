@@ -3,8 +3,8 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { getLocale, getTranslations } from 'next-intl/server';
 
+import { LinkButton } from '@/shared/components/ui/link-button';
 import { localizedPath, toLocaleCode } from '@/shared/i18n/public-locale-routing';
-import { LinkButton } from '@/shared/ui/link-button';
 
 /**
  * 公开区 404 页（Server Component）。

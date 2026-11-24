@@ -4,8 +4,8 @@ import Typography from '@mui/material/Typography';
 import type { Metadata } from 'next';
 import { getLocale, getTranslations } from 'next-intl/server';
 
+import { LinkButton } from '@/shared/components/ui/link-button';
 import { localizedPath, toLocaleCode } from '@/shared/i18n/public-locale-routing';
-import { LinkButton } from '@/shared/ui/link-button';
 
 /**
  * 404 文档的 title：不设的话会继承根 layout 的站点名，比「页面未找到」更不像 404。

@@ -3,6 +3,7 @@ import { Search } from 'lucide-react';
 import type { IOrderQueueItem, IOrderQueueQuery, IStatusOption } from '@/features/workspace/types/workspace.types';
 import { ORDER_STATUS_TONE } from '@/features/workspace/utils/workspace.config';
 import { t } from '@/locale';
+import { EmptyState } from '@/shared/components/ui/empty-state';
 import { StatusPill } from '@/shared/components/ui/status-pill';
 
 /**
@@ -123,9 +124,9 @@ export function OrderQueueSection({
         ) : null}
 
         {isEmpty ? (
-          /* 空态明确说明当前筛选无结果。 */
-          <div className="p-6 text-center text-sm text-slate-500" data-testid="dashboard-order-empty">
-            {t('dashboard.queue.empty')}
+          /* 空态走共享组件，文案仍由本层提供。 */
+          <div data-testid="dashboard-order-empty">
+            <EmptyState title={t('dashboard.queue.empty')} />
           </div>
         ) : null}
 

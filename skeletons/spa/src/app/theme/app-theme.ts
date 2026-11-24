@@ -1,28 +1,30 @@
 import { createTheme, type Theme } from '@mui/material/styles';
 
+import { designTokens } from '@/shared/theme/design-tokens';
+
 /**
- * 应用唯一 MUI 主题。正式项目在完成项目身份绑定后替换品牌色与字体。
+ * 应用唯一 MUI 主题，取值全部来自 design-tokens。
  */
 export const appTheme: Theme = createTheme({
   shape: {
-    borderRadius: 8,
+    borderRadius: designTokens.shape.borderRadius,
   },
   palette: {
     mode: 'light',
     primary: {
-      main: '#2563eb',
+      main: designTokens.light.primary,
     },
     background: {
-      default: '#f6f7f9',
-      paper: '#ffffff',
+      default: designTokens.light.background,
+      paper: designTokens.light.paper,
     },
     text: {
-      primary: '#0f172a',
-      secondary: '#475569',
+      primary: designTokens.light.text,
+      secondary: designTokens.light.textMuted,
     },
   },
   typography: {
-    fontFamily: 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+    fontFamily: designTokens.typography.fontFamily,
     button: {
       textTransform: 'none',
     },
