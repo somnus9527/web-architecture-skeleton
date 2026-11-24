@@ -1,15 +1,9 @@
 # Project Naming
 
-本文定义新应用复制骨架后的项目身份、后端模式和仓库关系。初始化器接收一个不带 `-web` 的小写
-kebab-case 基础项目名，并要求明确 `backend-mode`：
+本文定义新应用复制骨架后的项目身份、目录关系与交付文档根。初始化器接收一个不带 `-web` 的小写
+kebab-case 基础项目名，并要求明确是否有配套后端仓库（`--backend-root` 或 `--no-backend`）。
 
-- `bff-only` + 配套后端：`--backend-root <relative-path>`
-- `bff-only` + 无配套后端：`--no-backend`
-- `next-backend`：当前 Next 应用承载受控后端实现
-
-`bff-only` 是 Web/SSR/BFF 模式，不表示没有 Next.js 服务端代码；它只表示当前仓库不拥有
-Application、Domain、数据库和中间件等后端实现。`next-backend` 在相同 Web/BFF 基线上增加本地
-后端实现和数据权威。
+变体专属的初始化参数（例如 SSR 的 `backend-mode`）见文末补段。
 
 ## Initialization Input
 
@@ -32,7 +26,7 @@ Application、Domain、数据库和中间件等后端实现。`next-backend` 在
 | `<frontend-package-name>`       | `ssr-app-web`                          |
 | `<frontend-bff-prefix>`         | `ssr-app-api`                          |
 | `<frontend-root>`               | `.`                                    |
-| `<backend-root>`                | `../backend-architecture-skeleton`     |
+| `<backend-root>`                | `N/A`（无配套后端时）                  |
 | `<delivery-doc-root>`           | `<backend-root>`                       |
 | `<backend-implementation-root>` | `.`（next-backend）或 `<backend-root>` |
 

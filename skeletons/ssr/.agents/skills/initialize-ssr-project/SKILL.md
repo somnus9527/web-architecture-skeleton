@@ -52,11 +52,6 @@ kebab-case 基础项目名，并选择后端模式。项目名不需要包含 `-
 
 6. 汇报实际项目名、后端模式、能力矩阵、派生值、修改文件和验证结果。不要把数据库、ORM、后端
    地址、正式域名、密钥或图片白名单伪造为已完成配置。
-7. `bff-only` 的配套 Java 后端使用 `backend-architecture-skeleton` 中的
-   `$initialize-backend-project` 初始化。两边必须记录互相可解析的相对路径；没有配套后端时不创建
-   空仓库。
-8. `next-backend` 初始化后，数据库保持 `enabled-unbound`；开始真实后端实现前必须按
-   `docs/rules/next-backend/README.md` 完成数据库、迁移、连接池和 PM2 能力绑定。
 
 ## 派生规则
 

@@ -50,7 +50,5 @@
 3. **技能仍在 skeleton 内**：`initialize-spa-project`、`initialize-ssr-project`、`sync-architecture-rules`
    尚未上提到仓库根的 `skills/`。
 4. **RN 骨架不存在**：本机无 RN / Expo 工程，`skeletons/rn` 需按原 RN 规则与模板新建。
-5. **初始化脚本仍引用后端规则**：`initialize-*` 脚本把 `docs/rules/backend/**` 与
-   `../backend-architecture-skeleton` 写进生成的 AGENTS/README。按 D7 这些规则已不再分发，但脚本把它们
-   当作替换锚点，直接改文档会导致初始化报错。解耦需要改脚本模板串与锚点，单独一轮处理（约 0.5 人日）。
-6. **`templates/` 尚未落地**：`templates/{frontend,rn,monorepo}` 仍为空。
+5. **`templates/rn` 与 `templates/monorepo` 尚未落地**：`templates/frontend` 已完成，另两个待做。
+6. **`skeletons/rn` 未建**：本机无 RN 工程，需按 RN 规则与模板新建。

@@ -12,8 +12,6 @@
 - [ ] 有后端时使用 `--backend-root <relative-path>`；纯前端时使用 `--no-backend`
 - [ ] `docs/rules/shared/project-naming.md` 已记录 `<backend-root>` 和 `<delivery-doc-root>`；纯前端的
       `<backend-root>` 为 `N/A`，交付文档根为当前仓库 `.`
-- [ ] 确认配套后端规则入口可从 `docs/rules/backend/README.md` 访问，后端本地门禁从已绑定后端仓库执行
-- [ ] 配套后端使用其 `.agents/skills/initialize-backend-project/SKILL.md` 初始化，并反向绑定前端路径
 
 ## 2. 确认部署边界
 

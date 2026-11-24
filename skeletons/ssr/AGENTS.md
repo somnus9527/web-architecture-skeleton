@@ -3,8 +3,7 @@
 ## Always-on
 
 - 本仓库是可复制的 SSR/BFF 项目骨架，不是正式业务应用。
-- 本仓库同时承载前后端共享规则和通用 Java 后端规则；默认配套后端模板相对路径为
-  `../backend-architecture-skeleton`。
+- 本仓库承载前端、共享与 Next 后端规则；Java 后端规则不随前端骨架分发。
 - 没有配套 Java 后端仓库的 SSR 项目仍可使用自身 BFF 或外部 API，不需要创建占位后端仓库。
 - 初始化时必须选择 `bff-only` 或 `next-backend`；初始化 CLI 未传模式时仅为兼容旧命令回退到
   `bff-only`，正式运行时仍必须显式配置 `BACKEND_MODE`。
@@ -30,8 +29,6 @@
 - 用户要求初始化复制后的 SSR 骨架并提供一个 kebab-case 项目名时，使用
   `.agents/skills/initialize-ssr-project/SKILL.md`，并确认 `--backend-mode` 及适用的后端关系参数，
   不要手工进行全仓库替换。
-- 用户要求初始化 Java 后端骨架时，进入已复制的 `backend-architecture-skeleton` 仓库并使用
-  `.agents/skills/initialize-backend-project/SKILL.md`；没有配套 Java 后端的项目不创建占位仓库。
 - 用户要求检查或同步上游架构规范时，使用
   `.agents/skills/sync-architecture-rules/SKILL.md`，不得直接合并骨架分支。
 - 修改 `src/app`、RSC、Route Handler、metadata、图片或字体前，读取 SSR routing、SEO 和 UI runtime 规范。
@@ -41,13 +38,9 @@
 - 修改 BFF、鉴权、cookie、gateway、adapter、service 或 action 前，读取 SSR BFF、security 和 error handling 规范。
 - 修改环境变量、构建、standalone、PM2 或 Nginx 前，读取 SSR runtime config、environments and build、deployment 文档。
 - 修改 release ID、版本端点或发布后自动刷新前，读取 frontend release refresh 规范。
-- 修改 `next-backend`、数据库、事务、鉴权、幂等、Redis、锁、worker、MQ、scheduler 或 PM2
-  后端发布前，读取 `docs/rules/next-backend/README.md` 及其路由的专题规范。
 - 修改 OpenAPI、Prism、DTO 或 mock 前，读取 SSR contracts and mock 规范。
 - 修改前后端协作文档、模块契约或交付流程前，读取 `docs/rules/shared/intake-and-delivery.md`、
   `docs/rules/shared/module-documentation.md` 和 `docs/rules/shared/team-collaboration.md`。
-- 生成或审查 Java 后端实现前，读取 `docs/rules/backend/README.md`，并进入已绑定的后端仓库读取其
-  `AGENTS.md`、模板复用清单和本地质量门禁说明。
 - 修改日志、request ID、CSP、CORS 或错误响应前，读取 observability 和 security 规范。
 - 新增测试、架构边界、CI 或浏览器验证前，读取 `docs/rules/frontend/ssr-verification.md`。
 - 新应用的真实名称、cookie、BFF 前缀、PM2 名和日志目录只能在完成项目变量绑定后写入代码。
@@ -67,6 +60,3 @@
 - 部署发布：[`docs/deployment/online-release.md`](./docs/deployment/online-release.md)
 - SSR 验证：[`docs/rules/frontend/ssr-verification.md`](./docs/rules/frontend/ssr-verification.md)
 - 共享规则：`docs/rules/shared/`
-- Java 后端规则：`docs/rules/backend/`
-- 配套后端模板：`../backend-architecture-skeleton`
-- Next 后端规则：`docs/rules/next-backend/`

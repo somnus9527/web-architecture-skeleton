@@ -41,19 +41,13 @@ version endpoint  = /<project-id>/version.json
 
 `spa-app`、`spa-app-web` 和 `SPA Application` 都是待替换占位值。
 
-## 配套后端模板
+## 项目绑定
 
-本仓库是共享工程规则的统一入口，并在 [`docs/rules/backend/`](./docs/rules/backend/) 提供通用 Java
-后端规则。默认配套后端模板位于相对路径
-[`../backend-architecture-skeleton`](../backend-architecture-skeleton)：
+本仓库只承载前端与共享规则；Java 后端规则不随前端骨架分发。
 
-- 本仓库维护 `docs/rules/shared/**`、`docs/rules/frontend/**` 和 `docs/rules/backend/**` 的通用规则。
-- 后端模板维护可执行 Java 骨架、Maven/ArchUnit/ErrorProne/Spotless 门禁、Git Hook 和 AI Hook 适配。
-- 派生项目必须记录实际前端根、后端根和文档根的相对路径；不得写个人机器绝对路径。
-- 即使项目只有后端，也应取得本规则模板并读取共享规则和后端规则，不能改为从某个业务服务复制。
-- 上述关联是规则文档和门禁的协作关系，不要求纯后端项目引入 React 工程、Node.js 运行时或前端部署。
-- 后端模板提供独立的 `$initialize-backend-project`。纯前端使用 `--no-backend`，纯后端使用后端
-  skill 的 `--no-frontend`；只有真实配套时才在两边绑定相对路径。
+- 前端根：当前仓库。
+- 后端根与交付文档根：按项目实际路径绑定，没有配套后端时为 `N/A` 与当前仓库。
+- 派生项目必须记录实际相对路径，不得写个人机器绝对路径。
 
 ## 同步架构规范
 
@@ -147,4 +141,3 @@ feature service。路由保持薄层，业务状态与副作用放在 feature ho
 - 发布刷新：[`docs/rules/frontend/frontend-release-refresh.md`](./docs/rules/frontend/frontend-release-refresh.md)
 - 验证清单：[`docs/rules/frontend/spa-verification.md`](./docs/rules/frontend/spa-verification.md)
 - 共享规则：[`docs/rules/shared/`](./docs/rules/shared/)
-- Java 后端规则：[`docs/rules/backend/`](./docs/rules/backend/)

@@ -461,16 +461,16 @@ function updateReadme(source, values) {
     'README.md',
   );
 
-  const backendSectionStart = updated.indexOf('## 配套后端模板');
+  const backendSectionStart = updated.indexOf('## 项目绑定');
   const rulesSyncStart = updated.indexOf('## 同步架构规范');
   if (backendSectionStart < 0 || rulesSyncStart <= backendSectionStart) {
-    throw new Error('初始化目标结构已变化: README.md 配套后端模板');
+    throw new Error('初始化目标结构已变化: README.md 项目绑定');
   }
 
   const backendBinding =
     values.backendMode === 'next-backend'
       ? `当前项目使用 \`next-backend\`，后端实现根和交付文档根均为当前仓库 \`.\`。所有 Web 业务
-仍须经过 BFF，本地后端能力遵守 \`docs/rules/next-backend/**\`。`
+仍须经过 BFF，本地后端能力按项目 ADR 与能力开关表管理。`
       : values.backendRoot === 'N/A'
         ? `当前项目使用 \`bff-only\`，没有配套、由当前项目维护的 Java 后端仓库，后端仓库为
 \`N/A\`，交付文档根为当前仓库 \`.\`。SSR 自身 BFF 和外部 API 仍按已确认契约管理。`
@@ -509,17 +509,6 @@ log directory       = ${values.logDirectory}
 \`\`\`
 
 `;
-  const javaBackendRuleReference = '- Java 后端规则：[`docs/rules/backend/`](./docs/rules/backend/)\n';
-  const nextBackendRuleReference = '- Next 后端规则：[`docs/rules/next-backend/`](./docs/rules/next-backend/)\n';
-  if (values.backendMode === 'next-backend') {
-    updated = replaceRequired(updated, javaBackendRuleReference, '', 'README.md');
-  } else {
-    updated = replaceRequired(updated, nextBackendRuleReference, '', 'README.md');
-    if (values.backendRoot === 'N/A') {
-      updated = replaceRequired(updated, javaBackendRuleReference, '', 'README.md');
-    }
-  }
-
   return `${updated.slice(0, identityStart)}${identitySection}${backendSection}${updated.slice(rulesSyncStart)}`;
 }
 
@@ -532,8 +521,7 @@ log directory       = ${values.logDirectory}
  */
 function updateAgents(source, values) {
   const skeletonState = `- 本仓库是可复制的 SSR/BFF 项目骨架，不是正式业务应用。
-- 本仓库同时承载前后端共享规则和通用 Java 后端规则；默认配套后端模板相对路径为
-  \`../backend-architecture-skeleton\`。
+- 本仓库承载前端、共享与 Next 后端规则；Java 后端规则不随前端骨架分发。
 - 没有配套 Java 后端仓库的 SSR 项目仍可使用自身 BFF 或外部 API，不需要创建占位后端仓库。
 - 初始化时必须选择 \`bff-only\` 或 \`next-backend\`；初始化 CLI 未传模式时仅为兼容旧命令回退到
   \`bff-only\`，正式运行时仍必须显式配置 \`BACKEND_MODE\`。
@@ -577,45 +565,6 @@ ${backendModeState}`;
     `- 当前项目使用 \`${values.projectSnake}_auth\` 认证 cookie 和 \`${values.logDirectory}\` PM2 日志目录。`,
     'AGENTS.md',
   );
-  updated = replaceRequired(
-    updated,
-    '- 配套后端模板：`../backend-architecture-skeleton`',
-    `- 配套 Java 后端仓库：\`${values.backendRoot}\``,
-    'AGENTS.md',
-  );
-  const nextBackendRoute = `- 修改 \`next-backend\`、数据库、事务、鉴权、幂等、Redis、锁、worker、MQ、scheduler 或 PM2
-  后端发布前，读取 \`docs/rules/next-backend/README.md\` 及其路由的专题规范。`;
-  const javaBackendInitializeRoute = `- 用户要求初始化 Java 后端骨架时，进入已复制的 \`backend-architecture-skeleton\` 仓库并使用
-  \`.agents/skills/initialize-backend-project/SKILL.md\`；没有配套 Java 后端的项目不创建占位仓库。`;
-  if (values.backendMode === 'next-backend') {
-    updated = replaceRequired(updated, `${javaBackendInitializeRoute}\n`, '', 'AGENTS.md');
-    updated = replaceRequired(updated, '- Java 后端规则：`docs/rules/backend/`\n', '', 'AGENTS.md');
-    updated = replaceRequired(updated, `- 配套 Java 后端仓库：\`${values.backendRoot}\`\n`, '', 'AGENTS.md');
-  } else {
-    updated = replaceRequired(updated, `${nextBackendRoute}\n`, '', 'AGENTS.md');
-    updated = replaceRequired(updated, '- Next 后端规则：`docs/rules/next-backend/`\n', '', 'AGENTS.md');
-    if (values.backendRoot === 'N/A') {
-      updated = replaceRequired(updated, '- Java 后端规则：`docs/rules/backend/`\n', '', 'AGENTS.md');
-      updated = replaceRequired(updated, `- 配套 Java 后端仓库：\`${values.backendRoot}\`\n`, '', 'AGENTS.md');
-    }
-  }
-  const backendReviewRoute = `- 生成或审查 Java 后端实现前，读取 \`docs/rules/backend/README.md\`，并进入已绑定的后端仓库读取其
-  \`AGENTS.md\`、模板复用清单和本地质量门禁说明。`;
-  const projectBackendReviewRoute =
-    values.backendMode === 'next-backend'
-      ? ''
-      : values.backendRoot === 'N/A'
-        ? `- 当前项目没有配套 Java 后端仓库；需要新增自有 Java 后端能力时，先使用后端模板的
-  \`$initialize-backend-project\` 建立并绑定真实仓库。`
-        : `- 生成或审查 Java 后端实现前，读取 \`docs/rules/backend/README.md\`，并进入
-  \`${values.backendRoot}\` 读取其 \`AGENTS.md\`、项目绑定和本地质量门禁说明。`;
-  updated = replaceRequired(
-    updated,
-    `${backendReviewRoute}\n`,
-    projectBackendReviewRoute ? `${projectBackendReviewRoute}\n` : '',
-    'AGENTS.md',
-  );
-
   return updated.replace(
     `- 用户要求初始化复制后的 SSR 骨架并提供一个 kebab-case 项目名时，使用
   \`.agents/skills/initialize-ssr-project/SKILL.md\`，并确认 \`--backend-mode\` 及适用的后端关系参数，

@@ -20,7 +20,6 @@ skill 会自动派生 package、PM2、日志、cookie、BFF 和版本刷新标�
 - [ ] `bff-only` 有配套 Java 后端时使用 `--backend-root <relative-path>`；没有配套仓库时使用 `--no-backend`
 - [ ] `next-backend` 拒绝 `--backend-root` 与 `--no-backend`，后端实现根为当前仓库
 - [ ] `docs/rules/shared/project-naming.md` 已记录 `<backend-root>` 和 `<delivery-doc-root>`
-- [ ] 配套后端使用其 `.agents/skills/initialize-backend-project/SKILL.md` 初始化并反向绑定前端路径
 - [ ] `.agents/ssr-project.md`、基线 ADR 与运行环境中的 `BACKEND_MODE` 三者一致
 
 ## 2. 检查默认策略

@@ -18,3 +18,15 @@
 
 PM2 应用名默认由 `PROJECT_ID` 派生，可用 `PM2_APP_NAME` 覆盖。日志目录默认跟随最终 PM2 应用名，
 可用 `PM2_LOG_DIRECTORY` 覆盖。覆盖任一值时必须同步部署交接记录。
+
+## 初始化模式（SSR 专属）
+
+初始化器要求明确 `backend-mode`：
+
+- `bff-only` + 配套后端：`--backend-root <relative-path>`
+- `bff-only` + 无配套后端：`--no-backend`
+- `next-backend`：当前 Next 应用承载受控后端实现
+
+`bff-only` 是 Web/SSR/BFF 模式，不表示没有 Next.js 服务端代码；它只表示当前仓库不拥有
+Application、Domain、数据库和中间件等后端实现。`next-backend` 在相同 Web/BFF 基线上增加本地
+后端实现和数据权威。

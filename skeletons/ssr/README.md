@@ -47,19 +47,13 @@ log directory       = /data/logs/<project-id>-web
 
 `ssr-app`、`ssr-app-web`、`ssr_app_auth` 和 `/ssr-app-api` 只是本骨架的占位值，正式应用不得直接沿用。
 
-## 配套后端模板
+## 项目绑定
 
-本仓库是共享工程规则的统一入口，并在 [`docs/rules/backend/`](./docs/rules/backend/) 提供通用 Java
-后端规则。默认配套后端模板位于相对路径
-[`../backend-architecture-skeleton`](../backend-architecture-skeleton)：
+本仓库承载前端、共享与 Next 后端规则；Java 后端规则不随前端骨架分发。
 
-- 本仓库维护 `docs/rules/shared/**`、`docs/rules/frontend/**` 和 `docs/rules/backend/**` 的通用规则。
-- 后端模板维护可执行 Java 骨架、Maven/ArchUnit/ErrorProne/Spotless 门禁、Git Hook 和 AI Hook 适配。
-- 派生项目必须记录实际前端根、后端根和文档根的相对路径；不得写个人机器绝对路径。
-- 没有配套 Java 后端仓库时使用 `--no-backend`，不创建空仓库；SSR 自身 BFF 和外部 API 仍按确认的
-  契约管理。
-- 有配套后端时，后端使用 `$initialize-backend-project --frontend-root ...` 反向绑定当前仓库。
-- 上述关联是规则文档和门禁的协作关系，不要求纯后端项目引入 Next.js、Node.js 运行时或前端部署。
+- 前端根：当前仓库。
+- 后端根与交付文档根：按项目实际路径绑定，没有配套 Java 后端时为 `N/A` 与当前仓库。
+- 仓库关系只记录相对路径，不得写个人绝对路径。
 
 ## 同步架构规范
 
@@ -174,7 +168,5 @@ reload 获取同一版本的 HTML、RSC、JS 和 CSS。development 模式不挂�
 - SSR 初始化：[`docs/initialization/ssr-app-initialization.md`](./docs/initialization/ssr-app-initialization.md)
 - SSR 规则：[`docs/rules/frontend/ssr-frontend-architecture.md`](./docs/rules/frontend/ssr-frontend-architecture.md)
 - 共享规则：[`docs/rules/shared/`](./docs/rules/shared/)
-- Java 后端规则：[`docs/rules/backend/`](./docs/rules/backend/)
-- Next 后端规则：[`docs/rules/next-backend/`](./docs/rules/next-backend/)
 - 部署发布：[`docs/deployment/online-release.md`](./docs/deployment/online-release.md)
 - 基线 ADR：[`docs/decisions/adr-000-ssr-project-baseline.md`](./docs/decisions/adr-000-ssr-project-baseline.md)

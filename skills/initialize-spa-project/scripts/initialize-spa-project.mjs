@@ -242,27 +242,23 @@ function updateReadme(source, values) {
   );
   updated = replaceRequired(updated, '骨架默认提供：', '项目基线提供：', 'README.md');
 
-  const backendSectionStart = updated.indexOf('## 配套后端模板');
   const rulesSyncStart = updated.indexOf('## 同步架构规范');
-  if (backendSectionStart < 0 || rulesSyncStart <= backendSectionStart) {
-    throw new Error('初始化目标结构已变化: README.md 配套后端模板');
-  }
-
-  const backendBinding =
-    values.backendRoot === 'N/A'
-      ? `当前项目是纯前端项目，配套后端仓库为 \`N/A\`，交付文档根为当前仓库 \`.\`。`
-      : `配套后端仓库和默认交付文档根为 \`${values.backendRoot}\`。后端仓库必须使用自己的
-\`$initialize-backend-project\` 完成初始化，并反向绑定当前前端路径。`;
-  const backendSection = `## 后端与规则关系
-
-通用共享、前端和 Java 后端规则保留在本仓库 \`docs/rules/**\`。${backendBinding}
-所有仓库关系只记录相对路径，不得沿用模板仓库名或写个人绝对路径。
-
-`;
   const identityStart = updated.indexOf('## 复制后的第一步');
-  if (identityStart < 0 || rulesSyncStart <= identityStart) {
+  if (rulesSyncStart < 0 || identityStart < 0 || rulesSyncStart <= identityStart) {
     throw new Error('初始化目标结构已变化: README.md');
   }
+
+  const bindingSection = `## 项目绑定
+
+- 前端根：当前仓库。
+- 后端根与交付文档根：${
+    values.backendRoot === 'N/A'
+      ? '无配套后端，后端根为 `N/A`，交付文档根为当前仓库 `。'
+      : `\`${values.backendRoot}\`。`
+  }
+- 仓库关系只记录相对路径，不得写个人绝对路径。
+
+`;
 
   const identitySection = `## 项目身份
 
@@ -276,7 +272,7 @@ static root      = ${values.staticRoot}
 
 `;
 
-  return `${updated.slice(0, identityStart)}${identitySection}${backendSection}${updated.slice(rulesSyncStart)}`;
+  return `${updated.slice(0, identityStart)}${identitySection}${bindingSection}${updated.slice(rulesSyncStart)}`;
 }
 
 /**
@@ -288,10 +284,7 @@ static root      = ${values.staticRoot}
  */
 function updateAgents(source, values) {
   const skeletonState = `- 本仓库是可复制的 React SPA 项目骨架，不是正式业务应用。
-- 本仓库同时承载前后端共享规则和通用 Java 后端规则；默认配套后端模板相对路径为
-  \`../backend-architecture-skeleton\`。
-- 纯后端项目读取本仓库的 shared/backend 规则，不代表需要引入本仓库的 React 代码、Node.js 运行时
-  或前端部署产物。
+- 本仓库承载前端与共享规则；Java 后端规则不随前端骨架分发。
 - 新应用复制后，必须先完成项目变量绑定和 SPA 初始化清单。`;
   const projectState = `- 当前项目是基于 React SPA 骨架初始化的正式应用。
 - 项目 ID 为 \`${values.projectId}\`，package 与应用标题为 \`${values.appName}\`。
@@ -304,21 +297,6 @@ function updateAgents(source, values) {
     `- 当前项目使用 \`${values.basePath}\` 作为 Vite base、Router basename 和 Nginx location。`,
     'AGENTS.md',
   );
-  updated = replaceRequired(
-    updated,
-    '- 配套后端模板：`../backend-architecture-skeleton`',
-    `- 配套后端仓库：\`${values.backendRoot}\``,
-    'AGENTS.md',
-  );
-  const backendReviewRoute = `- 生成或审查 Java 后端实现前，读取 \`docs/rules/backend/README.md\`，并进入已绑定的后端仓库读取其
-  \`AGENTS.md\`、模板复用清单和本地质量门禁说明。`;
-  const projectBackendReviewRoute =
-    values.backendRoot === 'N/A'
-      ? `- 当前项目没有后端仓库；需要新增 Java 后端能力时，先使用后端模板的
-  \`$initialize-backend-project\` 建立并绑定真实仓库。`
-      : `- 生成或审查 Java 后端实现前，读取 \`docs/rules/backend/README.md\`，并进入
-  \`${values.backendRoot}\` 读取其 \`AGENTS.md\`、项目绑定和本地质量门禁说明。`;
-  updated = replaceRequired(updated, backendReviewRoute, projectBackendReviewRoute, 'AGENTS.md');
 
   return updated.replace(
     `- 用户要求初始化复制后的 SPA 骨架并提供一个 kebab-case 项目名时，使用
@@ -336,12 +314,6 @@ function updateAgents(source, values) {
  * @returns {string} 项目绑定 Markdown。
  */
 function buildProjectBinding(values) {
-  const backendRouting =
-    values.backendRoot === 'N/A'
-      ? `- 当前项目没有后端仓库；需要新增 Java 后端能力时，先使用后端模板的
-  \`$initialize-backend-project\` 建立并绑定真实仓库。`
-      : `- 生成或审查 Java 后端实现前，读取 \`docs/rules/backend/README.md\` 和
-  \`${values.backendRoot}/AGENTS.md\`。`;
   return `# SPA Project
 
 ## Always-on
@@ -362,7 +334,6 @@ function buildProjectBinding(values) {
   \`docs/rules/frontend/mock-and-integration.md\`。
 - 修改环境、base path 和发布能力前，读取 \`docs/rules/frontend/environments-and-build.md\`。
 - 修改跨端契约或交付文档前，读取 \`docs/rules/shared/\`。
-${backendRouting}
 
 ## Rule references
 
@@ -372,7 +343,6 @@ ${backendRouting}
 - Environment and build: \`docs/rules/frontend/environments-and-build.md\`
 - Release: \`docs/deployment/online-release.md\`
 - Shared rules: \`docs/rules/shared/\`
-- Java backend rules: \`docs/rules/backend/\`
 `;
 }
 

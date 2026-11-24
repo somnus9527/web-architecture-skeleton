@@ -52,8 +52,6 @@ kebab-case 基础项目名，并明确项目是否有配套后端。项目名不
 
 6. 汇报项目名、派生值、修改文件和验证结果。不要把 API upstream、正式域名、Nginx 主机名
    或密钥伪造为已配置。
-7. 配套后端使用 `backend-architecture-skeleton` 中的 `$initialize-backend-project` 初始化。两边必须
-   记录互相可解析的相对路径；纯前端项目不需要创建空后端仓库。
 
 ## 派生规则
 
