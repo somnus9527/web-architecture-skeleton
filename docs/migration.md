@@ -27,6 +27,18 @@
 `ssr` 首次安装时 Next.js 的 postinstall 会长时间无输出，改用 `--ignore-scripts` 后 84 秒完成；
 静态门禁不依赖 postinstall 产物，因此不影响上述结论。真实构建仍需一次带脚本的完整安装。
 
+## 治理批次完成情况
+
+| 批次 | 内容                                                                                           | 状态 |
+| ---- | ---------------------------------------------------------------------------------------------- | ---- |
+| 1    | 卫生门禁：`check:hygiene`、`check:gates`、`env:init`、pre-commit 与 CI                         | 完成 |
+| 2    | 共享 hook：`useRequest`、`useAsyncAction`、`useDebouncedValue`、`useDisclosure`                | 完成 |
+| 3    | 共享 UI：7 个原语 + design-tokens，SSR 的 `shared/ui` 已并入 `components/ui` 与 `shared/theme` | 完成 |
+| 4    | 架构测试：文件分级、shared 独立、feature 隔离、hook 重复、清单一致性、例外清单                 | 完成 |
+| 5    | 文档收口：ADR-001、索引必读分组、共享文档物化                                                  | 完成 |
+
+最终验收：`spa` 变体在全新安装下通过完整 `pnpm quality:check`（含 `build:prod`）。
+
 ## 已知遗留
 
 1. **规则尚未抽取**：`skeletons/*/docs/rules/` 仍是各自副本，两变体间的 44 处分叉尚未合并。抽取后
@@ -38,3 +50,7 @@
 3. **技能仍在 skeleton 内**：`initialize-spa-project`、`initialize-ssr-project`、`sync-architecture-rules`
    尚未上提到仓库根的 `skills/`。
 4. **RN 骨架不存在**：本机无 RN / Expo 工程，`skeletons/rn` 需按原 RN 规则与模板新建。
+5. **初始化脚本仍引用后端规则**：`initialize-*` 脚本把 `docs/rules/backend/**` 与
+   `../backend-architecture-skeleton` 写进生成的 AGENTS/README。按 D7 这些规则已不再分发，但脚本把它们
+   当作替换锚点，直接改文档会导致初始化报错。解耦需要改脚本模板串与锚点，单独一轮处理（约 0.5 人日）。
+6. **`templates/` 尚未落地**：`templates/{frontend,rn,monorepo}` 仍为空。

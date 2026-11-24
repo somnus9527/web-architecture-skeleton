@@ -77,16 +77,30 @@ function substitute(text, substitutions) {
  * @param {Array<{ file: string, title: string }>} entries - 索引条目。
  * @returns {string} 索引内容。
  */
-function renderIndex(heading, entries, prefix = '') {
-  const rows = entries
-    .sort((a, b) => a.file.localeCompare(b.file))
-    .map((entry) => {
-      const name = entry.file.slice(entry.file.lastIndexOf('/') + 1);
-      return `| [${name}](./${prefix}${entry.file}) | ${entry.title} |`;
-    })
-    .join('\n');
+function renderIndex(heading, entries, prefix = '', options = {}) {
+  const { intro = '', mustRead } = options;
+  const toRow = (entry) => {
+    const name = entry.file.slice(entry.file.lastIndexOf('/') + 1);
+    return `| [${name}](./${prefix}${entry.file}) | ${entry.title} |`;
+  };
+  const sorted = [...entries].sort((a, b) => a.file.localeCompare(b.file));
+  const mustReadSet = new Set(mustRead ?? []);
+  const primary = sorted.filter((entry) => mustReadSet.has(entry.file));
+  const rest = sorted.filter((entry) => !mustReadSet.has(entry.file));
+  const table = (rows) => `| 文件 | 主题 |\n| --- | --- |\n${rows.map(toRow).join('\n')}`;
+  const sections = [];
 
-  return `# ${heading}\n\n| 文件 | 主题 |\n| --- | --- |\n${rows}\n`;
+  if (intro) {
+    sections.push(intro);
+  }
+  if (primary.length > 0) {
+    sections.push(`## 必读\n\n${table(primary)}`);
+  }
+  if (rest.length > 0) {
+    sections.push(`## 其余规则\n\n${table(rest)}`);
+  }
+
+  return `# ${heading}\n\n${sections.join('\n\n')}\n`;
 }
 
 /**
@@ -146,9 +160,15 @@ function materialize(variant) {
   }
 
   const frontendEntries = entries.filter((entry) => entry.layer === 'frontend');
+  const mustRead = manifest.mustRead ?? [];
+  const intro = '本目录由 `rules/` 物化生成，不要手改：先读必读，再按任务检索。';
+
   writeFileSync(
     join(outRoot, 'README.md'),
-    renderIndex('Rules', [...entries.filter((entry) => entry.layer === 'shared'), ...frontendEntries], ''),
+    renderIndex('Rules', [...entries.filter((entry) => entry.layer === 'shared'), ...frontendEntries], '', {
+      intro,
+      mustRead,
+    }),
   );
   writeFileSync(
     join(outRoot, 'frontend', 'README.md'),
@@ -160,6 +180,13 @@ function materialize(variant) {
           ...entry,
           file: entry.file.replace(/^frontend\//u, ''),
         })),
+      '',
+      {
+        intro: '前端规则分两档：必读用于任何前端改动，其余按任务检索。',
+        mustRead: mustRead
+          .filter((path) => path.startsWith('frontend/'))
+          .map((path) => path.replace(/^frontend\//u, '')),
+      },
     ),
   );
 
@@ -168,6 +195,11 @@ function materialize(variant) {
   mkdirSync(hookTarget, { recursive: true });
   for (const name of readdirSync(sharedHooks)) {
     cpSync(join(sharedHooks, name), join(hookTarget, name));
+  }
+
+  const sharedDocs = join(ROOT, 'shared-assets', 'docs');
+  if (existsSync(sharedDocs)) {
+    cpSync(sharedDocs, join(ROOT, 'skeletons', variant, 'docs'), { recursive: true });
   }
 
   const sharedComponents = join(ROOT, 'shared-assets', 'src', 'shared', 'components');

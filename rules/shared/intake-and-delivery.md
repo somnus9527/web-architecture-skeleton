@@ -10,9 +10,9 @@
 - `<backend-root>`:后端仓库根目录;无后端时标 `N/A`。
 - `<delivery-doc-root>`:产品、领域、API、use case 和 task 文档事实源;配套项目默认使用后端仓库。
 
-模板默认是 `<frontend-root>=.`、`<backend-root>=../backend-architecture-skeleton`、
-`<delivery-doc-root>=<backend-root>`。派生后仓库名或目录关系变化时必须更新为实际相对路径,不得写
-个人机器绝对路径。
+`<frontend-root>` 默认是 `.`；`<backend-root>` 与 `<delivery-doc-root>` 按项目实际绑定，没有配套后端时
+`<backend-root>=N/A`、`<delivery-doc-root>=.`。派生后仓库名或目录关系变化时必须更新为实际相对路径，
+不得写个人机器绝对路径。
 
 ## Business Brief Shape
 

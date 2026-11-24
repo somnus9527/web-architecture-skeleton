@@ -6,5 +6,16 @@
     "mockDir": "mock"
   },
   "skills": ["initialize-ssr-project", "sync-architecture-rules"],
-  "gates": ["hygiene", "arch-tests", "quality-check", "ci"]
+  "gates": ["hygiene", "arch-tests", "quality-check", "ci"],
+  "mustRead": [
+    "frontend/ssr-project-baseline.md",
+    "frontend/ssr-frontend-architecture.md",
+    "frontend/ssr-routing-and-rsc.md",
+    "frontend/ssr-bff-boundaries.md",
+    "frontend/api-contracts.md",
+    "frontend/environments-and-build.md",
+    "frontend/ssr-security-baseline.md",
+    "frontend/quality-tooling.md",
+    "frontend/shared-capabilities.md"
+  ]
 }

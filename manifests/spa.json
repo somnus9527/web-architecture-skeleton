@@ -6,5 +6,15 @@
     "mockDir": "mocks"
   },
   "skills": ["initialize-spa-project", "sync-architecture-rules"],
-  "gates": ["hygiene", "arch-tests", "quality-check", "ci"]
+  "gates": ["hygiene", "arch-tests", "quality-check", "ci"],
+  "mustRead": [
+    "frontend/spa-project-baseline.md",
+    "frontend/frontend-architecture.md",
+    "frontend/frontend-react.md",
+    "frontend/api-contracts.md",
+    "frontend/environments-and-build.md",
+    "frontend/frontend-security.md",
+    "frontend/quality-tooling.md",
+    "frontend/shared-capabilities.md"
+  ]
 }
