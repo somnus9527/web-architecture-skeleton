@@ -78,7 +78,7 @@ Use each folder by ownership, not by file extension alone:
 
 - Each business domain may have `features/<module>/hooks/` when there is real domain logic to share.
 - Domain request hooks such as `useItems` or `useSampleDashboard` must call APIClient through the domain service layer and expose at least `data`, `loading`, and `error`; add `refetch`/`mutate`/`reset` only when the flow needs them.
-- Put cross-domain primitive hooks (`useHttp`, `useDebounce`) in `src/shared/hooks/`; put business orchestration hooks in `src/features/<module>/hooks/`. Single responsibility, compose primitives — no mixed hooks like `useHttpDebounce`.
+- Cross-domain primitive hooks live in `src/shared/hooks/` and are catalogued in [`./shared-capabilities.md`](./shared-capabilities.md) (`useRequest`, `useAsyncAction`, `useDebouncedValue`, `useDisclosure`); business orchestration hooks stay in `src/features/<module>/hooks/`. Compose primitives — do not write a per-module request hook or a mixed hook like `useHttpDebounce`.
 
 ## DTOs And Types
 

@@ -17,6 +17,7 @@
 | [quality-tooling.md](./frontend/quality-tooling.md) | Quality Tooling |
 | [responsive-and-breakpoints.md](./frontend/responsive-and-breakpoints.md) | Responsive And Breakpoints |
 | [seo.md](./frontend/seo.md) | SEO |
+| [shared-capabilities.md](./frontend/shared-capabilities.md) | Shared Capabilities |
 | [ssr-bff-boundaries.md](./frontend/ssr-bff-boundaries.md) | SSR BFF Boundaries |
 | [ssr-cache-and-performance.md](./frontend/ssr-cache-and-performance.md) | SSR Cache And Performance |
 | [ssr-contracts-and-mock.md](./frontend/ssr-contracts-and-mock.md) | SSR Contracts And Mock |

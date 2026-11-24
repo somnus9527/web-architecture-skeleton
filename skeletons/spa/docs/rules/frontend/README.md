@@ -15,6 +15,7 @@
 | [monorepo-workspace.md](./monorepo-workspace.md) | Monorepo Workspace Rules |
 | [quality-tooling.md](./quality-tooling.md) | Quality Tooling |
 | [responsive-and-breakpoints.md](./responsive-and-breakpoints.md) | Responsive And Breakpoints |
+| [shared-capabilities.md](./shared-capabilities.md) | Shared Capabilities |
 | [spa-project-baseline.md](./spa-project-baseline.md) | SPA 项目基线 |
 | [spa-verification.md](./spa-verification.md) | SPA 验证清单 |
 | [store.md](./store.md) | Store Architecture |

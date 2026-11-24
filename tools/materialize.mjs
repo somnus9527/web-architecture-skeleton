@@ -163,6 +163,20 @@ function materialize(variant) {
     ),
   );
 
+  const sharedHooks = join(ROOT, 'shared-assets', 'src', 'shared', 'hooks');
+  const hookTarget = join(ROOT, 'skeletons', variant, 'src', 'shared', 'hooks');
+  mkdirSync(hookTarget, { recursive: true });
+  for (const name of readdirSync(sharedHooks)) {
+    cpSync(join(sharedHooks, name), join(hookTarget, name));
+  }
+
+  const sharedHookTests = join(ROOT, 'shared-assets', 'src', 'test', 'shared');
+  const hookTestTarget = join(ROOT, 'skeletons', variant, 'src', 'test', 'shared');
+  mkdirSync(hookTestTarget, { recursive: true });
+  for (const name of readdirSync(sharedHookTests)) {
+    cpSync(join(sharedHookTests, name), join(hookTestTarget, name));
+  }
+
   const projectScripts = join(ROOT, 'tools', 'project', 'scripts');
   const scriptTarget = join(ROOT, 'skeletons', variant, 'scripts');
   mkdirSync(scriptTarget, { recursive: true });
