@@ -26,7 +26,11 @@
     "mock:check": "node scripts/check-openapi-mock.mjs",
     "test": "vitest run",
     "check": "pnpm typecheck && pnpm lint && pnpm format:check",
-    "prepare": "husky"
+    "prepare": "husky",
+    "env:init": "node scripts/init-local-env.mjs",
+    "check:hygiene": "node scripts/check-repo-hygiene.mjs --tracked",
+    "check:gates": "node scripts/verify-gates.mjs",
+    "quality:check": "pnpm check:gates && pnpm typecheck && pnpm lint && pnpm check:hygiene && pnpm mock:check && pnpm test && pnpm format:check && pnpm build:prod"
   },
   "lint-staged": {
     "*.{ts,tsx,js,mjs,cjs}": [

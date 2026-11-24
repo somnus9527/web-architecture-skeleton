@@ -60,3 +60,16 @@
 - SSR:standalone 启动命令、需拷贝的产物清单、`NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` 注入方式。
 - 发版刷新：release id 的生成或注入方式、构建日志定位方式、多实例一致性边界、版本端点、缓存头、
   检测周期、二次确认、发布后公网验证与回滚边界。
+
+## 本地 env 生命周期
+
+`.gitignore` 使用 `.env*` 通配加显式白名单：`!.env.example`、`!.env.mock`、`!.env.*.example`。
+真实取值永不入库；新克隆通过 `pnpm env:init <env>` 从对应模板生成。
+
+已被跟踪的 env 文件，`gitignore` 不再生效，必须显式移除：
+
+```bash
+git rm --cached .env.dev .env.prod .env.test
+```
+
+删除跟踪不等于删除历史：文件曾被推送就必须按密钥处理，先轮换再评估是否清理历史。

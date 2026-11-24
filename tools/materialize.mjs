@@ -163,6 +163,14 @@ function materialize(variant) {
     ),
   );
 
+  const projectScripts = join(ROOT, 'tools', 'project', 'scripts');
+  const scriptTarget = join(ROOT, 'skeletons', variant, 'scripts');
+  mkdirSync(scriptTarget, { recursive: true });
+  for (const name of readdirSync(projectScripts)) {
+    cpSync(join(projectScripts, name), join(scriptTarget, name));
+  }
+  cpSync(join(ROOT, 'tools', 'project', 'repo-hygiene.json'), join(ROOT, 'skeletons', variant, '.repo-hygiene.json'));
+
   const skillTarget = join(ROOT, 'skeletons', variant, '.agents', 'skills');
   rmSync(skillTarget, { recursive: true, force: true });
   mkdirSync(skillTarget, { recursive: true });

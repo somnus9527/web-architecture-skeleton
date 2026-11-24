@@ -39,6 +39,12 @@ jobs:
           curl -sSL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" | tar -xz gitleaks
           ./gitleaks detect --redact --exit-code 1
 
+      - name: Repo hygiene
+        run: pnpm check:hygiene
+
+      - name: Gate self-check
+        run: pnpm check:gates
+
       - name: Typecheck
         run: pnpm typecheck
 

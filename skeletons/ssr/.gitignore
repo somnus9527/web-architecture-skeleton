@@ -19,9 +19,12 @@ next-env.d.ts
 .dockerignore
 
 # 环境配置：仅 .env.example 与 .env.mock 入库；真实环境值不入库（部署期注入）。
+# 环境配置：只提交模板；真实取值不入库
 .env
-.env.local
-.env.dev
-.env.test
-.env.prod
-.env.*.local
+.env.*
+!.env.example
+!.env.mock
+!.env.*.example
+output/
+.pnpm-store/
+*.log

@@ -7,10 +7,13 @@ coverage
 .vite
 *.tsbuildinfo
 .DS_Store
+# 环境配置：只提交模板；真实取值不入库
 .env
-.env.dev
-.env.test
-.env.prod
-.env.local
-.env.*.local
+.env.*
+!.env.example
+!.env.mock
+!.env.*.example
 .idea/
+output/
+.pnpm-store/
+*.log

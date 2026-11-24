@@ -23,3 +23,19 @@
 ## Existing Projects
 
 已有项目已有工具链时优先兼容。若 Husky、Commitlint、EditorConfig 或架构边界缺失,按改动范围决定直接补齐还是请用户批准更大范围的工具链迁移。
+
+## 仓库门禁
+
+骨架内置三条可执行门禁，派生项目不得删除：
+
+| 命令                              | 作用                                                                       | 失败条件   |
+| --------------------------------- | -------------------------------------------------------------------------- | ---------- |
+| `pnpm check:gates`                | 门禁自检：脚本、CI、husky、ESLint、架构测试、规则目录是否齐全              | 缺任一项   |
+| `pnpm check:hygiene`              | 仓库卫生：env 文件、变量白名单、私钥、二进制、体积、包管理器混用、疑似密钥 | 命中任一项 |
+| `pnpm env:init <dev\|test\|prod>` | 从 `.env.<env>.example` 生成本地 env                                       | 模板缺失   |
+
+`quality:check` 已串联 `check:gates` 与 `check:hygiene`。本地提交前由 pre-commit 运行
+`check-repo-hygiene.mjs --staged`，CI 运行 `--tracked`；两者都必须能失败，否则门禁形同虚设。
+
+卫生阈值与白名单集中在项目根的 `.repo-hygiene.json`，按实际素材规模调整；`.env.example` 是公开配置契约，
+新增变量先改契约再改本地文件。

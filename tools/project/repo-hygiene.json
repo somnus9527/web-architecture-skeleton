@@ -1,0 +1,26 @@
+{
+  "maxFileBytes": 2097152,
+  "maxAssetBytes": 307200,
+  "maxTextBytes": 307200,
+  "envFileAllowList": [".env.example", ".env.mock", ".env.dev.example", ".env.test.example", ".env.prod.example"],
+  "envVarAllowPatterns": [
+    "^APP_ENV$",
+    "^VITE_[A-Z0-9_]+$",
+    "^NEXT_PUBLIC_[A-Z0-9_]+$",
+    "^MOCK_[A-Z0-9_]+$",
+    "^DEV_SERVER_PORT$",
+    "^APP_ORIGIN$",
+    "^PORT$",
+    "^BACKEND_MODE$",
+    "^BACKEND_API_BASE_URL$",
+    "^PRISM_MOCK_BASE_URL$",
+    "^LOG_LEVEL$",
+    "^SESSION_COOKIE_[A-Z0-9_]+$",
+    "^CSRF_ENABLED$",
+    "^PROJECT_ID$",
+    "^NEXT_SERVER_ACTIONS_ENCRYPTION_KEY$"
+  ],
+  "binaryAllowList": ["public/", "docs/"],
+  "lockFile": "pnpm-lock.yaml",
+  "conflictingLockFile": "package-lock.json"
+}
