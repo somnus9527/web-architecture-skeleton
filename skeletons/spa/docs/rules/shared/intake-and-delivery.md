@@ -24,15 +24,15 @@
 
 需求进入开发前,必须按 7 条线拆清楚,每条都有产出或明确"不适用":
 
-| Lane                   | Output                                                                                                                   |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| Product(业务真相,只读) | `<delivery-doc-root>/docs/product/<module>/<module>-business.md` + `story/<name>-story.md`                               |
-| Domain(+ catalogs)     | `<delivery-doc-root>/docs/domain/<module>/<module>-domain.md`                                                            |
+| Lane                   | Output                                                                                                                         |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Product(业务真相,只读) | `<delivery-doc-root>/docs/product/<module>/<module>-business.md` + `story/<name>-story.md`                                     |
+| Domain(+ catalogs)     | `<delivery-doc-root>/docs/domain/<module>/<module>-domain.md`                                                                  |
 | API(story 级)          | `<delivery-doc-root>/docs/api/<module>/story/<name>-api.md` + `<frontend-root>/mocks/openapi.yaml`(如使用 OpenAPI/Prism) |
-| Usecase(跨模块时)      | `<delivery-doc-root>/docs/usecases/<module>.md`                                                                          |
-| Task                   | `<delivery-doc-root>/docs/tasks/{backend,frontend}/<module>/<name>-task.md` + `acceptance.md`                            |
-| SQL                    | `<backend-root>/sql/ddl/<module>.sql`(使用关系型数据库且有 DDL 变更时)                                                   |
-| Verification           | 目标仓库内的测试/门禁命令、验收点、风险清单和执行证据                                                                    |
+| Usecase(跨模块时)      | `<delivery-doc-root>/docs/usecases/<module>.md`                                                                                |
+| Task                   | `<delivery-doc-root>/docs/tasks/{backend,frontend}/<module>/<name>-task.md` + `acceptance.md`                                  |
+| SQL                    | `<backend-root>/sql/ddl/<module>.sql`(使用关系型数据库且有 DDL 变更时)                                                         |
+| Verification           | 目标仓库内的测试/门禁命令、验收点、风险清单和执行证据                                                                          |
 
 ## Delivery Surfaces(每个模块内的交付面)
 

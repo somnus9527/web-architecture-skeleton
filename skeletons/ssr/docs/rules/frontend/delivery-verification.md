@@ -24,10 +24,8 @@
 - 所有请求走 app-local `src/shared/tools/APIClient`、明确提升的 `packages/tools` 请求工厂,或已批准的请求封装;domain fetch hook 至少暴露 `data`/`loading`/`error`。
 - **mock / Prism / OpenAPI / `{ data, code, codeMsg }` 包**(Prism 读 `mock/openapi.yaml`、example 用 `$ref` 拆分、每个运行时 service 方法映射 OpenAPI path+operationId、mock 返回字段与 OpenAPI/API 文档一致、缺包裹时 APIClient 报 contract error、`Planned`/未实现端点显式标注、schema 足以捕获 DTO 漂移)按 [`./mock-and-integration.md`](./mock-and-integration.md) 与 [`./api-contracts.md`](./api-contracts.md) 验收,本文不重复。
 - **i18n / 硬编码文案**(`zh-CN` 与 `en-US` 存在且 key order 对齐、用户可见文案全部 locale-backed、fallback `codeMsg`/校验/Snackbar/空/错/aria/placeholder/mock 展示文案均走 locale,品牌/协议名/日志/注释/测试除外)按 [`./i18n.md`](./i18n.md) 验收,本文不重复。
-- **环境、base URL 与认证传输**:`.env.mock/.dev/.test/.prod` 契约明确;mock=>real base URL、浏览器
-  session 和 BFF-to-backend 认证路径在真实联调交付时已记录或实现。SSR/BFF 使用 server-side gateway
-  env，细节见 [`./ssr-contracts-and-mock.md`](./ssr-contracts-and-mock.md) 与
-  [`./ssr-runtime-config.md`](./ssr-runtime-config.md)。
+- **环境、base URL 与认证传输**:`.env.mock/.dev/.test/.prod` 契约明确;mock=>real base URL 与确认的
+  token 或 cookie/session 路径在真实联调交付时已记录或实现。变体专属的认证链路见补段。
 - PM 专属 check 与生产构建在脚本存在时通过(如 `pnpm check`、`pnpm build:prod`);依赖/typecheck/lint/format/OpenAPI-mock/build/dev-mock 失败都是全量交付的 blocker。
 - 启动策略:用户要启动时先看脚本;有 Prism/OpenAPI mock 且有 `dev:mock` 则用 `dev:mock`,否则用 `dev`/`dev:dev`;启动后若有多环境配置和匹配命令(`dev:mock`/`dev:dev`/`dev:test` 或 `--mode <env>`),报告环境=>命令映射和实际启动的环境。
 - 进程清理:代理为验证或调试启动的 dev/mock/server/browser/Playwright 等长驻进程,必须在任务结束前关闭;若复用了任务开始前已经存在的用户进程,不得擅自终止,最终交付需说明复用情况。
@@ -52,3 +50,9 @@ mock 数据与 service 路径;适用的数据变更路径;模块清单及数据�
 - 用户明确只要 plan/docs/API/SQL 或其他部分产物时,不造无关产物,并说明有意跳过了什么。
 - 不把 mock 当最终后端实现;不在前端页面暴露 secrets/真实 token/数据库连接/生产 API 地址。
 - 不生成 Java 后端实现源文件,除非用户明确改变约束;不忽略用户给的表模型,冲突时解释风险并选兼容方案。
+
+## Delivery Verification（SSR 变体）
+
+- **认证传输**：浏览器 session 与 BFF-to-backend 认证路径在真实联调交付时必须已记录或实现；SSR/BFF 使用
+  server-side gateway env，细节见 [`ssr-contracts-and-mock.md`](./ssr-contracts-and-mock.md) 与
+  [`ssr-runtime-config.md`](./ssr-runtime-config.md)。

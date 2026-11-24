@@ -47,7 +47,11 @@ Decide store ownership in this order:
 
 - Persist only state with a clear reload-survival requirement.
 - Locale, currency, theme, collapsed navigation, and other user preferences are good persist candidates.
-- Persisting tokens is a project security decision. If allowed, persist only the minimal token/session identifier, clear it on logout, and avoid persisting sensitive user details.
+- Persisting tokens is a project security decision. When allowed, follow the credential storage clause in
+  [`frontend-security.md`](./frontend-security.md): persist only the minimal token/session identifier, rely on
+  server-side revocation for logout, clear it on 401/403, account switch and release migration, avoid persisting
+  sensitive user details, and keep the persisted key versioned. `localStorage` is the default carrier; use
+  `sessionStorage` only when the session must die with the tab.
 - Do not persist server caches, large API responses, form drafts with sensitive data, or short-lived loading/error states unless the business explicitly requires recovery.
 - Use versioned persist config or migration logic when persisted state shape can change.
 

@@ -5,8 +5,8 @@
 - Use REST-style HTTP APIs unless the existing project already uses another HTTP style.
 - Name paths around resources, not screens.
 - HTTP methods follow the confirmed backend contract. The paired backend template defaults to `GET` for reads and
-  `POST` for writes; externally owned or existing APIs keep their approved convention. Do not let frontend code invent
-  a competing method style.
+  `POST` for writes; externally owned or existing APIs keep their approved convention. Do not let frontend or BFF code
+  invent a competing method style.
 - New projects must create an OpenAPI contract for Prism mock. Markdown API docs remain the human-readable handoff.
 - Existing projects without OpenAPI may stay Markdown-first until the user approves contract migration.
 - Every frontend mock service method must have a matching API doc entry.

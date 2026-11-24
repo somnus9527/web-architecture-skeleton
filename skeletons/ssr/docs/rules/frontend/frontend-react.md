@@ -44,7 +44,7 @@ Frontend output must be genuinely usable, not a static screenshot:
 - In new projects, create, edit, detail, and confirmation surfaces should use MUI `Dialog` or `Drawer`; do not flatten modal-like interaction into the page body.
 - In new projects, dangerous actions must show an MUI `Dialog` confirmation before committing a mock or real state change.
 - Success, failure, API error, and business notices should use MUI `Snackbar` + `Alert` in new projects and new capabilities; existing/rebuilt projects may keep current feedback UI only for pre-existing surfaces when changing to MUI would regress styling.
-- `Snackbar` defaults: `anchorOrigin={{ vertical: "top", horizontal: "center" }}`, `autoHideDuration={3000}` (auto-hide after 3000ms), and a Slide transition (`TransitionComponent={Slide}`). These are defaults only — callers may override per case (e.g., a longer duration for errors, a different transition, or disabling auto-hide).
+- `Snackbar` defaults: `anchorOrigin={{ vertical: "top", horizontal: "center" }}`, `autoHideDuration={3000}`, and a Slide transition (`TransitionComponent={Slide}`). These are defaults only — callers may override per case.
 - New-project forms should use MUI `TextField`, `Select`, `Autocomplete`, `FormControl`, and default helper/error placement.
 - New-project menus, Tooltip, Tabs, Pagination, Table, Chip, and Badge should use MUI equivalents.
 - Status labels, enum mappings, money/date/file formatting, and risk tone mappings must be centralized.
@@ -52,7 +52,10 @@ Frontend output must be genuinely usable, not a static screenshot:
 ## Data And Service Shape
 
 - Frontend pages must not directly hardcode business records.
-- New projects use Prism examples under `mock/examples/` as the mock source; runtime mock interfaces must go through Prism. Prism-runtime + env switching details live in [`./mock-and-integration.md`](./mock-and-integration.md); the `{ data, code, codeMsg }` wrapper rules are canonical in [`./api-contracts.md`](./api-contracts.md), not repeated here.
+- New projects use Prism examples under `mock/examples/` as the mock source; runtime mock interfaces must go through
+  Prism. Prism-runtime + env switching details live in
+  [`./mock-and-integration.md`](./mock-and-integration.md); the `{ data, code, codeMsg }` wrapper rules are canonical
+  in [`./api-contracts.md`](./api-contracts.md), not repeated here.
 - Fixtures may support unit tests, Storybook, static examples, or OpenAPI example generation, but they must not be the normal runtime fallback for mock mode.
 - Put API-facing methods inside the relevant feature service directory or the existing service directory.
 - Put API DTOs in `src/types/dto/`.

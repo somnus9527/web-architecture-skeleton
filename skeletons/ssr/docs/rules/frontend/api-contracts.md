@@ -5,13 +5,19 @@
 - Use REST-style HTTP APIs unless the existing project already uses another HTTP style.
 - Name paths around resources, not screens.
 - HTTP methods follow the confirmed backend contract. The paired backend template defaults to `GET` for reads and
-  `POST` for writes; externally owned or existing APIs keep their approved convention. Do not let frontend or BFF
-  code invent a competing method style.
+  `POST` for writes; externally owned or existing APIs keep their approved convention. Do not let frontend or BFF code
+  invent a competing method style.
 - New projects must create an OpenAPI contract for Prism mock. Markdown API docs remain the human-readable handoff.
 - Existing projects without OpenAPI may stay Markdown-first until the user approves contract migration.
 - Every frontend mock service method must have a matching API doc entry.
+- Scaffold demo endpoints shipped inside the skeleton repository itself (the demo paths in `mock/openapi.yaml`, such
+  as `/workspace/*` and `/auth/*`) are not business contracts: inside the skeleton they need no
+  `docs/api/<module>.md` entry, but they must be marked as demo endpoints in the OpenAPI `info.description`. A
+  project copied from the skeleton must replace them with the confirmed contract and then create the API docs
+  required above; this exemption does not transfer to the derived project.
 - Every new-project frontend service method must also map to the owning app's `mock/openapi.yaml` path + operation.
-- In projects with Prism/OpenAPI mock support, every implemented frontend service method must map to the owning app's `mock/openapi.yaml` path + `operationId`; do not keep runtime mock endpoints only in TypeScript code.
+- In projects with Prism/OpenAPI mock support, every implemented frontend service method must map to the owning app's
+  `mock/openapi.yaml` path + `operationId`; do not keep runtime mock endpoints only in TypeScript code.
 - API docs may describe future endpoints only when they are explicitly marked `Planned`, `Not implemented in frontend`, or `Not available in Prism mock`.
 - Split API docs by module. Use `docs/api/<module-name>.md` by default.
 - Each endpoint must identify its module and contract owner. For an owned backend, also identify the backend service
@@ -35,9 +41,9 @@ Endpoint index template:
 ```markdown
 ## Endpoint Index
 
-| API ID        | Method | Path                        | Business Action | Service Method            | Data Objects       | Frontend Method |
-| ------------- | ------ | --------------------------- | --------------- | ------------------------- | ------------------ | --------------- |
-| API-MODULE-01 | POST   | /<project-id>-api/resources | 创建资源        | ResourceAppService.create | resource_record(W) | createResource  |
+| API ID        | Method | Path           | Business Action | Service Method            | Data Objects       | Frontend Method |
+| ------------- | ------ | -------------- | --------------- | ------------------------- | ------------------ | --------------- |
+| API-MODULE-01 | POST   | /api/resources | 创建资源        | ResourceAppService.create | resource_record(W) | createResource  |
 ```
 
 ## Unified Response
@@ -78,7 +84,8 @@ mock/
 
 Rules:
 
-- `mock/openapi.yaml` is the Prism entry relative to the single-app root or owning app root, and references components/examples through `$ref`.
+- `mock/openapi.yaml` is the Prism entry relative to the single-app root or owning app root, and references
+  components/examples through `$ref`.
 - Do not put all schemas and examples in the entry file.
 - Keep schemas, requestBodies, responses, examples, frontend DTOs, and API docs aligned.
 - Schemas consumed by frontend code must explicitly define nested object fields and array item fields. Avoid broad `type: object` with `additionalProperties: true` for consumed data unless it is an intentional extension bag and the reason is documented.
@@ -88,11 +95,11 @@ Rules:
 
 ## Auth And Headers
 
-- Browser-to-BFF authentication follows the confirmed SSR session contract, normally using Secure/HttpOnly/SameSite
-  cookies plus CSRF and Origin protection for state-changing requests.
-- BFF-to-backend authentication uses the approved server-side token or service assertion and never exposes backend
-  credentials to browser code.
-- External APIs keep their approved authentication contract; do not invent credentials or transport.
+- Follow the confirmed authentication contract; do not invent credentials or transport in the frontend.
+- Token-based contracts send the token through the approved `authorization` scheme and never persist production
+  credentials in source code.
+- Cookie/session contracts require Secure/HttpOnly/SameSite policy plus CSRF and Origin protection for state-changing
+  requests.
 - Include tenant, organization, merchant, or data-scope headers only when the business context requires them or the existing project already has them.
 
 ## Each Endpoint Must Include
@@ -170,7 +177,8 @@ This summary must match the backend doc table usage matrix and the SQL files.
 
 ## Endpoint Template
 
-Each endpoint entry must carry the blocks below. For the full filled-in markdown skeleton (table headings and JSON shapes), copy an existing module doc such as [`../../api/<module>/story/<name>-api.md`](../../api/<module>/story/<name>-api.md) rather than re-typing the layout.
+Each endpoint entry must carry the blocks below. New projects should create an API document from the confirmed
+upstream OpenAPI contract rather than copying the scaffold mock as a business source of truth.
 
 Required per endpoint:
 
@@ -184,3 +192,9 @@ Required per endpoint:
 - State Transition table (Current / Action / Target / Error When Illegal) for state-change endpoints.
 - Errors table: code / codeMsg / Scenario.
 - Example Request and Example Response JSON, both wrapped in `{ data, code, codeMsg }`.
+
+## API Contracts（SSR 变体）
+
+- BFF 与前端共享同一份 `mock/openapi.yaml`；BFF gateway 不得自创第二套方法风格或路径规则。
+- BFF 的对外路由统一挂在 `/<project-id>-api/**` 下，前端只经 `src/shared/tools/APIClient` 访问，不直连 BFF 内部路径。
+- server-only 的 DTO 与 gateway 实现不得进入浏览器可消费的包或 `src/shared`。

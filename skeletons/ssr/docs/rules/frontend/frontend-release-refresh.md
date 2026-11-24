@@ -75,7 +75,38 @@ flowchart TD
 - `router.refresh()` 只用于刷新 RSC 数据，不满足发版切换；发版必须使用
   `window.location.reload()` 或等价整页导航。
 
-## SSR / Next.js
+## Cache And Proxy
+
+- Nginx、网关和 CDN 不得缓存 SSR `/<project-id>-api/version` 或 SPA `/version.json`。
+- 查询参数只能作为额外防御，不能替代正确的响应缓存头与代理配置。
+- Next `/_next/static/**` 和 SPA hash assets 应保持内容寻址与长期缓存，不得被全局
+  `Cache-Control: no-store` 覆盖。
+- 发版后必须从公网入口验证响应头，而不只验证应用进程直连端口。
+
+## Failure Boundaries
+
+- 版本端点不可用：保持当前页面，延后重试，不刷新。
+- 首次与二次版本不同：视为发布尚未稳定，不刷新。
+- 刷新后仍是旧版本：同一目标版本停止自动刷新，等待下一次不同版本或人工处理。
+- 页面隐藏：停止定时请求；收到其他标签页已确认版本的广播时允许同步刷新。
+- 浏览器不支持 BroadcastChannel：退化为每个可见标签页独立低频检查。
+- 自动刷新不能替代发布健康检查、回滚、静态资源缓存配置或 Server Action encryption key。
+
+## Verification
+
+- 单测覆盖：版本响应校验、60 秒递归检查、隐藏暂停、请求互斥、超时取消、二次确认、
+  BroadcastChannel、sessionStorage 防循环。
+- 构建入口验证：项目标准 `build:<env>` 命令在干净环境中可直接取得或生成合法 `releaseId`，不依赖
+  未记录、未接线的外部变量。
+- development 验证：不设置 `NEXT_DEPLOYMENT_ID` 时 `dev:<env>` 可启动，且不会请求版本端点。
+- SSR 构建验证：构建日志可定位本次 `releaseId`，且 `deploymentId`、客户端版本与
+  `/<project-id>-api/version` 返回值一致。
+- 发布后公网验证：健康检查成功、版本端点为新版本且 `no-store`、入口页面可加载、
+  关键 JS/CSS 无 404。
+- 浏览器验证：旧版本标签页在检测周期内刷新；多个标签页同步刷新；后台标签页不持续轮询；
+  网络失败或发布中版本不稳定时不产生刷新循环。
+
+## Frontend Release Refresh（SSR 变体）
 
 ### Required Wiring
 
@@ -138,67 +169,3 @@ sequenceDiagram
   发布平台、负载均衡 active slot 或现有配置中心。
 - 不因为 SSR 或自动刷新单独引入 Nacos。只有公司已经使用 Nacos 且确实需要跨机器统一
   active release / 灰度规则时，才由服务端订阅并缓存；浏览器不得直接访问 Nacos。
-
-## SPA / Vite
-
-### Build And Runtime
-
-- 构建时把同一 `releaseId` 固化到 SPA bundle，并在完整发布包中生成 `version.json`。
-- `index.html`、`version.json`、hash JS/CSS/asset 必须来自同一次构建。
-- `version.json` 使用 `no-store`；`index.html` 使用 `no-cache` 或 `no-store`；带内容 hash
-  的 JS/CSS 使用长期 `immutable`。
-- 动态 import / chunk 加载失败时先检查版本；只有确认服务端版本变化后才允许针对该版本刷新一次。
-
-### Online Direct Overwrite
-
-当现有运维流程是“在线直接覆盖固定 webroot，覆盖完成后重启或 reload Nginx”时：
-
-- 项目接受覆盖窗口内短暂的新旧资源混合，不宣称零中断或原子发布。
-- 版本信号必须尽量晚于主体文件复制；客户端仍必须等待 3 至 5 秒并二次确认，避免在覆盖中途刷新。
-- 如果 `version.json` 随 dist 一起复制且无法保证最后写入，二次确认只能降低概率，不能形成严格原子保证。
-- 发布完成后的目标是：旧页面发现稳定的新版本后整页刷新并恢复正常使用。
-- 不要求使用多版本 release 目录、软链接或运维清理历史版本，除非运维另行批准。
-
-```mermaid
-flowchart TD
-    A[构建完整 SPA dist] --> B[校验 index version assets]
-    B --> C[在线覆盖固定 webroot]
-    C --> D[覆盖窗口可能短暂混合]
-    D --> E[重启或 reload Nginx]
-    E --> F[版本端点稳定返回新 releaseId]
-    F --> G[旧页面发现新版本]
-    G --> H[等待 3 至 5 秒并二次确认]
-    H --> I[广播并整页刷新]
-    I --> J[新版本正常运行]
-```
-
-## Cache And Proxy
-
-- Nginx、网关和 CDN 不得缓存 SSR `/<project-id>-api/version` 或 SPA `/version.json`。
-- 查询参数只能作为额外防御，不能替代正确的响应缓存头与代理配置。
-- Next `/_next/static/**` 和 SPA hash assets 应保持内容寻址与长期缓存，不得被全局
-  `Cache-Control: no-store` 覆盖。
-- 发版后必须从公网入口验证响应头，而不只验证应用进程直连端口。
-
-## Failure Boundaries
-
-- 版本端点不可用：保持当前页面，延后重试，不刷新。
-- 首次与二次版本不同：视为发布尚未稳定，不刷新。
-- 刷新后仍是旧版本：同一目标版本停止自动刷新，等待下一次不同版本或人工处理。
-- 页面隐藏：停止定时请求；收到其他标签页已确认版本的广播时允许同步刷新。
-- 浏览器不支持 BroadcastChannel：退化为每个可见标签页独立低频检查。
-- 自动刷新不能替代发布健康检查、回滚、静态资源缓存配置或 Server Action encryption key。
-
-## Verification
-
-- 单测覆盖：版本响应校验、60 秒递归检查、隐藏暂停、请求互斥、超时取消、二次确认、
-  BroadcastChannel、sessionStorage 防循环。
-- 构建入口验证：项目标准 `build:<env>` 命令在干净环境中可直接取得或生成合法 `releaseId`，不依赖
-  未记录、未接线的外部变量。
-- development 验证：不设置 `NEXT_DEPLOYMENT_ID` 时 `dev:<env>` 可启动，且不会请求版本端点。
-- SSR 构建验证：构建日志可定位本次 `releaseId`，且 `deploymentId`、客户端版本与
-  `/<project-id>-api/version` 返回值一致。
-- 发布后公网验证：健康检查成功、版本端点为新版本且 `no-store`、入口页面可加载、
-  关键 JS/CSS 无 404。
-- 浏览器验证：旧版本标签页在检测周期内刷新；多个标签页同步刷新；后台标签页不持续轮询；
-  网络失败或发布中版本不稳定时不产生刷新循环。

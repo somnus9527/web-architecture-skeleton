@@ -31,6 +31,7 @@
 
 **前端**:
 
+- SSR/BFF app:SSR owner + API owner(BFF 变更)
 - SPA app:app owner + UI owner(可见流程变更)
 - 共享 TypeScript 契约:后端 API owner + 前端 app owner
 - 共享工具或配置:tooling owner

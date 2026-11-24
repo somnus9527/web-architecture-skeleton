@@ -1,27 +1,35 @@
 # Frontend Rules
 
-## SSR 必读路径
-
-- 架构：[`ssr-frontend-architecture.md`](./ssr-frontend-architecture.md)
-- 路由与 RSC：[`ssr-routing-and-rsc.md`](./ssr-routing-and-rsc.md)
-- BFF：[`ssr-bff-boundaries.md`](./ssr-bff-boundaries.md)
-- 契约与 Mock：[`ssr-contracts-and-mock.md`](./ssr-contracts-and-mock.md)
-- UI runtime：[`ssr-ui-runtime.md`](./ssr-ui-runtime.md)
-- 运行时配置：[`ssr-runtime-config.md`](./ssr-runtime-config.md)
-- 安全：[`ssr-security-baseline.md`](./ssr-security-baseline.md)
-- 日志：[`ssr-observability-and-logging.md`](./ssr-observability-and-logging.md)
-- i18n：[`ssr-i18n.md`](./ssr-i18n.md)
-- 交付：[`ssr-delivery-workflow.md`](./ssr-delivery-workflow.md)
-- 验证：[`ssr-verification.md`](./ssr-verification.md)
-
-## 适用原则
-
-- 本目录约束 Next.js 的 Web、SSR 和 BFF 表面，在 `bff-only` 与 `next-backend` 两种模式下都生效；
-  目录名不表示 `next-backend` 项目只需执行后端规则。
-- SSR 项目默认使用 Next.js App Router、RSC、BFF gateway 和 OpenAPI/Prism mock。
-- `bff-only` 表示 Next.js 只承担 Web、SSR 和 BFF，不承担领域或数据基础设施；它不是纯浏览器运行模式。
-- 项目初始化选择 `next-backend` 时，除本目录外还必须读取
-  [`../next-backend/README.md`](../next-backend/README.md)，且所有本地后端能力继续经过 BFF。
-- 公开页面负责 SSR、metadata 和 SEO；认证和工具页面默认 `noindex`。
-- Client Component 不读取 server env，不导入 server-only BFF 运行时。
-- 真实应用标识、cookie、BFF 前缀和部署名称必须来自项目变量绑定。
+| 文件 | 主题 |
+| --- | --- |
+| [animation.md](./animation.md) | 动画 |
+| [api-contracts.md](./api-contracts.md) | API Contracts |
+| [delivery-verification.md](./delivery-verification.md) | Delivery Verification |
+| [environments-and-build.md](./environments-and-build.md) | Environments And Build(环境与构建) |
+| [frontend-architecture.md](./frontend-architecture.md) | Frontend Architecture |
+| [frontend-react.md](./frontend-react.md) | Frontend React |
+| [frontend-release-refresh.md](./frontend-release-refresh.md) | Frontend Release Refresh |
+| [frontend-security.md](./frontend-security.md) | Frontend Security(前端安全红线) |
+| [i18n.md](./i18n.md) | Internationalization |
+| [mock-and-integration.md](./mock-and-integration.md) | Mock And Integration |
+| [monorepo-workspace.md](./monorepo-workspace.md) | Monorepo Workspace Rules |
+| [next-app-router-mui-provider.md](./next-app-router-mui-provider.md) | Next App Router MUI Provider Example |
+| [quality-tooling.md](./quality-tooling.md) | Quality Tooling |
+| [responsive-and-breakpoints.md](./responsive-and-breakpoints.md) | Responsive And Breakpoints |
+| [seo.md](./seo.md) | SEO |
+| [ssr-bff-boundaries.md](./ssr-bff-boundaries.md) | SSR BFF Boundaries |
+| [ssr-cache-and-performance.md](./ssr-cache-and-performance.md) | SSR Cache And Performance |
+| [ssr-contracts-and-mock.md](./ssr-contracts-and-mock.md) | SSR Contracts And Mock |
+| [ssr-delivery-workflow.md](./ssr-delivery-workflow.md) | SSR Delivery Workflow |
+| [ssr-frontend-architecture.md](./ssr-frontend-architecture.md) | SSR Frontend Architecture Rules |
+| [ssr-i18n.md](./ssr-i18n.md) | SSR I18n |
+| [ssr-observability-and-logging.md](./ssr-observability-and-logging.md) | SSR Observability And Logging |
+| [ssr-project-baseline.md](./ssr-project-baseline.md) | SSR Project Baseline |
+| [ssr-routing-and-rsc.md](./ssr-routing-and-rsc.md) | SSR Routing And RSC |
+| [ssr-runtime-config.md](./ssr-runtime-config.md) | SSR Runtime Config |
+| [ssr-security-baseline.md](./ssr-security-baseline.md) | SSR Security Baseline |
+| [ssr-ui-runtime.md](./ssr-ui-runtime.md) | SSR UI Runtime |
+| [ssr-verification.md](./ssr-verification.md) | SSR Verification |
+| [store.md](./store.md) | Store Architecture |
+| [tailwind-v4-system.md](./tailwind-v4-system.md) | Tailwind V4 System |
+| [ui-style-and-components.md](./ui-style-and-components.md) | UI Style And Shared Components |

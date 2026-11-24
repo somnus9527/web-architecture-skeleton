@@ -3,7 +3,7 @@
 ## Project Rules
 
 - Existing project wins: follow its framework, routes, request wrapper, state management, component library, mock convention, style tokens, auth, menu, and permission model.
-- Existing project package manager wins: keep `npm`, `pnpm`, `yarn`, or the monorepo tool already in use unless the user explicitly approves changing it.
+- This skeleton uses `pnpm` as its package manager; keep all install, script, CI, and release commands on pnpm.
 - Existing projects must be assessed before migration. If the existing UI library, mock/API system, env layout, i18n, or directories differ from the new standard, explain impact and wait for approval before broad rewrites.
 - Existing or rebuilt projects require a migration status matrix before broad rewrites. Cover UI library, visual parity
   risk, routing, request wrapper, mock/OpenAPI/Prism, env modes, i18n, DTO placement, feature/shared layout, API
@@ -44,7 +44,7 @@ Frontend output must be genuinely usable, not a static screenshot:
 - In new projects, create, edit, detail, and confirmation surfaces should use MUI `Dialog` or `Drawer`; do not flatten modal-like interaction into the page body.
 - In new projects, dangerous actions must show an MUI `Dialog` confirmation before committing a mock or real state change.
 - Success, failure, API error, and business notices should use MUI `Snackbar` + `Alert` in new projects and new capabilities; existing/rebuilt projects may keep current feedback UI only for pre-existing surfaces when changing to MUI would regress styling.
-- `Snackbar` defaults to `anchorOrigin={{ vertical: "top", horizontal: "center" }}`.
+- `Snackbar` defaults: `anchorOrigin={{ vertical: "top", horizontal: "center" }}`, `autoHideDuration={3000}`, and a Slide transition (`TransitionComponent={Slide}`). These are defaults only — callers may override per case.
 - New-project forms should use MUI `TextField`, `Select`, `Autocomplete`, `FormControl`, and default helper/error placement.
 - New-project menus, Tooltip, Tabs, Pagination, Table, Chip, and Badge should use MUI equivalents.
 - Status labels, enum mappings, money/date/file formatting, and risk tone mappings must be centralized.

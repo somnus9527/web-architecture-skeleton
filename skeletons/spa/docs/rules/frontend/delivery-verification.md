@@ -9,10 +9,8 @@
 - 前端代码放 `apps/<app-name>/`(monorepo)或用户指定目录。
 - 开发文档输入只读:路径按 [`../shared/project-naming.md`](../shared/project-naming.md) 绑定的
   `<delivery-doc-root>` 和 `<backend-root>` 解析;不要猜测仓库名或绝对路径。
-- 新项目 mock 数据放 Prism examples(`mocks/examples/`,相对单 app 根或所属 app 根);默认模板不要重新
-  引入运行时 `src/mocks/mock-data.ts`。
-- Prism 契约:新单 app 在项目根 `mocks/`,monorepo 在 `apps/<app-name>/mocks/`。真实 API 切换逻辑在
-  app-local `src/shared/tools/APIClient`,除非能力明确提升到 `packages/tools`。
+- 新项目 mock 数据放 Prism examples(`mocks/examples/`,相对单 app 根或所属 app 根);默认模板不要重新引入运行时 `src/mocks/mock-data.ts`。
+- Prism 契约:新单 app 在项目根 `mocks/`,monorepo 在 `apps/<app-name>/mocks/`。真实 API 切换逻辑在 app-local `src/shared/tools/APIClient`,除非能力明确提升到 `packages/tools`。
 - DTO 在 `src/types/dto/`、locale 在 `src/locale/`;跨 app DTO 进 `packages/types`,app-private DTO 留在所属 app。
 - 不生成无关模板文档、空目录或不可用占位文件。
 
@@ -21,21 +19,16 @@
 验收要点(逐项 OK 或标注差异):
 
 - 依赖已安装;typecheck 或 build 通过。
-- **MUI / Dialog/Drawer / Snackbar** 行为(ThemeProvider 包裹、浮层而非页内伪 modal、Snackbar 默认 top-center、新项目 MUI-first、旧复杂界面保留已批准视觉或标注 parity-safe)按 [`./frontend-react.md`](./frontend-react.md) 验收,本文不重复。
+- **MUI / Dialog/Drawer / Snackbar** 行为(ThemeProvider 包裹、浮层而非页内伪 modal、Snackbar 默认 top-center / 3000ms 自动隐藏 / Slide 动画(均为默认,可覆盖)、新项目 MUI-first、旧复杂界面保留已批准视觉或标注 parity-safe)按 [`./frontend-react.md`](./frontend-react.md)(SSR 见 [`./ssr-ui-runtime.md`](./ssr-ui-runtime.md))验收,本文不重复。
 - 表单校验错误显示在对应表单控件下方;路由可达;核心交互可用:filter/search、create/edit、detail、status action、confirmation、error、empty、loading。
 - 所有请求走 app-local `src/shared/tools/APIClient`、明确提升的 `packages/tools` 请求工厂,或已批准的请求封装;domain fetch hook 至少暴露 `data`/`loading`/`error`。
-- **mock / Prism / OpenAPI / `{ data, code, codeMsg }` 包**(Prism 读 `mocks/openapi.yaml`、example 用
-  `$ref` 拆分、每个运行时 service 方法映射 OpenAPI path+operationId、mock 返回字段与
-  OpenAPI/API 文档一致、缺包裹时 APIClient 报 contract error、`Planned`/未实现端点显式标注、
-  schema 足以捕获 DTO 漂移)按 [`./mock-and-integration.md`](./mock-and-integration.md) 与
-  [`./api-contracts.md`](./api-contracts.md) 验收,本文不重复。
+- **mock / Prism / OpenAPI / `{ data, code, codeMsg }` 包**(Prism 读 `mocks/openapi.yaml`、example 用 `$ref` 拆分、每个运行时 service 方法映射 OpenAPI path+operationId、mock 返回字段与 OpenAPI/API 文档一致、缺包裹时 APIClient 报 contract error、`Planned`/未实现端点显式标注、schema 足以捕获 DTO 漂移)按 [`./mock-and-integration.md`](./mock-and-integration.md) 与 [`./api-contracts.md`](./api-contracts.md) 验收,本文不重复。
 - **i18n / 硬编码文案**(`zh-CN` 与 `en-US` 存在且 key order 对齐、用户可见文案全部 locale-backed、fallback `codeMsg`/校验/Snackbar/空/错/aria/placeholder/mock 展示文案均走 locale,品牌/协议名/日志/注释/测试除外)按 [`./i18n.md`](./i18n.md) 验收,本文不重复。
-- **环境、base URL 与认证传输**:`.env.mock/.dev/.test/.prod` 契约明确;mock=>real base URL 和确认的
-  token 或 cookie/session 路径在真实联调交付时已记录或实现。Vite SPA 默认使用
-  `VITE_API_MODE`、`VITE_API_BASE_URL` 与 `MOCK_API_TARGET` 切换 mock/dev/test/prod。细节见
-  [`./mock-and-integration.md`](./mock-and-integration.md)。
+- **环境、base URL 与认证传输**:`.env.mock/.dev/.test/.prod` 契约明确;mock=>real base URL 与确认的
+  token 或 cookie/session 路径在真实联调交付时已记录或实现。变体专属的认证链路见补段。
 - PM 专属 check 与生产构建在脚本存在时通过(如 `pnpm check`、`pnpm build:prod`);依赖/typecheck/lint/format/OpenAPI-mock/build/dev-mock 失败都是全量交付的 blocker。
 - 启动策略:用户要启动时先看脚本;有 Prism/OpenAPI mock 且有 `dev:mock` 则用 `dev:mock`,否则用 `dev`/`dev:dev`;启动后若有多环境配置和匹配命令(`dev:mock`/`dev:dev`/`dev:test` 或 `--mode <env>`),报告环境=>命令映射和实际启动的环境。
+- 进程清理:代理为验证或调试启动的 dev/mock/server/browser/Playwright 等长驻进程,必须在任务结束前关闭;若复用了任务开始前已经存在的用户进程,不得擅自终止,最终交付需说明复用情况。
 - UI 文案不在常见桌面/移动宽度溢出。
 - 若前端 UI/UE/UX 因 `ui-ux-pro-max` 不可用而降级,最终 handoff 提示用户按其标准流程安装 UI UX Pro MAX(不附安装说明)。
 
@@ -57,3 +50,8 @@ mock 数据与 service 路径;适用的数据变更路径;模块清单及数据�
 - 用户明确只要 plan/docs/API/SQL 或其他部分产物时,不造无关产物,并说明有意跳过了什么。
 - 不把 mock 当最终后端实现;不在前端页面暴露 secrets/真实 token/数据库连接/生产 API 地址。
 - 不生成 Java 后端实现源文件,除非用户明确改变约束;不忽略用户给的表模型,冲突时解释风险并选兼容方案。
+
+## Delivery Verification（SPA 变体）
+
+- **认证传输**：Vite SPA 通过 `VITE_API_MODE`、`VITE_API_BASE_URL` 与 `MOCK_API_TARGET` 切换 mock/dev/test/prod；
+  token 或 cookie/session 的落地方式按 `frontend-security.md` 的凭证条款在交付说明中记录。

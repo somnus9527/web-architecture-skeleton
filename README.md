@@ -41,4 +41,4 @@ rm -rf .git
 | `templates/`                                    | 未开始                                                                         |
 | `docs/rules/backend`、`docs/rules/next-backend` | 已按决策剔除，不再分发                                                         |
 
-抽取规则前，`skeletons/*/docs/rules/` 仍是各自副本，两变体之间的差异尚未合并（原分支模型遗留 44 处分叉）。
+`skeletons/*/docs/rules/` 现在是物化产物，不要手改；改规则请改 `rules/` 后运行 `node tools/materialize.mjs`。

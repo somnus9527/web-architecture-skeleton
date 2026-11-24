@@ -1,7 +1,7 @@
 # Project Rule Capture
 
 > 前后端共享规范:项目规则的状态生命周期 + 变更流程。派生项目规则只沉淀**已反复出现、影响一致性
-> 或安全性**的项目特定决策;通用共享、React SPA、tooling 和 Java 后端分层指引留在各自通用规则
+> 或安全性**的项目特定决策;通用共享、React SPA / SSR、tooling 和 Java 后端分层指引留在各自通用规则
 > 文件,项目名、仓库相对路径与 app/package 绑定放
 > [`./project-naming.md`](./project-naming.md) 或项目 ADR。
 

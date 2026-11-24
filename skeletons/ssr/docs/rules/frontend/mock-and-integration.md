@@ -1,8 +1,6 @@
 # Mock And Integration
 
-> **Scope**: This file provides the shared Prism/OpenAPI baseline. This template's Next.js SSR/BFF runtime uses the
-> server-side gateway rules in [`ssr-contracts-and-mock.md`](./ssr-contracts-and-mock.md) and
-> [`ssr-runtime-config.md`](./ssr-runtime-config.md).
+> **Scope**: This file covers mock + mock=>real switching for Vite SPA apps. The app root is `<frontend-root>` unless the project binding says otherwise.
 
 ## Prism And OpenAPI
 
@@ -14,7 +12,9 @@
 - All frontend service methods must map to a path + operation in the owning app's `mock/openapi.yaml`.
 - Existing projects keep their current mock system unless the user approves migration.
 - If a project has Prism/OpenAPI mock support, Prism is the only runtime mock path. Service, hook, page, APIClient, or component code must not return hardcoded mock response objects for HTTP/mock endpoints.
-- Treat the owning app's `mock/openapi.yaml` as the source of truth for implemented frontend/API contracts. API docs may include future endpoints only when they are marked `Planned`, `Not implemented in frontend`, or `Not available in Prism mock`.
+- Treat the owning app's `mock/openapi.yaml` as the source of truth for implemented frontend/API contracts. API docs
+  may include future endpoints only when they are marked `Planned`, `Not implemented in frontend`, or
+  `Not available in Prism mock`.
 - Frontend-consumed schemas must define nested object fields and array item fields explicitly. Avoid broad `type: object` with `additionalProperties: true` for consumed data unless the field is intentionally an extension bag and the reason is documented.
 
 ## Mock Coverage
@@ -50,14 +50,13 @@ Required fields, optional fields, enums, state values, error codes, and example 
 
 Provide handoff steps when delivering a project:
 
-1. Switch through the project's environment loader and server-side gateway configuration, not scattered code branches.
-   For this template, follow [`ssr-contracts-and-mock.md`](./ssr-contracts-and-mock.md) and
-   [`ssr-runtime-config.md`](./ssr-runtime-config.md).
-2. Keep service method names, adapter mappings, gateway boundaries, and TypeScript DTOs stable while replacing mock
-   upstreams with real APIs.
+1. Switch through the project env loader and dev script, not scattered code branches. Concrete variables and commands live in the variant note appended by materialize.
+2. Use `src/shared/tools/APIClient` for new template projects, or replace service internals with the existing request wrapper; keep service method names and TypeScript DTOs stable.
 3. Preserve the unified `{ data, code, codeMsg }` handling (canonical in [`./api-contracts.md`](./api-contracts.md)).
-4. Keep browser session credentials in the approved HttpOnly cookie flow and keep BFF-to-backend credentials
-   server-side. Never commit real tokens, cookies, assertions, or production credentials.
+4. Apply the confirmed auth contract. For token-based APIs, use the approved `authorization` scheme and keep only
+   local demo tokens in `.env.mock`; real credentials follow the credential storage clause in
+   `./frontend-security.md`. For cookie/session APIs, implement the required credential mode, CSRF, Origin, and
+   SameSite handling. Never commit production credentials.
 5. Re-run OpenAPI validation, frontend checks, and manual tests for loading, success, failure, empty, validation error, and illegal transition states.
 
 ## Env Scripts
@@ -66,7 +65,14 @@ New projects should provide:
 
 - `mock:serve` for Prism.
 - `mock:check` or `openapi:check` for OpenAPI validation.
-- `dev` or `dev:mock` to run Prism and the SSR application together with `.env.mock`.
-- Environment-specific check/build commands aligned with `.env.dev`, `.env.test`, and `.env.prod`.
+- `dev:mock` to run Prism and Vite together with `.env.mock`.
+- `dev:dev`, `dev:test`, and `build:prod` for `.env.dev`, `.env.test`, and `.env.prod`.
 
 When a user asks to start the frontend project, use `dev:mock` by default if Prism/OpenAPI mock support exists and the script is available. After startup, if multiple `.env.*` files and matching dev scripts exist, report each environment's command to the caller, such as `mock -> pnpm dev:mock`, `dev -> pnpm dev:dev`, and `test -> pnpm dev:test`, and state which one is currently running.
+
+## Mock And Integration（SSR 变体）
+
+- 本骨架的 Next.js SSR/BFF 运行时使用服务端 gateway 规则，见
+  [`ssr-contracts-and-mock.md`](./ssr-contracts-and-mock.md) 与 [`ssr-runtime-config.md`](./ssr-runtime-config.md)。
+- 切换 mock 与真实上游要通过服务端 env 加载器与 gateway 配置完成，不在页面或组件里分支。
+- 前端 service 方法、adapter 映射、gateway 边界与 DTO 名称在替换上游时必须保持稳定。

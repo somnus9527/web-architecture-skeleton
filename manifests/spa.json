@@ -1,0 +1,8 @@
+{
+  "variant": "spa",
+  "kind": "project",
+  "ruleLayers": ["shared", "frontend", "spa"],
+  "substitutions": { "mockDir": "mocks" },
+  "skills": ["initialize-spa-project", "sync-architecture-rules", "audit-derived-repo"],
+  "gates": ["hygiene", "arch-tests", "quality-check", "ci"]
+}

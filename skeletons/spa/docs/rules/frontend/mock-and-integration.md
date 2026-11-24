@@ -50,7 +50,7 @@ Required fields, optional fields, enums, state values, error codes, and example 
 
 Provide handoff steps when delivering a project:
 
-1. Switch via the `.env.<mode>` file + dev script, not scattered code branches. **Vite SPA default**: `.env.mock` sets `VITE_API_MODE=mock`, `VITE_API_BASE_URL=/mock-api`, and `MOCK_API_TARGET=http://127.0.0.1:4010`; `.env.dev` sets `VITE_API_MODE=dev` and points `VITE_API_BASE_URL` to the real browser request entry. Run `pnpm dev:mock` / `pnpm dev:dev` for the corresponding mode.
+1. Switch through the project env loader and dev script, not scattered code branches. Concrete variables and commands live in the variant note appended by materialize.
 2. Use `src/shared/tools/APIClient` for new template projects, or replace service internals with the existing request wrapper; keep service method names and TypeScript DTOs stable.
 3. Preserve the unified `{ data, code, codeMsg }` handling (canonical in [`./api-contracts.md`](./api-contracts.md)).
 4. Apply the confirmed auth contract. For token-based APIs, use the approved `authorization` scheme and keep only
@@ -69,3 +69,9 @@ New projects should provide:
 - `dev:dev`, `dev:test`, and `build:prod` for `.env.dev`, `.env.test`, and `.env.prod`.
 
 When a user asks to start the frontend project, use `dev:mock` by default if Prism/OpenAPI mock support exists and the script is available. After startup, if multiple `.env.*` files and matching dev scripts exist, report each environment's command to the caller, such as `mock -> pnpm dev:mock`, `dev -> pnpm dev:dev`, and `test -> pnpm dev:test`, and state which one is currently running.
+
+## Mock And Integration（SPA 变体）
+
+- **Vite SPA 默认取值**：`.env.mock` 设 `VITE_API_MODE=mock`、`VITE_API_BASE_URL=/mock-api`、
+  `MOCK_API_TARGET=http://127.0.0.1:4010`；`.env.dev` 设 `VITE_API_MODE=dev` 并把 `VITE_API_BASE_URL`
+  指向真实浏览器请求入口。对应命令 `pnpm dev:mock` / `pnpm dev:dev`。

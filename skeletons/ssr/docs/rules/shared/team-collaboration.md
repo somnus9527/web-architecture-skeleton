@@ -9,7 +9,7 @@
 - **Business Owner**:确认业务规则
 - **Tech Owner**:确认实现边界
 - **Review Owner / Reviewer**:确认规范和测试
-- **目标前端 app/package、BFF module、后端 module/package**,以及 **API 契约 owner**
+- **目标前端 app/package、后端 module/package**,以及 **API 契约 owner**
 
 ## Intent To Change
 

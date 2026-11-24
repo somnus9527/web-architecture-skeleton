@@ -32,23 +32,36 @@
 
 通用:`mock:serve`(Prism)、`mock:check`(OpenAPI 校验)、`typecheck`、`lint`、`test`。
 
-### 3.1 SPA(Vite,`--mode` 原生加载 `.env.<env>`)
+## 4. 启动必须加载并校验 env(fail-fast)
 
-```jsonc
-{
-  "dev": "pnpm dev:mock",
-  "dev:mock": "concurrently -k \"pnpm mock:serve\" \"vite --mode mock\"",
-  "dev:dev": "vite --mode dev",
-  "dev:test": "vite --mode test",
-  "build:test": "tsc -b && vite build --mode test",
-  "build:prod": "tsc -b && vite build --mode prod",
-  "preview": "vite preview",
-}
-```
+- 禁止缺少明确配置来源就直接启动:dev / build 经 `.env.<env>` 加载;生产 start 仅使用 PM2、部署平台或 secret manager 注入的进程环境,不依赖未随产物发布的 `.env.prod`。
+- 服务端启动做 runtime validation(Zod / envalid 等),缺关键 key **启动即失败**,不在请求中途才发现
+  (细则见 [`./ssr-runtime-config.md`](./ssr-runtime-config.md))。客户端 public config 单独 schema。
 
-- SPA 的 `VITE_*` 在 build 时烤进产物 → **每环境一份构建产物**(`build:test` / `build:prod`),
-  不存在"一份产物多环境"。
-- **不引入运行时 `config.json` 注入**:公共配置一律走构建期 `.env.<env>`,按环境分别构建。
+## 5. 构建产物与部署
+
+按变体不同，见文末补段：SPA 的 `dist/` 静态产物，SSR 的 standalone 输出、Server Action 稳定性与发版刷新。
+
+## 6. 验证(✅ 可机械门禁 / ⚠️ 人审)
+
+- ✅ `.env.example` 存在,key 与脚本矩阵自洽;`.env` 及凭证类 `.env.*` 已进 `.gitignore`。
+- ✅ 脚本矩阵存在,且 `dev:<env>` / `build:<env>` 带 env 加载(SPA `--mode`、SSR `--env-file`)。
+- ✅ SSR:`next.config` 含 `output: 'standalone'`;build 脚本含 standalone 资源拷贝;
+  存在 Server Action 时 `.env.example` 含 `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY`。
+- ✅ 启用自动刷新时：标准构建入口可生成或取得合法 `releaseId`，同一产物内版本一致，版本端点为
+  `no-store`，客户端有二次确认和同版本防循环。
+- ✅ `next dev` 在未设置 `NEXT_DEPLOYMENT_ID` 时可直接启动，且 development 页面不发起版本轮询。
+- ⚠️ key 是否真跨实例一致、运行时 secret 注入是否到位 → 交付证据 + 人审 / ops。
+
+## 7. Handoff 必含
+
+- 各环境启动 / 构建命令(`mock → pnpm dev:mock`、`test → pnpm build:test` 等),及当前运行的是哪个。
+- `.env.*` key 清单、敏感级别、build-time vs runtime 注入方式。
+- SSR:standalone 启动命令、需拷贝的产物清单、`NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` 注入方式。
+- 发版刷新：release id 的生成或注入方式、构建日志定位方式、多实例一致性边界、版本端点、缓存头、
+  检测周期、二次确认、发布后公网验证与回滚边界。
+
+## Environments And Build（SSR 变体）
 
 ### 3.2 SSR(Next 无 `--mode`,用 `node --env-file=` 显式加载,不引入额外依赖)
 
@@ -76,12 +89,6 @@
 - 纯服务端 secret(后端 token、签名密钥)可不写进 `.env.<env>`,改由 PM2 / 平台运行时注入;
   其余 build-time 值由 `.env.<env>` 或 CI / 云效构建环境变量提供。两者并存,但**每环境构建是基线**。
 
-## 4. 启动必须加载并校验 env(fail-fast)
-
-- 禁止缺少明确配置来源就直接启动:dev / build 经 `.env.<env>` 加载;生产 start 仅使用 PM2、部署平台或 secret manager 注入的进程环境,不依赖未随产物发布的 `.env.prod`。
-- 服务端启动做 runtime validation(Zod / envalid 等),缺关键 key **启动即失败**,不在请求中途才发现
-  (细则见 [`./ssr-runtime-config.md`](./ssr-runtime-config.md))。客户端 public config 单独 schema。
-
 ## 5. SSR 构建产物与部署
 
 ### 5.1 输出目录与产物(无 CDN 基线)
@@ -104,12 +111,12 @@
 参考实现 `scripts/copy-standalone-assets.mjs`:
 
 ```js
-import { cpSync, existsSync } from 'node:fs';
+import { cpSync, existsSync } from "node:fs";
 
 /** 将 standalone 默认不打入的静态资源拷进自包含目录(无 CDN,由 Node 服务自伺服)。 */
 const pairs = [
-  ['.next/static', '.next/standalone/.next/static'],
-  ['public', '.next/standalone/public'],
+  [".next/static", ".next/standalone/.next/static"],
+  ["public", ".next/standalone/public"],
 ];
 for (const [from, to] of pairs) {
   if (existsSync(from)) cpSync(from, to, { recursive: true });
@@ -147,22 +154,3 @@ for (const [from, to] of pairs) {
   [`./frontend-release-refresh.md`](./frontend-release-refresh.md)。
 - Server Action encryption key 解决跨实例 Action ID 稳定性；`deploymentId` 与自动整页刷新解决
   新旧客户端/服务端版本偏斜，两者不能互相替代。
-
-## 6. 验证(✅ 可机械门禁 / ⚠️ 人审)
-
-- ✅ `.env.example` 存在,key 与脚本矩阵自洽;`.env` 及凭证类 `.env.*` 已进 `.gitignore`。
-- ✅ 脚本矩阵存在,且 `dev:<env>` / `build:<env>` 带 env 加载(SPA `--mode`、SSR `--env-file`)。
-- ✅ SSR:`next.config` 含 `output: 'standalone'`;build 脚本含 standalone 资源拷贝;
-  存在 Server Action 时 `.env.example` 含 `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY`。
-- ✅ 启用自动刷新时：标准构建入口可生成或取得合法 `releaseId`，同一产物内版本一致，版本端点为
-  `no-store`，客户端有二次确认和同版本防循环。
-- ✅ `next dev` 在未设置 `NEXT_DEPLOYMENT_ID` 时可直接启动，且 development 页面不发起版本轮询。
-- ⚠️ key 是否真跨实例一致、运行时 secret 注入是否到位 → 交付证据 + 人审 / ops。
-
-## 7. Handoff 必含
-
-- 各环境启动 / 构建命令(`mock → pnpm dev:mock`、`test → pnpm build:test` 等),及当前运行的是哪个。
-- `.env.*` key 清单、敏感级别、build-time vs runtime 注入方式。
-- SSR:standalone 启动命令、需拷贝的产物清单、`NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` 注入方式。
-- 发版刷新：release id 的生成或注入方式、构建日志定位方式、多实例一致性边界、版本端点、缓存头、
-  检测周期、二次确认、发布后公网验证与回滚边界。

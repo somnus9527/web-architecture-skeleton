@@ -95,6 +95,12 @@
 
 这样「一份正文 + 每变体一段补遗」既避免了整份复制，也避免了在正文中间做切分手术。
 
+两条实现约定：
+
+- 补段标题统一为二级（`## <主题>（<变体> 变体）`），追加在正文末尾。
+- `docs/rules/` 是物化产物，已加入各 skeleton 的 `.prettierignore`；格式由 `rules/` 源保证，
+  与生成代码同类处理。
+
 ## 4. 执行顺序
 
 1. 建立 `rules/{shared,frontend,spa,ssr}/`，先落 7 份一致文件与 17 份变体专属文件。
@@ -103,4 +109,11 @@
 4. 写 `tools/materialize.mjs`，生成索引与占位替换。
 5. 用物化结果覆盖 `skeletons/*/docs/rules/`，跑门禁确认无回归。
 
-第 5 步之前，`skeletons/*/docs/rules/` 保持原样，避免迁移中间态无法构建。
+已完成 1–5：`spa` 生成 25 份规则、`ssr` 生成 38 份，物化幂等（两次运行 hash 一致），两个 skeleton
+的 `pretty` 检查均通过。
+
+遗留：
+
+- 生成的索引只列「文件 + 标题」，原 README 的「必读 / 按需读取」分组丢失；后续可用 `rules/index.json`
+  元数据补回分组，仍由脚本生成，避免手写漂移。
+- `project-naming` 中 `--backend-root` 与 `initialize-backend-project` 的表述需在技能上提时清理。

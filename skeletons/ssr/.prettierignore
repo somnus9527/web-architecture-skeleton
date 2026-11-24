@@ -8,3 +8,6 @@ pnpm-lock.yaml
 next-env.d.ts
 tsconfig.tsbuildinfo
 .playwright-cli
+
+# 物化产物：格式由 rules/ 源保证
+docs/rules/

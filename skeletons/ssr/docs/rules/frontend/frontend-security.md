@@ -76,18 +76,6 @@ SSR/BFF 专属增量(cache 投毒、出站边界、渲染注入转义、生产�
 
 ---
 
-## SSR / BFF 专属(仅 SSR/BFF app)
-
-以下随「有服务器」而来的攻击面,红线与细则见 [`ssr-security-baseline.md`](./ssr-security-baseline.md),此处仅列清单:
-
-- **SSRF**: 服务端按用户输入抓取 URL(图片代理、导入、远程 fetch)必须限制协议、host 白名单、私网网段、重定向跳数与响应大小。
-- **渲染注入转义**: 服务端把数据注入 HTML(如 `window.__INITIAL_STATE__`)必须 JSON 转义,防 `</script>` 逃逸;用 `serialize-javascript` 类库,不裸拼 `JSON.stringify`。
-- **原型链污染**: 服务端合并请求参数/对象时防 prototype pollution。
-- **缓存投毒 / 数据串号**: cache key/tag 必须含租户、语言、权限、用户态维度;私有响应 `no-store`,不被 static/ISR/CDN 缓存给他人。
-- **资源耗尽**: SSR 渲染与 gateway 出站加超时 + 限流,防放大攻击。
-
----
-
 ## 交付自检清单(每次功能交付对照)
 
 - [ ] 新增/改动的富文本、外链、`href`/`src` 无 XSS sink,动态 HTML 已 sanitize;内联 JSON-LD 无用户输入。
@@ -101,17 +89,14 @@ SSR/BFF 专属增量(cache 投毒、出站边界、渲染注入转义、生产�
 
 ---
 
-## 本工程现状与待办(截至骨架阶段)
+## Frontend Security（SSR 变体）
 
-> 红线正文通用;下表是本工程当前落地情况,随业务迁入更新。
+以下随「有服务器」而来的攻击面,红线与细则见 [`ssr-security-baseline.md`](./ssr-security-baseline.md),此处仅列清单:
 
-| 红线        | 现状         | 说明与待办                                                                                                                                                                                                                                                                                                                                                               |
-| ----------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| R1 XSS      | 达标(含例外) | 无 `innerHTML` / `eval`;当前骨架未实现 JSON-LD,新增时放在公开区 Server Component(`src/app/[locale]/**`)内,内容仅允许 `appOrigin` + i18n 文案(非用户可控),属已接受 SEO 例外——新增 JSON-LD 守住「不混入用户输入」。                                                                                                                                                        |
-| R2 凭证     | 骨架就绪     | BFF `session-auth-transform` 转服务端 header;token 不落 localStorage。生产 `SESSION_COOKIE_SECURE=true` 已由 [`server-config.ts`](../../../src/bff/shared/server-config.ts) 在 `APP_ENV=prod` 时启动期 fail-fast 强制(非默认 `false` 放行)。                                                                                                                             |
-| R3 CSRF     | 部分达标     | 生产 `CSRF_ENABLED=true` 已由 [`server-config.ts`](../../../src/bff/shared/server-config.ts) 启动期强制;Server Action 面由 Next Origin 检查覆盖。**待整改**: 被浏览器 fetch 调用的 Route Handler POST 面尚无 CSRF/Origin 校验实现(当前无此类端点),接入首个写 Route 时补校验与测试。                                                                                      |
-| R4 安全头   | **达标**     | [`src/proxy.ts`](../../../src/proxy.ts) 已集中下发 CSP / `nosniff` / `X-Frame-Options` / HSTS / COOP / CORP / Permissions-Policy + CORS allowlist。**待收敛**: `script-src` 含 `'unsafe-inline'`(为 Next 内联 hydration/bootstrap 脚本保留),XSS 兜底被削弱;nonce 化框架内联脚本后移除(与 JSON-LD 无关,后者是数据块;`style-src` 的 `unsafe-inline` 归 Emotion/MUI,另计)。 |
-| R5 敏感信息 | 达标         | `NEXT_PUBLIC_*` 仅 `APP_ENV` / `APP_ORIGIN`;`.env` 注入约束在案。**核对项**: 生产 source map 策略写入交付说明。                                                                                                                                                                                                                                                          |
-| R6 依赖     | 骨架就绪     | `pnpm-lock.yaml` 已提交;[`.github/workflows/check.yml`](../../../.github/workflows/check.yml) 已接 `pnpm audit --audit-level=high`(高危阻断)与 gitleaks secret 扫描作合并门禁。                                                                                                                                                                                          |
-| R7 权限边界 | 骨架就绪     | BFF 转 header 边界在位;接入后端数据后每个读写守 IDOR。                                                                                                                                                                                                                                                                                                                   |
-| SSRF        | 暂无面       | 当前仅 [`src/bff/gateway/showcase-gateway.ts`](../../../src/bff/gateway/showcase-gateway.ts) 抓取固定后端 URL(非用户输入);接入图片代理/导入等用户可控 URL 时按红线拦截。                                                                                                                                                                                                 |
+- **SSRF**: 服务端按用户输入抓取 URL(图片代理、导入、远程 fetch)必须限制协议、host 白名单、私网网段、重定向跳数与响应大小。
+- **渲染注入转义**: 服务端把数据注入 HTML(如 `window.__INITIAL_STATE__`)必须 JSON 转义,防 `</script>` 逃逸;用 `serialize-javascript` 类库,不裸拼 `JSON.stringify`。
+- **原型链污染**: 服务端合并请求参数/对象时防 prototype pollution。
+- **缓存投毒 / 数据串号**: cache key/tag 必须含租户、语言、权限、用户态维度;私有响应 `no-store`,不被 static/ISR/CDN 缓存给他人。
+- **资源耗尽**: SSR 渲染与 gateway 出站加超时 + 限流,防放大攻击。
+
+---
