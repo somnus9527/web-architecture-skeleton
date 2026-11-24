@@ -22,19 +22,30 @@ pnpm start                   # 或 pnpm ios / pnpm android
 
 依赖版本按 Expo SDK 对齐；升级时用 `npx expo install --fix` 让 Expo 校准原生依赖，不要手工跳版本。
 
+**两个依赖被刻意钉在小版本上**：`@tanstack/react-query@5.108.3` 与 `i18next@27.2.4`。更新的版本发布不足
+24 小时，会被 pnpm 的供应链策略（`minimumReleaseAge`）拒绝，导致 `pnpm install --frozen-lockfile`
+报「Lockfile failed supply-chain policy check」。等新版本满足时长后再放开。
+
 ## 门禁
 
 ```bash
 pnpm typecheck      # tsc --noEmit
 pnpm lint           # eslint，含 I 前缀 interface 与 no-console
+pnpm test           # jest + jest-expo + @testing-library/react-native
 pnpm format:check
 pnpm check:hygiene  # 仓库卫生：env、密钥、体积、包管理器混用
 ```
 
+测试约定：
+
+- 测试文件放 `src/test/**/*.test.ts?(x)`，`jest.config.js` 用 `jest-expo` 预设，`@/*` 由
+  `moduleNameMapper` 映射到 `src/*`。
+- `@testing-library/react-native` v14 的 `render` 是 **async**，必须 `await`，否则 `screen` 不会被绑定。
+- Query 测试里把 `retry` 关掉、`gcTime` 设为 `Infinity`，避免残留定时器让 Jest 无法退出。
+
 ## 尚未完成
 
-- **测试栈**：RN 需要 `jest-expo` + `@testing-library/react-native`，本骨架暂未引入，因为当前环境无法安装
-  原生依赖做真实验证；接入前不要声称 `pnpm test` 可用。
-- **`check:gates`**：`verify-gates.mjs` 依赖架构测试目录与 SPA/SSR 的 ESLint 规则，RN 尚未适配，
-  因此没有接入；补齐测试栈后一并处理。
+- **`check:gates`**：`verify-gates.mjs` 依赖架构测试目录与 SPA/SSR 的 ESLint 规则，RN 尚未适配。
+- **架构测试**：`shared-assets` 的架构测试基于 Vite/Next 目录结构，RN 需要按
+  `src/components / src/domain / src/api` 分层另写一套。
 - **初始化技能**：`initialize-rn-project` 未建，当前需手工改 `package.json` 与 `app.json` 的应用名。

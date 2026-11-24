@@ -36,7 +36,6 @@ export class ApiError extends Error {
   }
 }
 
-const BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL ?? '';
 const TIMEOUT_MS = 15000;
 
 /**
@@ -46,7 +45,9 @@ const TIMEOUT_MS = 15000;
  * @returns 解包后的业务数据。
  */
 export async function getJson<TData>(path: string): Promise<TData> {
-  if (!BASE_URL) {
+  const baseUrl = process.env.EXPO_PUBLIC_API_BASE_URL ?? '';
+
+  if (!baseUrl) {
     throw new ApiError('config_missing', 'EXPO_PUBLIC_API_BASE_URL is not configured.');
   }
 
@@ -54,7 +55,7 @@ export async function getJson<TData>(path: string): Promise<TData> {
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
   try {
-    const response = await fetch(`${BASE_URL}${path}`, {
+    const response = await fetch(`${baseUrl}${path}`, {
       method: 'GET',
       headers: { Accept: 'application/json' },
       signal: controller.signal,
