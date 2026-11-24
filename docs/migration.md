@@ -50,5 +50,8 @@
 3. **技能仍在 skeleton 内**：`initialize-spa-project`、`initialize-ssr-project`、`sync-architecture-rules`
    尚未上提到仓库根的 `skills/`。
 4. **RN 骨架不存在**：本机无 RN / Expo 工程，`skeletons/rn` 需按原 RN 规则与模板新建。
-5. **`templates/rn` 与 `templates/monorepo` 尚未落地**：`templates/frontend` 已完成，另两个待做。
-6. **`skeletons/rn` 未建**：本机无 RN 工程，需按 RN 规则与模板新建。
+5. **RN 只迁了规则与模板，还没有可运行骨架**：`rules/rn/`（30 份规则 + 19 份模板）已就位，
+   但 `skeletons/rn` 尚未建立；`materialize` 目前不认识 rn 层（会把变体层文件写进
+   `docs/rules/frontend/`），建骨架前需要先补 rn 的层映射。
+6. **`templates/monorepo` 尚未落地**。
+7. **`skeletons/rn` 未建**：本机无 RN / Expo 工程，需要按 `rules/rn/` 的规则与模板新建。

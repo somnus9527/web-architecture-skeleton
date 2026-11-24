@@ -10,14 +10,19 @@ skeletons/      工程级模板：复制一个目录即得到完整项目
   spa/          Vite + React SPA
   ssr/          Next.js SSR（BACKEND_MODE=bff-only）
 rules/          规则单源，物化进各 skeleton 的 docs/rules/
-templates/      文件级模板：单文件 / 单模块骨架
+  shared/       跨端共用
+  frontend/     SPA / SSR 通用
+  spa/ ssr/     变体专属与变体补段
+  rn/           RN 规则，模板同层放在 rules/rn/templates/
+templates/      文件级模板：单文件 / 单模块骨架（当前仅 frontend）
 skills/         initialize-*、sync-architecture-rules、audit-derived-repo
 tools/          check-repo-hygiene、verify-gates、materialize、audit
 manifests/      每个变体消费的规则层、技能与门禁
 docs/           本仓库自身的说明、迁移记录、ADR
 ```
 
-`rules/`、`templates/`、`skills/`、`tools/`、`manifests/` 是源，只在这里编辑；
+`rules/`、`templates/`、`skills/`、`tools/`、`manifests/` 是源，只在这里编辑；RN 的代码模板刻意放在
+`rules/rn/templates/`：规则里有 45 处引用它们，必须与规则一起交付，不能留在仓库级 `templates/`；
 `skeletons/<variant>/docs/rules/` 与 `.agents/skills/` 是物化产物，由脚本生成，CI 校验一致。
 
 ## 使用方式
