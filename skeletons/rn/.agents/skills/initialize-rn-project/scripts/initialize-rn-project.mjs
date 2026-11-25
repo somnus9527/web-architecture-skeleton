@@ -6,7 +6,7 @@
  *   node initialize-rn-project.mjs [--dry-run] <project-id>
  */
 
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
@@ -151,7 +151,7 @@ function updatePackageJson(values, dryRun, changedFiles) {
 /**
  * 更新 app.json 的名称、slug 与 scheme。
  *
- * @param {{projectId: string, displayName: string, scheme: string}} values - 派生值。
+ * @param {{projectId: string, displayName: string, scheme: string, applicationId: string}} values - 派生值。
  * @param {boolean} dryRun - 是否只演练。
  * @param {string[]} changedFiles - 变更文件收集器。
  * @returns {void}
@@ -171,6 +171,10 @@ function updateAppConfig(values, dryRun, changedFiles) {
     'app.json',
   );
   source = replaceRequired(source, `"scheme": "${PLACEHOLDER_SCHEME}"`, `"scheme": "${values.scheme}"`, 'app.json');
+  if (!source.includes('com.example.rnapp')) {
+    throw new Error('初始化目标结构已变化: app.json bundle identifier');
+  }
+  source = source.replaceAll('com.example.rnapp', values.applicationId);
   writeText('app.json', source, dryRun, changedFiles);
 }
 
@@ -182,6 +186,33 @@ function updateAppConfig(values, dryRun, changedFiles) {
  * @param {string[]} changedFiles - 变更文件收集器。
  * @returns {void}
  */
+
+/**
+ * 把 env 模板与 EAS profile 中的 Android 包名同步为当前项目。
+ *
+ * @param {{applicationId: string}} values - 派生值。
+ * @param {boolean} dryRun - 是否只演练。
+ * @param {string[]} changedFiles - 变更文件收集器。
+ * @returns {void}
+ */
+function updateApplicationId(values, dryRun, changedFiles) {
+  const files = [
+    'eas.json',
+    ...readdirSync(join(ROOT_DIRECTORY, 'env'))
+      .filter((name) => name.endsWith('.example'))
+      .map((name) => `env/${name}`),
+  ];
+
+  for (const relativePath of files) {
+    let source = readText(relativePath);
+    if (!source.includes('com.example.rnapp')) {
+      throw new Error(`初始化目标结构已变化: ${relativePath} 缺少占位包名`);
+    }
+    source = source.replaceAll('com.example.rnapp', values.applicationId);
+    writeText(relativePath, source, dryRun, changedFiles);
+  }
+}
+
 function updateLocales(values, dryRun, changedFiles) {
   for (const locale of ['zh-CN', 'en-US']) {
     const relativePath = `src/domain/i18n/locales/${locale}.json`;
@@ -199,7 +230,7 @@ function updateLocales(values, dryRun, changedFiles) {
 /**
  * 生成正式项目的绑定记录。
  *
- * @param {{projectId: string, displayName: string, scheme: string}} values - 派生值。
+ * @param {{projectId: string, displayName: string, scheme: string, applicationId: string}} values - 派生值。
  * @returns {string} 绑定文档。
  */
 function buildProjectBinding(values) {
@@ -280,6 +311,7 @@ function initializeProject() {
     projectId,
     displayName: toDisplayName(projectId),
     scheme: projectId.replaceAll('-', ''),
+    applicationId: `com.example.${projectId.replaceAll('-', '')}`,
   };
 
   assertPristineSkeleton();
@@ -287,6 +319,7 @@ function initializeProject() {
   const changedFiles = [];
   updatePackageJson(values, dryRun, changedFiles);
   updateAppConfig(values, dryRun, changedFiles);
+  updateApplicationId(values, dryRun, changedFiles);
   updateLocales(values, dryRun, changedFiles);
   writeText('.agents/rn-project.md', buildProjectBinding(values), dryRun, changedFiles);
   writeText('AGENTS.md', updateAgents(readText('AGENTS.md'), values), dryRun, changedFiles);

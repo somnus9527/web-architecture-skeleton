@@ -3,8 +3,10 @@ import type { ReactNode } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { ApiError } from '@api/errors';
+import { NetworkBridge } from '@components/providers/network-bridge';
 import { PaperThemeProvider } from '@components/providers/paper-theme-provider';
 import { QueryFocusBridge } from '@components/providers/query-focus-bridge';
+import { QueryOnlineBridge } from '@components/providers/query-online-bridge';
 import { ThemeProvider } from '@theme/theme-provider';
 
 /**
@@ -56,6 +58,8 @@ export function AppProviders({ children }: IAppProvidersProps) {
         <ThemeProvider>
           <PaperThemeProvider>
             <QueryFocusBridge />
+            <NetworkBridge />
+            <QueryOnlineBridge />
             {children}
           </PaperThemeProvider>
         </ThemeProvider>

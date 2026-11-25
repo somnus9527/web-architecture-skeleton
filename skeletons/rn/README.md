@@ -45,6 +45,19 @@ pnpm dev                 # = dev:development，用 node --env-file 注入 env �
 `pnpm start` / `pnpm ios` / `pnpm android` 是不注入 env 的裸 Expo 命令，只在已自行导出
 `EXPO_PUBLIC_*` 的终端里可用；业务联调请用 `pnpm dev:development` 或 `pnpm dev:mock`。
 
+本地打包与 EAS 云构建共用同一套环境契约：
+
+```bash
+pnpm build:staging       # node --env-file=env/.env.staging scripts/build-env.mjs
+pnpm build:production    # node --env-file=env/.env.production scripts/build-env.mjs
+npx eas build --profile staging
+npx eas build --profile production
+```
+
+`scripts/env-utils.mjs` 负责 `__LAN_IP__` 替换、过滤 Expo 进程环境并设置 `EXPO_NO_DOTENV=1`；
+`eas.json` 的三个 profile 必须与 `env/.env.<environment>.example` 的 `EXPO_PUBLIC_*` 保持一致，
+由 `src/test/architecture/eas-release-config.test.ts` 守护。
+
 依赖版本按 Expo SDK 对齐；升级时用 `npx expo install --fix` 让 Expo 校准原生依赖，不要手工跳版本。
 
 **两个依赖被刻意钉在小版本上**：`@tanstack/react-query@5.108.3` 与 `i18next@27.2.4`。更新的版本发布不足
@@ -82,6 +95,7 @@ pnpm quality:check  # 一键跑完全部门禁
 | `src/domain/` 不碰视图 | `layer-boundary.test.ts`         | 禁止 `react-native`、`react-native-paper`、`expo-router`、`@components`                 |
 | `src/api/` 只依赖契约  | `layer-boundary.test.ts`         | 允许 `@domain/contracts`，禁止其它 `@domain`、UI、storage                               |
 | storage 边界唯一       | `layer-boundary.test.ts`         | 只有 `src/storage/**` 可导入 `expo-secure-store` 与 `async-storage`                     |
+| 图片/网络边界          | `network-boundary.test.ts`       | 只有 `image.tsx` 可 import `expo-image`，只有 `network-store.ts` 可 import NetInfo      |
 | 组件不直接取数         | `layer-boundary.test.ts`         | `src/components/**` 禁止 `fetch(`                                                       |
 | alias 无冗余写法       | `layer-boundary.test.ts`         | `app/` 与 `src/` 不允许再出现 `@/` 开头的 import                                        |
 | alias 配置完整         | `alias-config.test.ts`           | tsconfig 必须声明 7 组 alias + `@/*` 兜底，且 jest 映射一致                             |
@@ -93,10 +107,8 @@ pnpm quality:check  # 一键跑完全部门禁
 ## 尚未完成
 
 - **原生工程未生成**：`android/` 与 `ios/` 尚未 `expo prebuild`，需要原生定制或上架前再生成。
-- **发布管线未落全**：`docs/rules/rn/release.md` 要求的 `scripts/dev-env.mjs` / `build-env.mjs` /
-  `env-utils.mjs`、`eas.json` 与 EAS profile 一致性测试尚未建立；当前 `pnpm dev:*` 直接用
-  `node --env-file` 注入 env 文件。
-- **缺失 wrapper**：`@components/ui/image`（需要 `expo-image` 依赖）、`@domain/safe-url`、
-  `QueryOnlineBridge`（需要 `@react-native-community/netinfo`）尚未实现；依赖未加入 lockfile 前不写空壳。
-- **其余架构测试**：`file-split-boundary`、`button-action-state-boundary`、`eas-release-config` 等
-  规则点名的测试尚未全部落地。
+- **缺失 wrapper**：`@domain/safe-url` 尚未实现（host 白名单属于项目配置，未写空壳）。
+- **其余架构测试**：`file-split-boundary`、`button-action-state-boundary`、`expo-app-identity`、
+  `expo-app-assets` 等规则点名的测试尚未全部落地。
+- **EAS 真机构建未跑**：`eas.json` 与本地脚本已就绪，但还没有在 EAS 云端实际出包；`eas init` /
+  签名与商店凭据属于项目接入时的操作。

@@ -1,9 +1,7 @@
 {
   "variant": "rn",
   "kind": "project",
-  "ruleLayers": [
-    "rn"
-  ],
+  "ruleLayers": ["rn"],
   "variantLayerTarget": "rn",
   "substitutions": {
     "mockDir": "mock"
@@ -14,21 +12,9 @@
     "architectureTests": false,
     "hookTests": false
   },
-  "projectScripts": [
-    "check-repo-hygiene.mjs",
-    "init-local-env.mjs",
-    "verify-gates.mjs"
-  ],
-  "skills": [
-    "initialize-rn-project",
-    "sync-architecture-rules"
-  ],
-  "gates": [
-    "hygiene",
-    "arch-tests",
-    "quality-check",
-    "ci"
-  ],
+  "projectScripts": ["check-repo-hygiene.mjs", "verify-gates.mjs"],
+  "skills": ["initialize-rn-project", "sync-architecture-rules"],
+  "gates": ["hygiene", "arch-tests", "quality-check", "ci"],
   "mustRead": [
     "rn/architecture.md",
     "rn/routing.md",

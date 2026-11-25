@@ -101,6 +101,7 @@
 - 业务代码不得直接 `console.*`；走 `@api/logger`。详见 `docs/rules/rn/observability.md`。
 - `expo-secure-store` / `@react-native-async-storage/async-storage` 只能在 `src/storage/*` 内 import。详见 `docs/rules/rn/storage.md`。
 - 业务图片必须使用 `expo-image` 通过 `@components/ui/image` 接入，不直接用 RN `Image`。详见 `docs/rules/rn/images.md`。
+- 网络状态只从 `@domain/network/network-store` 读取；业务代码不得直接 import `@react-native-community/netinfo`。
 - 业务长列表必须 `FlatList` / `SectionList`，使用 `@components/ui/flat-list-performance` 常量；不允许 `.map` 直接渲染。详见 `docs/rules/rn/ui-components.md`。
 - 用户可见文案必须走 i18n，不允许硬编码。详见 `docs/rules/rn/i18n.md`。
 - 所有外部 URL 与 deep link 入口必须走 `@domain/safe-url` 校验；详见 `docs/rules/rn/security.md`。

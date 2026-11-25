@@ -1,0 +1,43 @@
+{
+  "cli": {
+    "version": ">= 16.0.0",
+    "appVersionSource": "local"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_APP_ENV": "development",
+        "EXPO_PUBLIC_API_BASE_URL": "http://127.0.0.1:8080/api",
+        "EXPO_PUBLIC_IOS_APP_STORE_ID": "0000000000",
+        "EXPO_PUBLIC_ANDROID_APP_PACKAGE_NAME": "com.example.rnapp",
+        "EXPO_PUBLIC_ANALYTICS_ENABLED": "false"
+      }
+    },
+    "staging": {
+      "distribution": "internal",
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_APP_ENV": "staging",
+        "EXPO_PUBLIC_API_BASE_URL": "https://api-staging.example.com/api",
+        "EXPO_PUBLIC_IOS_APP_STORE_ID": "0000000000",
+        "EXPO_PUBLIC_ANDROID_APP_PACKAGE_NAME": "com.example.rnapp",
+        "EXPO_PUBLIC_ANALYTICS_ENABLED": "false"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_APP_ENV": "production",
+        "EXPO_PUBLIC_API_BASE_URL": "https://api.example.com/api",
+        "EXPO_PUBLIC_IOS_APP_STORE_ID": "0000000000",
+        "EXPO_PUBLIC_ANDROID_APP_PACKAGE_NAME": "com.example.rnapp",
+        "EXPO_PUBLIC_ANALYTICS_ENABLED": "true"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}

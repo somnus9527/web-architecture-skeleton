@@ -12,10 +12,14 @@
       "typedRoutes": true
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.example.rnapp",
+      "buildNumber": "1"
     },
     "android": {
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.example.rnapp",
+      "versionCode": 1
     }
   }
 }
