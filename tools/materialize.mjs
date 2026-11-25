@@ -166,6 +166,20 @@ function materialize(variant) {
     writeDoc(variantTarget, name, body);
   }
 
+  // 显式追加规则：用于只消费某一层的少数文档（如 monorepo 只要 monorepo-workspace.md）。
+  for (const rel of manifest.ruleInclude ?? []) {
+    const separator = rel.indexOf('/');
+    if (separator <= 0 || separator === rel.length - 1) {
+      throw new Error(`manifest.ruleInclude 路径不合法: ${rel}`);
+    }
+    const layer = rel.slice(0, separator);
+    const name = rel.slice(separator + 1);
+    if (entries.some((entry) => entry.file === `${layer}/${name}`)) {
+      continue;
+    }
+    writeDoc(layer, name, readFileSync(join(ROOT, 'rules', rel), 'utf8'));
+  }
+
   const frontendEntries = entries.filter((entry) => entry.layer === 'frontend');
   const mustRead = manifest.mustRead ?? [];
   const intro = '本目录由 `rules/` 物化生成，不要手改：先读必读，再按任务检索。';
@@ -243,7 +257,9 @@ function materialize(variant) {
   for (const name of allowedScripts) {
     cpSync(join(projectScripts, name), join(scriptTarget, name));
   }
-  cpSync(join(ROOT, 'tools', 'project', 'repo-hygiene.json'), join(ROOT, 'skeletons', variant, '.repo-hygiene.json'));
+  if (manifest.hygiene !== false) {
+    cpSync(join(ROOT, 'tools', 'project', 'repo-hygiene.json'), join(ROOT, 'skeletons', variant, '.repo-hygiene.json'));
+  }
 
   const skillTarget = join(ROOT, 'skeletons', variant, '.agents', 'skills');
   rmSync(skillTarget, { recursive: true, force: true });

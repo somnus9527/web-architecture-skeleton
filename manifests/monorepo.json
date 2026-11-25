@@ -1,0 +1,29 @@
+{
+  "variant": "monorepo",
+  "kind": "workspace",
+  "ruleLayers": [
+    "shared"
+  ],
+  "ruleInclude": [
+    "frontend/monorepo-workspace.md",
+    "frontend/quality-tooling.md"
+  ],
+  "skills": [
+    "sync-architecture-rules"
+  ],
+  "projectScripts": [
+    "check-repo-hygiene.mjs"
+  ],
+  "sharedAssets": {
+    "hooks": false,
+    "components": false,
+    "architectureTests": false,
+    "hookTests": false
+  },
+  "mustRead": [
+    "frontend/monorepo-workspace.md"
+  ],
+  "substitutions": {
+    "mockDir": "mocks"
+  }
+}

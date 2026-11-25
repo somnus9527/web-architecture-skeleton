@@ -181,9 +181,46 @@ function checkScriptsAndExports(entry, domain) {
   }
 }
 
+/**
+ * 校验应用从 workspace 根继承工具链配置，而不是各自保留仓库级副本。
+ *
+ * @param {{dir: string, name: string}} entry - 应用条目。
+ * @returns {void}
+ */
+function checkInheritance(entry) {
+  const hoisted = [
+    '.github',
+    '.husky',
+    '.prettierrc.json',
+    '.prettierignore',
+    '.editorconfig',
+    'commitlint.config.cjs',
+    'pnpm-lock.yaml',
+    'pnpm-workspace.yaml',
+    'README.md',
+    'AGENTS.md',
+  ];
+
+  for (const name of hoisted) {
+    if (existsSync(join(ROOT, entry.dir, name))) {
+      fail(`${entry.dir}: ${name} 由 workspace 根统一提供，应用内不得保留副本`);
+    }
+  }
+
+  const tsconfig = readJson(`${entry.dir}/tsconfig.json`);
+  if (!tsconfig) {
+    fail(`${entry.dir}: 缺少 tsconfig.json`);
+    return;
+  }
+  if (tsconfig.extends !== '../../tsconfig.base.json') {
+    fail(`${entry.dir}: tsconfig.json 必须 extends ../../tsconfig.base.json`);
+  }
+}
+
 for (const entry of apps) {
   checkDependencies(entry, 'apps');
   checkScriptsAndExports(entry, 'apps');
+  checkInheritance(entry);
 }
 for (const entry of packages) {
   checkDependencies(entry, 'packages');

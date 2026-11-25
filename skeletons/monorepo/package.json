@@ -1,27 +1,35 @@
 {
-  "name": "monorepo-template",
+  "name": "monorepo-app",
   "version": "0.1.0",
   "private": true,
   "packageManager": "pnpm@11.9.0",
   "scripts": {
-    "dev": "pnpm --filter example-app dev",
-    "build": "pnpm --filter example-app build",
-    "typecheck": "pnpm -r --parallel typecheck",
-    "lint": "eslint .",
-    "test": "pnpm -r --parallel test",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "dev": "pnpm -r --parallel --if-present dev",
+    "build": "pnpm -r --if-present build",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "lint": "pnpm -r --if-present lint",
+    "test": "pnpm -r --if-present test",
+    "format": "pnpm -r --if-present format && prettier --write .",
+    "format:check": "pnpm -r --if-present format:check && prettier --check .",
     "check:workspace": "node scripts/check-workspace.mjs",
-    "check": "pnpm check:workspace && pnpm typecheck && pnpm lint && pnpm test && pnpm format:check"
+    "check:hygiene": "node scripts/check-repo-hygiene.mjs --tracked",
+    "check": "pnpm check:workspace && pnpm typecheck && pnpm lint && pnpm check:hygiene && pnpm test && pnpm format:check",
+    "prepare": "husky"
   },
   "devDependencies": {
-    "@eslint/js": "^10.0.1",
+    "@commitlint/cli": "^21.2.0",
+    "@commitlint/config-conventional": "^21.2.0",
+    "@eslint/js": "^9.39.5",
     "@types/node": "^24.10.1",
-    "eslint": "^9.39.1",
+    "eslint": "^9.39.5",
     "globals": "^17.14.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.4",
     "prettier": "^3.8.4",
     "typescript": "^6.0.3",
-    "typescript-eslint": "8.73.0",
-    "vitest": "^5.1.1"
+    "typescript-eslint": "8.74.0"
+  },
+  "lint-staged": {
+    "*.{js,cjs,mjs,ts,tsx,json,md,yaml,yml}": "prettier --write"
   }
 }

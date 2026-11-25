@@ -1,0 +1,6 @@
+{
+  "schemaVersion": 2,
+  "variant": "monorepo",
+  "repository": "git@github.com:somnus9527/web-architecture-skeleton.git",
+  "ref": "main"
+}

@@ -109,10 +109,84 @@ function checkVariant(variant) {
   }
 }
 
-const failures = Object.keys(VARIANTS).flatMap(checkVariant);
+/**
+ * monorepo 组合生成冒烟测试：生成 spa + ssr 两个应用，校验继承与剥离结果。
+ *
+ * @returns {string[]} 失败描述。
+ */
+function checkMonorepo() {
+  const failures = [];
+  const workdir = mkdtempSync(join(tmpdir(), 'skeleton-monorepo-'));
+  const target = join(workdir, 'smoke-mono');
+
+  try {
+    execFileSync(
+      process.execPath,
+      [
+        join(ROOT, 'skills', 'initialize-monorepo-project', 'scripts', 'initialize-monorepo-project.mjs'),
+        '--id',
+        'smoke-mono',
+        '--target',
+        target,
+        '--app',
+        'spa:web',
+        '--app',
+        'ssr:site',
+      ],
+      { cwd: ROOT, stdio: 'pipe' },
+    );
+
+    const rootManifest = JSON.parse(readFileSync(join(target, 'package.json'), 'utf8'));
+    if (rootManifest.name !== 'smoke-mono') {
+      failures.push('monorepo: 根 package.json 名称未替换');
+    }
+    if (existsSync(join(target, 'apps', 'example-app'))) {
+      failures.push('monorepo: example-app 夹具未被删除');
+    }
+
+    for (const [directory, expectedName] of [
+      ['apps/web', 'smoke-mono-web'],
+      ['apps/site', 'smoke-mono-site'],
+    ]) {
+      const appDirectory = join(target, directory);
+      const manifest = JSON.parse(readFileSync(join(appDirectory, 'package.json'), 'utf8'));
+      if (manifest.name !== expectedName) {
+        failures.push(`${directory}: 包名应为 ${expectedName}，实际 ${manifest.name}`);
+      }
+      if (manifest.private !== true) {
+        failures.push(`${directory}: 必须声明 private: true`);
+      }
+      for (const hoisted of ['.github', '.husky', '.prettierrc.json', '.editorconfig', 'README.md', 'AGENTS.md', 'pnpm-lock.yaml']) {
+        if (existsSync(join(appDirectory, hoisted))) {
+          failures.push(`${directory}: 根级配置 ${hoisted} 未被剥离`);
+        }
+      }
+    }
+
+    const appTsconfigs = readdirSync(join(target, 'apps', 'web')).filter((name) => /^tsconfig.*\.json$/u.test(name));
+    const inherited = appTsconfigs.some((name) =>
+      readFileSync(join(target, 'apps', 'web', name), 'utf8').includes('../../tsconfig.base.json'),
+    );
+    if (!inherited) {
+      failures.push('apps/web: tsconfig 未继承 ../../tsconfig.base.json');
+    }
+
+    try {
+      execFileSync(process.execPath, [join(target, 'scripts', 'check-workspace.mjs')], { cwd: target, stdio: 'pipe' });
+    } catch {
+      failures.push('monorepo: workspace 边界校验未通过');
+    }
+
+    return failures;
+  } finally {
+    rmSync(workdir, { recursive: true, force: true });
+  }
+}
+
+const failures = [...Object.keys(VARIANTS).flatMap(checkVariant), ...checkMonorepo()];
 
 if (failures.length === 0) {
-  process.stdout.write(`初始化冒烟测试通过：${Object.keys(VARIANTS).join('、')}\n`);
+  process.stdout.write(`初始化冒烟测试通过：${Object.keys(VARIANTS).join('、')}、monorepo\n`);
 } else {
   process.stderr.write(`初始化冒烟测试失败（${failures.length} 项）：\n`);
   for (const failure of failures) {

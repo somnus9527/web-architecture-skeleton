@@ -13,5 +13,8 @@
   },
   "dependencies": {
     "@repo/types": "workspace:*"
+  },
+  "devDependencies": {
+    "vitest": "catalog:"
   }
 }

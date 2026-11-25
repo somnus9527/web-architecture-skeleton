@@ -76,6 +76,7 @@ function parseArguments() {
   let dryRun = false;
   let backendRoot;
   let noBackend = false;
+  let packageName;
   const projectArguments = [];
 
   for (let index = 0; index < argumentsList.length; index += 1) {
@@ -91,6 +92,16 @@ function parseArguments() {
       }
       backendRoot = normalizeRelativePath(value, '--backend-root');
       index += 1;
+    } else if (argument === '--package-name') {
+      const value = argumentsList[index + 1];
+      if (!value || value.startsWith('--')) {
+        throw new Error('--package-name 必须提供 kebab-case 包名。');
+      }
+      if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(value)) {
+        throw new Error(`--package-name 必须是 kebab-case: ${value}`);
+      }
+      packageName = value;
+      index += 1;
     } else if (argument.startsWith('--')) {
       throw new Error(`未知参数: ${argument}`);
     } else {
@@ -100,7 +111,7 @@ function parseArguments() {
 
   if (projectArguments.length !== 1) {
     throw new Error(
-      '用法: node initialize-ssr-project.mjs [--dry-run] (--backend-root <path>|--no-backend) <project-id>',
+      '用法: node initialize-ssr-project.mjs [--dry-run] [--package-name <name>] (--backend-root <path>|--no-backend) <project-id>',
     );
   }
   if (Boolean(backendRoot) === noBackend) {
@@ -111,6 +122,7 @@ function parseArguments() {
     dryRun,
     projectId: normalizeProjectId(projectArguments[0]),
     backendRoot: backendRoot ?? 'N/A',
+    packageName,
   };
 }
 
@@ -121,9 +133,9 @@ function parseArguments() {
  * @param {string} backendRoot - 配套 Java 后端相对路径或 N/A。
  * @returns {Record<string, string>} 所有受控替换值。
  */
-function deriveProjectValues(projectId, backendRoot) {
+function deriveProjectValues(projectId, backendRoot, packageName) {
   const projectSnake = projectId.replace(/-/gu, '_');
-  const appName = `${projectId}-web`;
+  const appName = packageName ?? `${projectId}-web`;
 
   return {
     projectId,
@@ -531,8 +543,8 @@ function assertNoRuntimePlaceholders() {
  * @returns {void}
  */
 function initializeProject() {
-  const { dryRun, projectId, backendRoot } = parseArguments();
-  const values = deriveProjectValues(projectId, backendRoot);
+  const { dryRun, projectId, backendRoot, packageName } = parseArguments();
+  const values = deriveProjectValues(projectId, backendRoot, packageName);
   assertPristineSkeleton();
   const routeDirectory = getBffRouteDirectory(projectId);
   const changedFiles = [...replaceRuntimeIdentity(values, dryRun), ...updateProjectDocuments(values, dryRun)];

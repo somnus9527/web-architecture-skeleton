@@ -10,6 +10,7 @@ skeletons/      工程级模板：复制一个目录即得到完整项目
   spa/          Vite + React SPA
   ssr/          Next.js SSR/BFF（固定 BFF-only）
   rn/           Expo + expo-router 最小可运行工程
+  monorepo/     pnpm workspace 组织骨架（apps/packages + 根工具链 + 边界校验）
 rules/          规则单源，物化进各 skeleton 的 docs/rules/
   shared/       跨端共用
   frontend/     SPA / SSR 通用
@@ -17,8 +18,7 @@ rules/          规则单源，物化进各 skeleton 的 docs/rules/
   rn/           RN 规则，模板同层放在 rules/rn/templates/
 templates/      文件级模板：单文件 / 单模块骨架
   frontend/     业务模块参考模板
-  monorepo/     pnpm workspace 架构骨架（含边界校验）
-skills/         initialize-{spa,ssr,rn}-project、sync-architecture-rules
+skills/         initialize-{spa,ssr,rn}-project、initialize-monorepo-project、sync-architecture-rules
 tools/          materialize、check-init-smoke、check-doc-links、project/
 manifests/      每个变体消费的规则层、技能与门禁
 docs/           本仓库自身的迁移记录、规则归因与审计
@@ -38,6 +38,14 @@ rm -rf .git
 # 在本项目内运行 initialize-spa-project，完成身份绑定与门禁自检
 ```
 
+monorepo 在骨架仓库内组合生成（不需要先复制目录）：
+
+```bash
+node skills/initialize-monorepo-project/scripts/initialize-monorepo-project.mjs \
+  --id acme --target ../acme --app spa:web --app ssr:site
+cd ../acme && pnpm install && pnpm check
+```
+
 ## 当前状态
 
 | 项                     | 状态                                                      |
@@ -46,7 +54,8 @@ rm -rf .git
 | `skeletons/ssr`        | 完整可运行，固定 BFF-only，不提供 `next-backend`          |
 | `skeletons/rn`         | 完整可运行，规则与骨架对齐中                              |
 | `rules/`               | 已经抽取为单源，54 份共用/变体规则 + RN 30 份 + 19 份模板 |
-| `templates/`           | `frontend/` 与 `monorepo/` 已落地                         |
+| `skeletons/monorepo`   | 组织骨架：workspace + catalog + 根工具链 + 继承校验        |
+| `templates/`           | 只剩 `frontend/` 业务模块参考模板                          |
 | backend / next-backend | 不再分发；文档不再引用仓库外文件                          |
 
 `skeletons/*/docs/rules/` 是物化产物，不要手改；改规则请改 `rules/` 后运行 `node tools/materialize.mjs`。

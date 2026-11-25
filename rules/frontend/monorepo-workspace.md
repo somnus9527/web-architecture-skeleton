@@ -108,9 +108,9 @@ packages/<package-name>/src/
 
 ## Contracts, Mock, And DTO Ownership
 
-- 单 app 私有契约可以留在 app 内，例如 `apps/<app-name>/{{mockDir}}/openapi.yaml` 与 app-local DTO。
+- 单 app 私有契约可以留在 app 内，例如 `apps/<app-name>/<mock-dir>/openapi.yaml`（SPA 为 `mocks/`，SSR 为 `mock/`）与 app-local DTO。
 - 多 app 共享契约应把稳定 DTO、endpoint id、envelope、错误码放入 `packages/types`，OpenAPI 仍需要有明确 source of truth。
-- Prism/OpenAPI mock runtime 归各 app 所有；每个 app 通过自身根目录下的 `{{mockDir}}/openapi.yaml`、`{{mockDir}}/components/`、`{{mockDir}}/examples/` 和 Prism 脚本控制 mock，不创建独立 `apps/mock-server`。
+- Prism/OpenAPI mock runtime 归各 app 所有；每个 app 通过自身根目录下的 mock 目录（`openapi.yaml`、`components/`、`examples/`）和 Prism 脚本控制 mock，不创建独立 `apps/mock-server`。
 - 不允许页面、组件或共享 UI 直接读取 OpenAPI example 作为运行时数据；必须通过 service、BFF 或 app request wrapper。
 - DTO 变更必须同步检查 OpenAPI schema、API 文档、mock example、SQL 字段语义和所有引用 app。
 
@@ -136,7 +136,7 @@ packages/<package-name>/src/
 
 ## Optional E-Commerce Platform Recommendations
 
-> 仅当项目明确存在多渠道、多角色、多端应用时作为**推荐项**(不强制)：app 可按真实运行边界拆分(`apps/workbench`、`apps/ops-console`、`apps/mobile`)，核心领域边界、跨端 DTO/endpoint id/错误码/状态语义进 `packages/types`，`packages/ui` 按使用面拆子入口，SSR/BFF 的 server-only 预取/SEO/缓存/BFF gateway 不泄漏到 client/shared，核心状态机在 API 文档/DTO/mock/SQL/UI 文案间保持一致。mock 仍由各应用根目录的 `{{mockDir}}/openapi.yaml` 和 Prism 控制，不建独立 mock-server app。
+> 仅当项目明确存在多渠道、多角色、多端应用时作为**推荐项**(不强制)：app 可按真实运行边界拆分(`apps/workbench`、`apps/ops-console`、`apps/mobile`)，核心领域边界、跨端 DTO/endpoint id/错误码/状态语义进 `packages/types`，`packages/ui` 按使用面拆子入口，SSR/BFF 的 server-only 预取/SEO/缓存/BFF gateway 不泄漏到 client/shared，核心状态机在 API 文档/DTO/mock/SQL/UI 文案间保持一致。mock 仍由各应用根目录的 mock 目录（`openapi.yaml`）和 Prism 控制，不建独立 mock-server app。
 > 若采用，必须标记采用项；未采用时不得作为缺口强制阻塞交付。
 
 ## Delivery Gates
