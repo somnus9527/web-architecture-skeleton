@@ -207,6 +207,13 @@ function checkInheritance(entry) {
     }
   }
 
+  const eslintConfig = ['eslint.config.js', 'eslint.config.mjs']
+    .map((name) => join(ROOT, entry.dir, name))
+    .find((path) => existsSync(path));
+  if (!eslintConfig || !readFileSync(eslintConfig, 'utf8').includes('../../eslint.config.mjs')) {
+    fail(`${entry.dir}: eslint 配置必须继承 workspace 根 eslint.config.mjs`);
+  }
+
   const tsconfig = readJson(`${entry.dir}/tsconfig.json`);
   if (!tsconfig) {
     fail(`${entry.dir}: 缺少 tsconfig.json`);

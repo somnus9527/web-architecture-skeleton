@@ -2,7 +2,6 @@ import js from '@eslint/js';
 import nextPlugin from '@next/eslint-plugin-next';
 import eslintConfigPrettier from 'eslint-config-prettier';
 import importPlugin from 'eslint-plugin-import';
-import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
@@ -33,19 +32,11 @@ export default tseslint.config(
     plugins: {
       '@next/next': nextPlugin,
       import: importPlugin,
-      react,
       'react-hooks': reactHooks,
-    },
-    settings: {
-      react: {
-        version: 'detect',
-      },
     },
     rules: {
       ...nextPlugin.configs.recommended.rules,
       ...nextPlugin.configs['core-web-vitals'].rules,
-      ...react.configs.flat.recommended.rules,
-      ...react.configs.flat['jsx-runtime'].rules,
       ...reactHooks.configs.recommended.rules,
       '@typescript-eslint/consistent-type-imports': 'error',
       '@typescript-eslint/no-explicit-any': 'error',

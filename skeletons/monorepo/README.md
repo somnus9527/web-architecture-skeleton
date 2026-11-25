@@ -12,9 +12,9 @@ monorepo 是**多应用组织方式**，不是项目类型。`apps/*` 下的每�
 apps/
   example-app/        可运行夹具：验证 workspace 边界，初始化时删除
 packages/
-  types/              纯类型与契约：DTO、view model、状态联合类型
-  tools/              运行时工具：src/shared 纯函数 + src/client 浏览器能力
-  ui/                 跨应用 UI：src/client 组件，文案由 app 注入
+  types/              纯类型与契约（空包，只有 exports 与 tsconfig）
+  tools/              运行时工具（空包，按需补 src/shared、src/client）
+  ui/                 跨应用 UI（空包，按需补 src/client 组件）
 scripts/
   check-workspace.mjs 包边界、catalog、配置继承与聚合脚本校验
 ```
@@ -29,10 +29,11 @@ scripts/
 | `.prettierrc.json` / `.prettierignore`   | 根   | 不保留，Prettier 自动向上查找         |
 | `.editorconfig`                          | 根   | 不保留                                |
 | `commitlint.config.cjs` / `.husky/`      | 根   | 不保留                                |
-| `eslint.config.mjs`                      | 根   | 应用按插件集覆盖，共享规则来自根      |
+| `eslint.config.mjs`                      | 根   | 应用 `import` 后只追加自己的插件规则  |
 | `pnpm-lock.yaml` / `pnpm-workspace.yaml` | 根   | 应用不保留                            |
 
-`check:workspace` 会校验应用里没有根级配置副本，且 `tsconfig.json` 指向根基线。
+`check:workspace` 会校验应用里没有根级配置副本、`tsconfig.json` 指向根基线、且 ESLint 配置确实
+`import` 了根 `eslint.config.mjs`。
 
 ## 命令
 

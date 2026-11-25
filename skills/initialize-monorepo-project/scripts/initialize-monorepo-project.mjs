@@ -238,6 +238,46 @@ function listCatalogKeys() {
 }
 
 /**
+ * 让应用 ESLint 配置继承 workspace 根基线，应用只追加自己的插件规则。
+ *
+ * @param {string} appDirectory - 应用目录。
+ * @returns {void}
+ */
+function inheritEslint(appDirectory) {
+  for (const file of ['eslint.config.js', 'eslint.config.mjs']) {
+    const path = join(appDirectory, file);
+    if (!existsSync(path)) {
+      continue;
+    }
+
+    let content = readFileSync(path, 'utf8');
+    if (content.includes('../../eslint.config.mjs')) {
+      continue;
+    }
+
+    content = content.replace(/^import js from '@eslint\/js';\n/mu, '');
+    content = content.replace(/^ {2}js\.configs\.recommended,\n/mu, '');
+    content = content.replace(/^ {2}\.\.\.tseslint\.configs\.recommended,\n/mu, '');
+
+    const lines = content.split('\n');
+    let lastImport = -1;
+    lines.forEach((line, index) => {
+      if (line.startsWith('import ')) {
+        lastImport = index;
+      }
+    });
+    lines.splice(lastImport + 1, 0, "import sharedEslintConfig from '../../eslint.config.mjs';");
+    content = lines.join('\n');
+
+    content = content.replace(
+      'export default tseslint.config(\n',
+      'export default tseslint.config(\n  ...sharedEslintConfig,\n',
+    );
+    writeFileSync(path, content);
+  }
+}
+
+/**
  * 把应用 package.json 收敛到 workspace 约定。
  *
  * @param {string} appDirectory - 应用目录。
@@ -360,6 +400,7 @@ for (const app of apps) {
   runVariantInitializer(app, appDirectory, projectId, false);
   stripWorkspaceOnlyEntries(appDirectory);
   normalizeAppManifest(appDirectory);
+  inheritEslint(appDirectory);
   inheritTsconfig(appDirectory);
   process.stdout.write(`已初始化 apps/${app.name}（${app.variant}，${projectId}）\n`);
 }

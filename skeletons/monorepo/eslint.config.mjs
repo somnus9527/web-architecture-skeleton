@@ -5,7 +5,7 @@ import tseslint from 'typescript-eslint';
 /**
  * 根 ESLint 配置：apps 与 packages 继承，只按需覆盖。
  */
-export default tseslint.config(
+export const sharedEslintConfig = tseslint.config(
   { ignores: ['**/dist/**', '**/node_modules/**', '**/coverage/**'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
@@ -30,3 +30,5 @@ export default tseslint.config(
     },
   },
 );
+
+export default sharedEslintConfig;

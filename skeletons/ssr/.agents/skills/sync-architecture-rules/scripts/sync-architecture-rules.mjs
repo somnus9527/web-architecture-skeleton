@@ -40,7 +40,7 @@ function readJsonFile(relativePath) {
     return JSON.parse(readFileSync(join(ROOT_DIRECTORY, relativePath), 'utf8'));
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
-    throw new Error(`无法读取 ${relativePath}: ${detail}`);
+    throw new Error(`无法读取 ${relativePath}: ${detail}`, { cause: error });
   }
 }
 
@@ -161,7 +161,7 @@ function runGit(argumentsList) {
     });
   } catch (error) {
     const stderr = error && typeof error === 'object' && 'stderr' in error ? String(error.stderr).trim() : '';
-    throw new Error(`Git 命令失败: git ${argumentsList[0]}${stderr ? `\n${stderr}` : ''}`);
+    throw new Error(`Git 命令失败: git ${argumentsList[0]}${stderr ? `\n${stderr}` : ''}`, { cause: error });
   }
 }
 
