@@ -7,6 +7,11 @@
   "scripts": {
     "android": "expo start --android",
     "check:gates": "node scripts/verify-gates.mjs",
+    "dev": "pnpm run dev:development",
+    "dev:development": "node --env-file=env/.env.development node_modules/expo/bin/cli start",
+    "dev:mock": "node --env-file=env/.env.mock node_modules/expo/bin/cli start",
+    "dev:staging": "node --env-file=env/.env.staging node_modules/expo/bin/cli start",
+    "dev:test": "node --env-file=env/.env.test node_modules/expo/bin/cli start",
     "check:hygiene": "node scripts/check-repo-hygiene.mjs --tracked",
     "env:init": "node scripts/init-local-env.mjs",
     "format": "prettier --write .",

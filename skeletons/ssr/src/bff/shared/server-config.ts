@@ -5,14 +5,12 @@ import { Buffer } from 'node:buffer';
 import { z } from 'zod';
 
 const envNameSchema = z.enum(['mock', 'dev', 'test', 'prod']);
-const backendModeSchema = z.enum(['bff-only', 'next-backend']);
 const logLevelSchema = z.enum(['debug', 'info', 'warn', 'error']);
 
 const serverConfigSchema = z
   .object({
     APP_ENV: envNameSchema,
     APP_ORIGIN: z.url(),
-    BACKEND_MODE: backendModeSchema,
     BACKEND_API_BASE_URL: z.url().optional(),
     PRISM_MOCK_BASE_URL: z.url().optional(),
     LOG_LEVEL: logLevelSchema,
@@ -54,11 +52,11 @@ const serverConfigSchema = z
       });
     }
 
-    if (value.BACKEND_MODE === 'bff-only' && value.APP_ENV !== 'mock' && !value.BACKEND_API_BASE_URL) {
+    if (value.APP_ENV !== 'mock' && !value.BACKEND_API_BASE_URL) {
       context.addIssue({
         code: 'custom',
         path: ['BACKEND_API_BASE_URL'],
-        message: 'BACKEND_API_BASE_URL is required for bff-only outside mock.',
+        message: 'BACKEND_API_BASE_URL is required outside mock.',
       });
     }
 
@@ -80,10 +78,6 @@ export interface IServerConfig {
    * 当前站点 origin，用于安全 header、回调与 public config 对齐。
    */
   appOrigin: string;
-  /**
-   * 当前项目的后端实现模式。
-   */
-  backendMode: 'bff-only' | 'next-backend';
   /**
    * 真实后端 API base URL，只有远程 gateway 使用。
    */
@@ -186,7 +180,6 @@ export function getServerConfig(): IServerConfig {
   cachedServerConfig = {
     appEnv: parsedConfig.data.APP_ENV,
     appOrigin: parsedConfig.data.APP_ORIGIN,
-    backendMode: parsedConfig.data.BACKEND_MODE,
     backendApiBaseUrl: parsedConfig.data.BACKEND_API_BASE_URL,
     prismMockBaseUrl: parsedConfig.data.PRISM_MOCK_BASE_URL,
     logLevel: parsedConfig.data.LOG_LEVEL,

@@ -15,6 +15,13 @@ export const designTokens = {
     paper: '#171a21',
     text: '#e5e7eb',
   },
+  breakpoints: {
+    tablet: 768,
+    laptop: 1024,
+    desktop: 1280,
+    wide: 1440,
+    ultra: 1920,
+  },
   shape: {
     borderRadius: 8,
   },

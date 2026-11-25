@@ -12,7 +12,8 @@
 
 ## 2. 环境与后端
 
-- [ ] `.env.example` 只包含 `EXPO_PUBLIC_*` 变量，未提交真实取值
+- [ ] `env/.env.<environment>.example` 只包含 `EXPO_PUBLIC_*` 变量，未提交真实取值
+- [ ] 已执行 `pnpm env:init <dev|test|prod>` 生成本地 `env/.env.<environment>`（不入库）
 - [ ] `EXPO_PUBLIC_API_BASE_URL` 指向真实网关地址，未使用占位域名
 - [ ] 涉及凭证时确认只进 SecureStore，不写入 AsyncStorage
 

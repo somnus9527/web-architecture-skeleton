@@ -135,7 +135,7 @@ export async function apiRequest<TData>(path: string, init: RequestInit = {}): P
     headers.set('Content-Type', 'application/json');
   }
 
-  /* authorization 只来自会话 store，避免在 APIClient 里散读 localStorage。 */
+  /* authorization 只来自会话 store，避免在 API client 里散读 localStorage。 */
   if (sessionToken && !headers.has('Authorization')) {
     headers.set('Authorization', `Bearer ${sessionToken}`);
   }

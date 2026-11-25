@@ -10,6 +10,10 @@ const PLACEHOLDER_APP_NAME = `${PLACEHOLDER_PROJECT_ID}-web`;
 const RUNTIME_IDENTITY_FILES = [
   '.env.example',
   '.env.mock',
+  '.env.dev.example',
+  '.env.test.example',
+  '.env.prod.example',
+  '.github/workflows/check.yml',
   'index.html',
   'mocks/openapi.yaml',
   'package.json',
@@ -215,8 +219,16 @@ function replaceRuntimeIdentity(values, dryRun) {
     const source = readFileSync(filePath, 'utf8');
     let updated = replacements.reduce((content, [from, to]) => content.replaceAll(from, to), source);
 
-    if (relativePath === '.env.example' || relativePath === '.env.mock') {
+    if (relativePath.startsWith('.env.')) {
       updated = replaceRequired(updated, 'VITE_APP_BASE_PATH=/', `VITE_APP_BASE_PATH=${values.basePath}`, relativePath);
+    }
+    if (relativePath.startsWith('.github/workflows/')) {
+      updated = replaceRequired(
+        updated,
+        'VITE_APP_BASE_PATH=/spa-app/',
+        `VITE_APP_BASE_PATH=${values.basePath}`,
+        relativePath,
+      );
     }
 
     applyFileUpdate(relativePath, updated, dryRun, changedFiles);
@@ -422,7 +434,10 @@ OpenAPI/Prism 和 Vitest。
 
 ## 例外
 
-暂无。API upstream、正式域名和 Nginx server name 由发布环境另行绑定。
+- 骨架演示使用 Bearer token + \`localStorage\` 持久化会话（\`frontend-security.md\` 的 Bearer 例外）。
+  正式项目若后端支持 HttpOnly cookie，应切换；继续使用 Bearer 必须在本 ADR 记录 XSS 风险、短过期
+  与清理策略。
+- API upstream、正式域名和 Nginx server name 由发布环境另行绑定。
 
 ## 约束
 

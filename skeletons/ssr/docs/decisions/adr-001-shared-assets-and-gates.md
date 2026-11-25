@@ -17,7 +17,8 @@
 
 1. `rules/<layer>/**` 是规则的唯一可编辑位置；`skeletons/<variant>/docs/rules/**` 由
    `tools/materialize.mjs` 生成，禁止手改。
-2. `shared-assets/**` 是强制内置代码（共享 hook、UI 原语、架构测试）的唯一可编辑位置，同样由物化下发。
+2. `shared-assets/**` 是 SPA/SSR 强制内置代码（共享 hook、UI 原语、架构测试）的唯一可编辑位置，同样由
+   物化下发；RN 使用 `skeletons/rn` 自带的 theme/UI 与架构测试。
 3. 门禁必须可执行且会失败：`check:gates`（结构自检）、`check:hygiene`（仓库卫生）、
    架构测试、`quality:check` 聚合，并由 pre-commit 与 CI 双重调用。
 4. 例外只能通过 `.agents/architecture-exceptions.json` 登记，必须带 `reason` 与 `expiresAt`，过期自动失效。

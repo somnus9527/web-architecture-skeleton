@@ -1,5 +1,13 @@
 @import 'tailwindcss';
 
+@theme {
+  --breakpoint-tablet: 48rem;
+  --breakpoint-laptop: 64rem;
+  --breakpoint-desktop: 80rem;
+  --breakpoint-wide: 90rem;
+  --breakpoint-ultra: 120rem;
+}
+
 /* MUI 与 Tailwind v4 共存的显式 CSS layer 顺序：MUI 注入到 mui 层，Tailwind utilities 在其后可覆盖。 */
 @layer theme, base, mui, components, utilities;
 

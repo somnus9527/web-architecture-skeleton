@@ -35,7 +35,7 @@ const VARIANTS = {
   spa: { script: 'initialize-spa-project/scripts/initialize-spa-project.mjs', args: ['--no-backend', PROJECT_ID] },
   ssr: {
     script: 'initialize-ssr-project/scripts/initialize-ssr-project.mjs',
-    args: ['--backend-mode', 'bff-only', '--no-backend', PROJECT_ID],
+    args: ['--no-backend', PROJECT_ID],
   },
   rn: {
     script: 'initialize-rn-project/scripts/initialize-rn-project.mjs',

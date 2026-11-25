@@ -1,5 +1,9 @@
 ## Frontend Security（SSR 变体）
 
+- **Next.js Server Action 自带 CSRF 防护**：框架校验 `Origin` 与 `Host`/`X-Forwarded-Host` 匹配（可配
+  `serverActions.allowedOrigins`），因此走 Server Action 的写操作（含登录）已满足 CSRF 红线，无需再手搓
+  token。显式 CSRF/Origin 校验主要针对**被浏览器 fetch 调用的 Route Handler POST 面**。
+
 以下随「有服务器」而来的攻击面,红线与细则见 [`ssr-security-baseline.md`](./ssr-security-baseline.md),此处仅列清单:
 
 - **SSRF**: 服务端按用户输入抓取 URL(图片代理、导入、远程 fetch)必须限制协议、host 白名单、私网网段、重定向跳数与响应大小。

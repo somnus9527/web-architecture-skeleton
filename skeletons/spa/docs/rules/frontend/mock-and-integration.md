@@ -1,17 +1,15 @@
 # Mock And Integration
 
-> **Scope**: This file covers mock + mock=>real switching for Vite SPA apps. The app root is `<frontend-root>` unless the project binding says otherwise.
+> **Scope**: This file covers the mock + mock=>real contract shared by SPA and SSR. Framework-specific dev commands live in the variant note appended by materialize; the app root is `<frontend-root>` unless the project binding says otherwise.
 
 ## Prism And OpenAPI
 
 - New projects use Prism + OpenAPI as the primary mock system.
 - Create `mocks/openapi.yaml` as the Prism entry relative to the single-app root or owning app root.
-- Split contract details under `mocks/components/` for schemas, parameters, responses, and requestBodies.
-- Split example payloads under `mocks/examples/`.
-- Use `$ref` from the owning app's `mocks/openapi.yaml`; do not pile every schema and example into the entry file.
+- For a large contract, split schemas/parameters/responses/requestBodies under `mocks/components/` and example payloads under `mocks/examples/`, then `$ref` them from the entry file. A small single-app contract may stay in one `openapi.yaml`; do not let the entry file become a dumping ground.
 - All frontend service methods must map to a path + operation in the owning app's `mocks/openapi.yaml`.
 - Existing projects keep their current mock system unless the user approves migration.
-- If a project has Prism/OpenAPI mock support, Prism is the only runtime mock path. Service, hook, page, APIClient, or component code must not return hardcoded mock response objects for HTTP/mock endpoints.
+- If a project has Prism/OpenAPI mock support, Prism is the only runtime mock path. Service, hook, page, API client, or component code must not return hardcoded mock response objects for HTTP/mock endpoints.
 - Treat the owning app's `mocks/openapi.yaml` as the source of truth for implemented frontend/API contracts. API docs
   may include future endpoints only when they are marked `Planned`, `Not implemented in frontend`, or
   `Not available in Prism mock`.
@@ -39,7 +37,7 @@ Required fields, optional fields, enums, state values, error codes, and example 
 
 - Put all mock or real API-facing methods in the service layer.
 - Keep method names use-case-oriented and stable, such as `listResources`, `submitAction`, or `updateStatus`.
-- In new projects, service methods call `src/shared/tools/APIClient` and never call `fetch` directly.
+- In new projects, service methods call `src/shared/tools/api-client.ts` and never call `fetch` directly.
 - In existing projects, use the existing request wrapper unless the user approves a migration.
 - Simulate realistic loading and error states through Prism examples and UI state; do not hide contract errors in page components.
 - Return error wrappers for validation failures, illegal state transitions, or mock exception scenarios.
@@ -51,7 +49,7 @@ Required fields, optional fields, enums, state values, error codes, and example 
 Provide handoff steps when delivering a project:
 
 1. Switch through the project env loader and dev script, not scattered code branches. Concrete variables and commands live in the variant note appended by materialize.
-2. Use `src/shared/tools/APIClient` for new template projects, or replace service internals with the existing request wrapper; keep service method names and TypeScript DTOs stable.
+2. Use `src/shared/tools/api-client.ts` for new template projects, or replace service internals with the existing request wrapper; keep service method names and TypeScript DTOs stable.
 3. Preserve the unified `{ data, code, codeMsg }` handling (canonical in [`./api-contracts.md`](./api-contracts.md)).
 4. Apply the confirmed auth contract. For token-based APIs, use the approved `authorization` scheme and keep only
    local demo tokens in `.env.mock`; real credentials follow the credential storage clause in
@@ -65,13 +63,13 @@ New projects should provide:
 
 - `mock:serve` for Prism.
 - `mock:check` or `openapi:check` for OpenAPI validation.
-- `dev:mock` to run Prism and Vite together with `.env.mock`.
+- `dev:mock` to run Prism together with the app dev server, using `.env.mock`.
 - `dev:dev`, `dev:test`, and `build:prod` for `.env.dev`, `.env.test`, and `.env.prod`.
 
 When a user asks to start the frontend project, use `dev:mock` by default if Prism/OpenAPI mock support exists and the script is available. After startup, if multiple `.env.*` files and matching dev scripts exist, report each environment's command to the caller, such as `mock -> pnpm dev:mock`, `dev -> pnpm dev:dev`, and `test -> pnpm dev:test`, and state which one is currently running.
 
 ## Mock And Integration（SPA 变体）
 
-- **Vite SPA 默认取值**：`.env.mock` 设 `VITE_API_MODE=mock`、`VITE_API_BASE_URL=/mock-api`、
-  `MOCK_API_TARGET=http://127.0.0.1:4010`；`.env.dev` 设 `VITE_API_MODE=dev` 并把 `VITE_API_BASE_URL`
-  指向真实浏览器请求入口。对应命令 `pnpm dev:mock` / `pnpm dev:dev`。
+- **Vite SPA 默认取值**：`.env.mock` 设 `VITE_API_BASE_URL=/mock-api` 与
+  `MOCK_API_TARGET=http://127.0.0.1:4010`；`.env.dev` / `.env.test` 把 `VITE_API_BASE_URL` 指向各自后端
+  入口；`.env.prod` 使用 Nginx 同源代理路径（如 `/api`）。对应命令 `pnpm dev:mock` / `pnpm dev:dev`。

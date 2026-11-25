@@ -1,7 +1,8 @@
 # SSR 线上发布
 
 本文是通用发布基线。正式应用必须将 `<project-id>`、域名、日志目录和平台账号替换为真实值。
-如果项目选择 `backend-mode=next-backend`，还必须执行 [`../rules/next-backend/pm2-deployment.md`](../rules/next-backend/pm2-deployment.md)。
+SSR 骨架固定 BFF-only：发布只需要 Next standalone 进程，数据库 migration、worker 和 scheduler 由配套
+Java 后端仓库负责。
 
 ## 发布模型
 
@@ -54,7 +55,6 @@ APP_ORIGIN
 NEXT_PUBLIC_APP_ENV
 NEXT_PUBLIC_APP_ORIGIN
 BACKEND_API_BASE_URL
-BACKEND_MODE
 PRISM_MOCK_BASE_URL
 LOG_LEVEL
 SESSION_COOKIE_NAME
@@ -84,8 +84,6 @@ PM2_SAVE_AFTER_HEALTH
 
 `ecosystem.config.cjs` 只向应用进程传递固定运行变量和 `PM2_ENV_ALLOWLIST` 显式列出的附加变量，
 不得通过展开完整 `process.env` 注入无关凭证。`PM2_ENV_ALLOWLIST` 只写变量名，不写 secret value。
-`BACKEND_MODE` 必须显式设置为 `bff-only` 或 `next-backend`；部署脚本和 PM2 配置都不得回退到
-隐式默认模式。
 
 线上统一使用 pnpm：
 
@@ -121,11 +119,9 @@ pm2 describe <project-id>-web
 之外，并由平台或 logrotate 负责保留和清理。健康探测失败时脚本退出且不执行 `pm2 save`；代码
 release 回退、数据库 forward-fix、version 和业务 smoke 仍由流水线或运维按“发布后检查”完成。
 
-`next-backend` 项目不得把 migration、worker 或 scheduler 隐藏在 Web 进程启动逻辑中；发布顺序、
-连接池总量、优雅退出、readiness 和回滚要求以 `next-backend/pm2-deployment.md` 为准。此模式必须将
-`PM2_HEALTHCHECK_URL` 指向能验证数据库 schema 和所有 required dependency 的 readiness 端点。
-`next-backend` 强制 `PM2_SAVE_AFTER_HEALTH=false`；流水线完成只读数据库和非破坏性业务 smoke
-后再显式执行 `pm2 save`。
+本骨架不得把 migration、worker 或 scheduler 隐藏在 Web 进程启动逻辑中；数据库 schema、连接池、
+readiness 和回滚要求由配套 Java 后端仓库的发布流程负责。健康探测只验证当前 Next standalone
+进程和 BFF 依赖。
 
 ## Nginx
 

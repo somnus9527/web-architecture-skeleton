@@ -78,7 +78,7 @@
 ## Error And Status Pages
 
 - `error.tsx` / `global-error.tsx` 必须是 Client Component；`global-error.tsx` 返回完整 `<html>` 和 `<body>`。
-- 登录态缺失优先使用 `unauthorized()` 或项目统一 redirect；权限不足使用 `forbidden()`；对应 `unauthorized.tsx` / `forbidden.tsx` 提供稳定 UI；资源不存在调用 `notFound()`。
+- 登录态缺失优先使用 `unauthorized()` 或项目统一 redirect；权限不足使用 `forbidden()`；采用 `unauthorized()` / `forbidden()` 的项目必须提供对应 `unauthorized.tsx` / `forbidden.tsx`；资源不存在调用 `notFound()`。
 - 错误页、未授权页、无权限页和 not-found 页的用户可见文案必须走 locale 字典。
 
 ## Metadata And Runtime Assets

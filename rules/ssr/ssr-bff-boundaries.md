@@ -2,13 +2,11 @@
 
 ## BFF Goals
 
-- BFF 是 Next SSR 应用到远程后端、Prism mock 或本地受控后端能力的唯一服务端业务出口。
+- BFF 是 Next SSR 应用到远程后端或 Prism mock 的唯一服务端业务出口。
 - BFF 隔离后端 DTO、统一响应 wrapper、错误结构、鉴权 header、request id、缓存策略和 mock/真实服务切换。
 - BFF 输出前端稳定 view model，页面和组件不依赖后端字段名、Java envelope、数据库字段或 Prism example 的临时形状。
-- `bff-only` 模式下，`src/bff/` 不承接数据库、Redis、MQ、邮件、供应商同步、支付轮询、库存履约、
+- 本骨架固定 BFF-only：`src/bff/` 不承接数据库、Redis、MQ、邮件、供应商同步、支付轮询、库存履约、
   定时任务或后台 worker；这些能力属于配套后端或另行批准的服务端架构。
-- `next-backend` 模式下，`src/bff/` 仍不承接上述基础设施能力；BFF service 只能调用
-  `src/server/application` 的公开用例入口，具体边界见 [`../next-backend/architecture.md`](../next-backend/architecture.md)。
 
 ## Directory Responsibilities
 
@@ -33,8 +31,7 @@ src/bff/
 
 **总原则(按层职责组织,不靠文件名分层)**:`src/bff/` 下**只允许**出现上表的 canonical 层目录(`gateway/ services/ adapter/ routes/ actions/ dto/ shared/ transform/`)。**禁止**新建业务语义子目录(如 `bff/user/`、`bff/order/`)再在其中用文件名后缀(`user-auth-gateway.ts`、`user-auth-service.ts`)模拟分层——这等于用文件名重新发明一套与层目录平行的边界,绕过了上表的职责隔离。每个文件**按其层归属**落到对应目录:`*-gateway.ts` 必须在 `gateway/`、`*-service.ts` 在 `services/`、`*-adapter.ts` 在 `adapter/`、依此类推;业务维度通过**文件名前缀**(`user-auth-*`)表达,而不是通过目录。
 
-如项目使用 `next-backend`，必须先通过项目初始化绑定和 ADR 定义独立服务端模块、依赖方向、部署
-和故障边界，并补充对应门禁；不得把数据库、MQ、worker 或完整领域实现直接塞入 `src/bff/`。
+本骨架固定 BFF-only，不提供本地后端模式。需要在同一应用内承载领域、数据库或中间件时，属于另立的服务端架构决策，必须单独审批并定义模块、依赖、部署与门禁；不得把数据库、MQ、worker 或完整领域实现直接塞入 `src/bff/`。
 
 ## Forbidden BFF Layouts
 
@@ -71,14 +68,12 @@ src/bff/
 - Server Component 可以导入 `src/bff/services/**` 的 read 能力；若项目要求更严格，应统一经 `src/bff/routes/**` 或 server facade。
 - `src/features/**` 和 Client Component 不导入 `src/bff/**`，除非目标项目明确提供浏览器安全的 BFF client wrapper。
 - `src/bff/services/**` 可以导入 `gateway`、`adapter`、`dto`、`shared`；不能导入 `src/app/**` 或 Client Component。
-- `next-backend` 模式下，`src/bff/services/**` 只能通过 `src/server/application` 的公开入口调用本地用例，
-  不得导入 `src/server/domain/**`、`src/server/infrastructure/**` 或 `src/server/composition/**`。
 - `src/bff/gateway/**` 不导入 UI、React component、route handler 或 adapter；它只关心契约、请求、响应和错误。
 
 ## Route Handler Rules
 
 - 允许：读取 `Request`、headers、cookies、query、path params、body；生成 request id；读取轻量会话；调用 BFF route facade；返回稳定 JSON、status 和 cache header。
-- 禁止：导入 DB/Redis/MQ/供应商 SDK/邮件 SDK/旧 server lib 或 `src/server/infrastructure/**`；直接请求后端 base URL；直接请求 Prism；返回后端 raw DTO；实现长业务流程或后台任务。
+- 禁止：导入 DB/Redis/MQ/供应商 SDK/邮件 SDK/旧 server lib ；直接请求后端 base URL；直接请求 Prism；返回后端 raw DTO；实现长业务流程或后台任务。
 - 迁移旧 Route Handler 时，只搬迁当前入口真正需要的纯 helper；不要一次性把旧 server 目录搬进 `shared`。
 - 仍有基础设施副作用的旧代码不能进入 BFF shared，只能由后端接口、专门迁移任务或受控 legacy 缺口承接。
 

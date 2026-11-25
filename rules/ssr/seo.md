@@ -157,9 +157,8 @@ CWV 是明确的排名输入项;[`ssr-cache-and-performance.md`](./ssr-cache-and
 - **非公开页不做语言镜像**:`/login`、`/showcase-console`、`/<project-id>-api/**` 不带语言前缀,也不
   输出 locale `alternates`;它们做语言判定用 cookie / `Accept-Language`,与 SEO 无关(多数已 noindex)。
 - 无语言信号(含多数爬虫、不带 `Accept-Language` 的客户端)一律兜底 **en-US**(`NO_SIGNAL_FALLBACK_LOCALE`):URL 语言只对带合法前缀的公开页生效,非公开页与无前缀 404 页仍需要确定的兜底语言。2026-10-13 项目口径,取代此前「删除该机制、回落 UI 默认语言」的做法。骨架**不**保留 UI 默认语言常量(`DEFAULT_LOCALE` 已于 2026-10-13 删除),默认公开语言 URL 由 `DEFAULT_PUBLIC_URL_LOCALE` 单独承担。
-- 详细机制、目录落点、解析优先级与验收矩阵见
-  [`../../proposals/2026-10-12-public-locale-routing-mechanism.md`](../../proposals/2026-10-12-public-locale-routing-mechanism.md)
-  (提案目录不在规则同步面内)与 [`./ssr-i18n.md`](./ssr-i18n.md)。
+- 详细机制、目录落点、解析优先级与验收矩阵见 [`./ssr-i18n.md`](./ssr-i18n.md)；历史提案不随规则分发，
+  不再作为引用来源。
 
 ## 验证
 

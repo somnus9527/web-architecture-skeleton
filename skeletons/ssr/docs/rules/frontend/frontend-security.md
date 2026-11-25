@@ -2,7 +2,7 @@
 
 所有前端工程(SPA 与 SSR/BFF)都要遵守的安全硬约束,分**必须(红线,违反即漏洞)**与**建议(纵深防御)**两档。红线正文保持通用可移植;本工程当前达标/待办集中在文末「本工程现状」一节。
 
-SSR/BFF 专属增量(cache 投毒、出站边界、渲染注入转义、生产部署基线)见 [`ssr-security-baseline.md`](./ssr-security-baseline.md);凭证与鉴权链的架构权威见 [`ssr-bff-boundaries.md`](./ssr-bff-boundaries.md)。
+SSR/BFF 专属增量(cache 投毒、出站边界、渲染注入转义、生产部署基线)由 SSR 变体补段承载;凭证与鉴权链的架构权威也在 SSR 变体中定义,本文不重复。
 
 ## 两条心智模型(先记这两条)
 
@@ -31,9 +31,8 @@ SSR/BFF 专属增量(cache 投毒、出站边界、渲染注入转义、生产�
 ### 3. CSRF
 
 - 用 Cookie 自动承载会话时**必须**防 CSRF:第一道是 `SameSite=Lax/Strict`;所有**改状态的写操作**(POST/PUT/PATCH/DELETE)再叠加 CSRF Token(双提交 cookie 或同步 token)或 Origin/Referer 校验。
-- 生产环境 **CSRF 开关必须为开**,且必须有真实校验实现(不是只读一个 flag);校验只在 BFF route/action facade 或 BFF shared helper 中实现。
+- 生产环境 **CSRF 开关必须为开**,且必须有真实校验实现(不是只读一个 flag);校验落在服务端可校验的边界：SSR 由 BFF route/action facade 或 shared helper 承担，SPA 由配套后端或网关承担，纯前端仓库不得用客户端 flag 冒充校验。
 - 纯 Bearer token(不自动携带)方案天然免疫 CSRF,但见红线 2 的 XSS 权衡。
-- **Next.js Server Action 自带 CSRF 防护**:框架校验 `Origin` 与 `Host`/`X-Forwarded-Host` 匹配(可配 `serverActions.allowedOrigins`),因此走 Server Action 的写操作(含登录)已满足本条,无需再手搓 CSRF token。本条的显式 CSRF/Origin 校验主要针对**被浏览器 fetch 调用的 Route Handler POST 面**——它不吃 Server Action 的 Origin 检查。
 
 ### 4. CSP 与安全响应头
 
@@ -90,6 +89,10 @@ SSR/BFF 专属增量(cache 投毒、出站边界、渲染注入转义、生产�
 ---
 
 ## Frontend Security（SSR 变体）
+
+- **Next.js Server Action 自带 CSRF 防护**：框架校验 `Origin` 与 `Host`/`X-Forwarded-Host` 匹配（可配
+  `serverActions.allowedOrigins`），因此走 Server Action 的写操作（含登录）已满足 CSRF 红线，无需再手搓
+  token。显式 CSRF/Origin 校验主要针对**被浏览器 fetch 调用的 Route Handler POST 面**。
 
 以下随「有服务器」而来的攻击面,红线与细则见 [`ssr-security-baseline.md`](./ssr-security-baseline.md),此处仅列清单:
 

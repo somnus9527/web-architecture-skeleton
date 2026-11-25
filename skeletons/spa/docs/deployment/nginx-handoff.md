@@ -2,12 +2,12 @@
 
 发布前由应用 owner 与运维共同确认：
 
-| 配置                 | 默认占位                      |
-| -------------------- | ----------------------------- |
-| `VITE_APP_BASE_PATH` | `/<project-id>/` 或 `/`       |
-| Nginx static root    | `/var/www/<project-id>`       |
-| API location         | `/api/`                       |
-| API upstream         | `http://127.0.0.1:<api-port>` |
+| 配置                 | 默认占位                                       |
+| -------------------- | ---------------------------------------------- |
+| `VITE_APP_BASE_PATH` | `/<project-id>/` 或 `/`                        |
+| 部署目录（static）   | `/var/www/<project-id>`；Nginx `root /var/www` |
+| API location         | `/api/`                                        |
+| API upstream         | `http://127.0.0.1:<api-port>`                  |
 
 交接必须提供：
 

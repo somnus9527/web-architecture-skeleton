@@ -40,7 +40,9 @@
 - 中文字体使用 `--font-zh`;英文字体使用 `--font-en`;数字、金额、用量、百分比、指标值使用 `--font-number`。
 - 默认正文和 MUI theme 使用 `--font-sans`;`--font-sans` 由 `html[lang]` 切换,中文环境指向 `--font-zh`,英文环境指向 `--font-en`。
 - MUI typography 的字体来源必须经过 `src/shared/theme/design-tokens.ts` 的 `designTokens.fontFamily`,再由 `src/shared/theme/theme.ts` 注入,不得在局部重新创建第二套 theme 字体。
-- `Inter` 字重引入放在 `src/app/layout.tsx`;`D-DIN-PRO` 的 `@font-face` 声明放在 `src/app/globals.css`。新增字体必须说明用途、加载权重和回退链,并更新本规范。
+- `Inter` 字重引入放在应用全局样式入口（SSR `src/app/layout.tsx` / `src/app/globals.css`；SPA
+  `index.html` / `src/styles.css`）;`D-DIN-PRO` 的 `@font-face` 声明放在同一全局样式文件。新增字体必须
+  说明用途、加载权重和回退链,并更新本规范。
 - 新页面默认不直接写 `font-family`;确需强调数字字体时,只使用 `font-family: var(--font-number)` 或 MUI `sx={{ fontFamily: 'var(--font-number)' }}`。
 
 ## 公共 UI 复用规则
@@ -54,7 +56,7 @@
 - 公共组件必须保留可访问性入口,例如 `aria-label`、`role`、键盘触发和禁用态;不得为了视觉统一牺牲交互语义。
 - 如果必须新建公共对象,命名应表达视觉/交互语义而不是业务页面名;业务文案、权限、接口字段和埋点仍由调用方提供。
 - 控制台类共享弹窗只封装通用外壳和动作区,例如遮罩、面板、标题区、关闭按钮、右上渐变和按钮 tone;弹窗里的表单字段、删除说明、业务摘要、校验提示和接口交互由页面或 feature 组件自行注入。
-- 不得为了复用弹窗而把不同业务内容强行抽成同一个“万能弹窗”。当企业端和个人端只共享视觉外壳时,优先使用 `src/shared/ui/console-modal.tsx`;当内容结构也高度一致时,才允许在 feature 内再封装业务弹窗。
+- 不得为了复用弹窗而把不同业务内容强行抽成同一个“万能弹窗”。当企业端和个人端只共享视觉外壳时,优先使用 `src/shared/components/ui/console-modal.tsx`（由派生项目按本节自建）;当内容结构也高度一致时,才允许在 feature 内再封装业务弹窗。
 
 ## 已固定的公共组件样式
 

@@ -10,6 +10,5 @@ expo-env.d.ts
 # 环境配置：只提交模板
 .env
 .env.*
-!.env.example
 !.env.mock
 !.env.*.example

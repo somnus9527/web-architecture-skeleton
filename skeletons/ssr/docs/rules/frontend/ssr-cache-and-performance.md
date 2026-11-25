@@ -1,9 +1,7 @@
 # SSR Cache And Performance
 
-`next-backend` 项目的数据库查询、连接池和 Redis 规则见
-[`../next-backend/database-and-transaction.md`](../next-backend/database-and-transaction.md) 与
-[`../next-backend/redis-lock-and-jobs.md`](../next-backend/redis-lock-and-jobs.md)。前端缓存不得替代
-数据库并发约束、权限校验或幂等事实。
+前端缓存不得替代数据库并发约束、权限校验或幂等事实。数据库查询、连接池和 Redis 规则属于配套后端
+仓库，不在本骨架分发。
 
 ## Generic Next.js Performance
 

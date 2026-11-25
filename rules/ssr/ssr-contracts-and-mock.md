@@ -6,8 +6,8 @@
 - OpenAPI/Prism mock 是 mock runtime 的事实来源；服务、hook、Server Component、Route Handler 和 Server Action 不写死 mock 成功响应。
 - API 文档、OpenAPI schema、Prism example、DTO、BFF adapter、SQL 语义和页面 view model 必须保持字段、枚举、必填/可选和错误语义一致。
 - 后端暂缺时，契约可以标注 `backend-gap`，但 mock 默认成功 example 仍要能支撑业务验收。
-- `next-backend` 的 Application result 也是 BFF adapter 的输入契约；不得把 ORM row、数据库实体或
-  Repository 返回值直接当作页面 view model。
+- 后端返回的 envelope、Application result 或 mock example 是 BFF adapter 的输入契约；不得把 ORM row、
+  数据库实体或 Repository 返回值直接当作页面 view model。
 
 ## DTO Placement
 

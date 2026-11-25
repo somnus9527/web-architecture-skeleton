@@ -1,5 +1,13 @@
 @import 'tailwindcss';
 
+@theme {
+  --breakpoint-tablet: 48rem;
+  --breakpoint-laptop: 64rem;
+  --breakpoint-desktop: 80rem;
+  --breakpoint-wide: 90rem;
+  --breakpoint-ultra: 120rem;
+}
+
 :root {
   color-scheme: light;
   font-family:

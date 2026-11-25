@@ -14,10 +14,9 @@
 | PM2 app name          | `ssr-app-web`              |
 | Log directory         | `/data/logs/ssr-app-web`   |
 | OpenAPI / Prism entry | `mock/openapi.yaml`        |
-| Backend mode          | `bff-only`                 |
+| Paired backend        | `N/A`（`--no-backend`）    |
 
-骨架将 `bff-only` 作为未传 `--backend-mode` 时的旧 CLI 兼容默认值；模式本身表示 Next.js
-只承担 Web、SSR 和 BFF，不承担本地领域或数据基础设施。正式应用必须在初始化时明确确认
-`bff-only` 或 `next-backend`，运行时也必须显式设置 `BACKEND_MODE`。
+SSR 骨架固定 BFF-only：Next.js 只承担 Web、SSR 和 BFF，不承担本地领域或数据基础设施。初始化时只
+需要确认配套 Java 后端关系，即 `--backend-root` 或 `--no-backend`。
 
 这些值仅用于让骨架可以运行。正式应用不得直接沿用占位身份。

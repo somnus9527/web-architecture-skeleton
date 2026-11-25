@@ -14,7 +14,7 @@
 ## Release Identity
 
 - 本规范中的 development / production 指 `NODE_ENV`。`NODE_ENV=development` 不要求 release id，
-  不得因为缺少 `NEXT_DEPLOYMENT_ID` 阻断本地启动。
+  不得因为缺少框架版本变量（SSR `NEXT_DEPLOYMENT_ID`、SPA `VITE_DEPLOYMENT_VERSION`）阻断本地启动。
 - `releaseId` 必须由受控构建入口在框架构建开始前生成或取得，并在一次构建内保持不变。
 - 单机构建后分发同一份产物时，可由构建脚本自动生成；多节点独立构建、滚动发布或灰度发布时，
   必须由 CI/CD、发布平台或统一事实源提供。
@@ -25,7 +25,8 @@
 - `releaseId` 是公开诊断元数据，不得包含分支凭证、用户名、内网地址、token 或其他敏感信息。
 - 禁止在请求处理、应用进程启动或浏览器运行期间重新生成版本号，否则同一份产物可能返回不同版本。
 - 环境变量只是传递 `releaseId` 的一种实现方式，不得把自定义变量名写成所有项目的唯一接入契约。
-- production 构建优先使用 CI/CD 注入的 `NEXT_DEPLOYMENT_ID`；未注入时由标准构建脚本自动生成。
+- production 构建优先使用 CI/CD 注入的框架版本变量（SSR `NEXT_DEPLOYMENT_ID`、SPA
+  `VITE_DEPLOYMENT_VERSION`）；未注入时由标准构建脚本自动生成。
   release id 不写入 `.env.*`，也不作为 development 启动前置条件。
 
 ## Client Detection State Machine
@@ -98,7 +99,7 @@ flowchart TD
   BroadcastChannel、sessionStorage 防循环。
 - 构建入口验证：项目标准 `build:<env>` 命令在干净环境中可直接取得或生成合法 `releaseId`，不依赖
   未记录、未接线的外部变量。
-- development 验证：不设置 `NEXT_DEPLOYMENT_ID` 时 `dev:<env>` 可启动，且不会请求版本端点。
+- development 验证：不设置框架版本变量时 `dev:<env>` 可启动，且不会请求版本端点。
 - SSR 构建验证：构建日志可定位本次 `releaseId`，且 `deploymentId`、客户端版本与
   `/<project-id>-api/version` 返回值一致。
 - 发布后公网验证：健康检查成功、版本端点为新版本且 `no-store`、入口页面可加载、

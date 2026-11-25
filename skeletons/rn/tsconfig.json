@@ -3,6 +3,13 @@
   "compilerOptions": {
     "strict": true,
     "paths": {
+      "@app/*": ["./app/*"],
+      "@api/*": ["./src/api/*"],
+      "@components/*": ["./src/components/*"],
+      "@domain/*": ["./src/domain/*"],
+      "@storage/*": ["./src/storage/*"],
+      "@theme/*": ["./src/theme/*"],
+      "@test/*": ["./src/test/*"],
       "@/*": ["./src/*"]
     },
     "types": ["jest", "node"]

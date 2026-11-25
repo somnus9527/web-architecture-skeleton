@@ -13,6 +13,7 @@ pnpm test
 ## 构建产物
 
 ```bash
+pnpm env:init prod   # 本地缺少 .env.prod 时
 pnpm build:prod
 test -f dist/index.html
 test -f dist/version.json

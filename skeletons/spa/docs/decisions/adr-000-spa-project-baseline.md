@@ -23,10 +23,16 @@ OpenAPI/Prism 和 Vitest。
 
 ## 原因
 
-- 与 `wgcards-xbox-web` 的现有工程和组件生态一致
+- 与现有 Console 工程的 React / MUI 组件生态一致
 - 保留 SPA 的纯静态部署特性，并复用现有 Nginx 入口
 - release ID 与版本文件可以解决旧标签页持有旧资源的问题
 - 不引入 Node 静态服务或 PM2 运行时
+
+## 例外
+
+- 骨架演示使用 Bearer token + `localStorage` 持久化会话，这是 `frontend-security.md` 中 Bearer
+  例外的演示实现。真实项目若后端支持 HttpOnly cookie，应切换到 cookie 方案；继续使用 Bearer 必须在
+  项目 ADR 记录 XSS 风险、短过期与清理策略。
 
 ## 约束
 

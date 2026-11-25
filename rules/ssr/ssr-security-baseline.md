@@ -17,9 +17,7 @@
 
 ## Auth And BFF Boundary
 
-> 三层鉴权链权威见 [`./ssr-bff-boundaries.md`](./ssr-bff-boundaries.md)
-> `next-backend` 的 application 授权、owner/tenant 校验和后端 secret 边界见
-> [`../next-backend/auth-and-security.md`](../next-backend/auth-and-security.md)。
+> 三层鉴权链权威见 [`./ssr-bff-boundaries.md`](./ssr-bff-boundaries.md)。
 
 - 安全侧强调：BFF 绝不把浏览器 raw cookie 直接透传给后端作为身份凭证；浏览器到 BFF 的 httpOnly same-origin cookie 必须在 BFF 转换为 `authorization` 或项目等价服务端 header,后端不应看到原始 cookie。
 - token、session id、权限全集、refresh token 不进入 Client Component props、JSON response、localStorage、sessionStorage、日志或 URL。
@@ -42,5 +40,4 @@
 ## Verification
 
 - 边界测试或静态扫描应覆盖：Client Component 不导入 server-only secret 模块；Route Handler/Server Action 有 runtime validation；cookie mutation 设置安全属性；敏感接口有 CSRF 或签名校验。
-- `next-backend` 额外覆盖 Application 权限、跨租户/owner、数据库行级条件和 secret 日志脱敏。
 - 交付说明必须列出：security headers 来源、cookie/CSRF/CORS 策略、输入校验工具、敏感页面 cache 策略、source map 策略、仍未覆盖的安全例外。

@@ -47,7 +47,7 @@
 ## Table Usage Marking
 
 涉及持久化的模块文档必须含数据使用矩阵,使用实际表/集合/索引名。逻辑删除字段和存储语义以目标
-后端数据模型及 [`../backend/database-mysql.md`](../backend/database-mysql.md) 等适用规则为准:
+后端仓库的数据模型及其适用规则为准:
 
 ```markdown
 ## Table Usage
@@ -107,7 +107,7 @@ endpoint 列出相关数据对象;不适用时标 `N/A`,让下游 AI 不必猜�
 
 ## Engineering Baseline
 
-Java 后端实现遵循 [`../backend/README.md`](../backend/README.md) 路由和目标后端仓库的本地门禁。数据库、
+Java 后端实现遵循配套后端仓库的路由约定与本地门禁。数据库、
 缓存、MQ、搜索、定时任务和认证模型以确认的项目绑定为准;共享文档只要求明确适用性、一致性、
 失败行为和验证证据,不强制所有项目采用同一组中间件。
 

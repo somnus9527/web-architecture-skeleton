@@ -1,8 +1,8 @@
 # Environments And Build(环境与构建)
 
 > Scope:SPA(Vite)与 SSR(Next App Router)通用基线。定义环境模型、`.env.*` 文件集、
-> pnpm 脚本矩阵、构建期 vs 运行期边界、SSR 产物与启动。配置的「读取与校验」边界以
-> [`./ssr-runtime-config.md`](./ssr-runtime-config.md) 为准,本文不重复 env 分类细节。
+> pnpm 脚本矩阵、构建期 vs 运行期边界、服务端产物与启动。配置的「读取与校验」边界由各变体的
+> config 层负责，本文只定义环境模型与脚本契约。
 >
 > 本文集中并固化"环境 + 脚本 + 构建"基线;[`./mock-and-integration.md`](./mock-and-integration.md) 的
 > _Env Scripts_ 段以本文为准(本文为硬基线,非 "should")。
@@ -35,8 +35,8 @@
 ## 4. 启动必须加载并校验 env(fail-fast)
 
 - 禁止缺少明确配置来源就直接启动:dev / build 经 `.env.<env>` 加载;生产 start 仅使用 PM2、部署平台或 secret manager 注入的进程环境,不依赖未随产物发布的 `.env.prod`。
-- 服务端启动做 runtime validation(Zod / envalid 等),缺关键 key **启动即失败**,不在请求中途才发现
-  (细则见 [`./ssr-runtime-config.md`](./ssr-runtime-config.md))。客户端 public config 单独 schema。
+- 服务端启动做 runtime validation(Zod / envalid 等),缺关键 key **启动即失败**,不在请求中途才发现;
+  SSR 的配置读取与校验细则见变体补段。客户端 public config 单独 schema。
 
 ## 5. 构建产物与部署
 
@@ -45,19 +45,15 @@
 ## 6. 验证(✅ 可机械门禁 / ⚠️ 人审)
 
 - ✅ `.env.example` 存在,key 与脚本矩阵自洽;`.env` 及凭证类 `.env.*` 已进 `.gitignore`。
-- ✅ 脚本矩阵存在,且 `dev:<env>` / `build:<env>` 带 env 加载(SPA `--mode`、SSR `--env-file`)。
-- ✅ SSR:`next.config` 含 `output: 'standalone'`;build 脚本含 standalone 资源拷贝;
-  存在 Server Action 时 `.env.example` 含 `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY`。
+- ✅ 脚本矩阵存在,且 `dev:<env>` / `build:<env>` 经统一入口加载对应 `.env.<env>`（`run-vite-with-env` / `run-next-with-env` 或等价脚本）。
 - ✅ 启用自动刷新时：标准构建入口可生成或取得合法 `releaseId`，同一产物内版本一致，版本端点为
   `no-store`，客户端有二次确认和同版本防循环。
-- ✅ `next dev` 在未设置 `NEXT_DEPLOYMENT_ID` 时可直接启动，且 development 页面不发起版本轮询。
 - ⚠️ key 是否真跨实例一致、运行时 secret 注入是否到位 → 交付证据 + 人审 / ops。
 
 ## 7. Handoff 必含
 
 - 各环境启动 / 构建命令(`mock → pnpm dev:mock`、`test → pnpm build:test` 等),及当前运行的是哪个。
 - `.env.*` key 清单、敏感级别、build-time vs runtime 注入方式。
-- SSR:standalone 启动命令、需拷贝的产物清单、`NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` 注入方式。
 - 发版刷新：release id 的生成或注入方式、构建日志定位方式、多实例一致性边界、版本端点、缓存头、
   检测周期、二次确认、发布后公网验证与回滚边界。
 

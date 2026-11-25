@@ -3,20 +3,16 @@
 ## Always-on
 
 - 本仓库是可复制的 SSR/BFF 项目骨架，不是正式业务应用。
-- 本仓库承载前端、共享与 Next 后端规则；Java 后端规则不随前端骨架分发。
+- 本仓库承载前端、共享与 Next 前端规则；Java 后端规则不随前端骨架分发。
 - 没有配套 Java 后端仓库的 SSR 项目仍可使用自身 BFF 或外部 API，不需要创建占位后端仓库。
-- 初始化时必须选择 `bff-only` 或 `next-backend`；初始化 CLI 未传模式时仅为兼容旧命令回退到
-  `bff-only`，正式运行时仍必须显式配置 `BACKEND_MODE`。
-- `next-backend` 允许当前 Next 应用承载受控后端能力，但所有 Web 业务仍必须经过 `src/bff/**`，
-  数据库和中间件不得穿透 BFF。
+- SSR 骨架固定 BFF-only：Next.js 只承担 Web、SSR 和 BFF，不实现数据库、Redis、MQ、worker 或
+  完整领域能力。
 - 新应用复制后，必须先完成 `docs/rules/shared/project-naming.md` 的项目变量绑定。
 - 未完成项目变量绑定，不得开始业务功能开发或接入真实后端。
 - Next.js 16 使用 `src/proxy.ts`；不得新增 `middleware.ts`。
 - BFF Route Handler 默认使用 `/<project-id>-api/**`，不得直接占用 `/api/**`。
-- 所有 Web 数据流先进入 `bff/routes|actions -> services`；远程能力经 `gateway`，本地
-  `next-backend` 能力经 `server/application -> domain -> infrastructure`，结果统一由 `adapter`
-  映射为 view model。
-- `gateway` 是唯一 HTTP 出站边界，`adapter` 是 DTO 或 application result 到 view model 的唯一映射边界。
+- 所有 Web 数据流统一为 `bff/routes|actions -> services -> gateway -> backend / Prism -> adapter`。
+- `gateway` 是唯一 HTTP 出站边界，`adapter` 是 DTO 到 view model 的唯一映射边界。
 - Client Component 不消费 raw DTO，不读取服务端环境变量，不导入 server-only BFF 运行时。
 - Server Action 仅放在 `src/bff/actions/`；服务端模块首行使用 `import 'server-only'`。
 - interface 使用 `I` 前缀；type alias 使用语义化 PascalCase；状态联合类型使用业务名。
@@ -27,7 +23,7 @@
 ## Routing
 
 - 用户要求初始化复制后的 SSR 骨架并提供一个 kebab-case 项目名时，使用
-  `.agents/skills/initialize-ssr-project/SKILL.md`，并确认 `--backend-mode` 及适用的后端关系参数，
+  `.agents/skills/initialize-ssr-project/SKILL.md`，并确认 `--backend-root` 或 `--no-backend`，
   不要手工进行全仓库替换。
 - 用户要求检查或同步上游架构规范时，使用
   `.agents/skills/sync-architecture-rules/SKILL.md`，不得直接合并骨架分支。

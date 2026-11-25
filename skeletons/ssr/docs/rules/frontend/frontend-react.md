@@ -9,16 +9,8 @@
   risk, routing, request wrapper, mock/OpenAPI/Prism, env modes, i18n, DTO placement, feature/shared layout, API
   contracts, paired backend tasks/data changes, package manager, and quality tooling. Mark each item as `compliant`,
   `migrated`, `compatible-exception`, or `non-compliant`.
-- New SPA projects should use Vite + React + TypeScript + MUI + pnpm unless the user or target repo requires another stack.
-- For a new project from this skill folder, run:
-
-```bash
-python3 scripts/create_react_app.py /path/to/frontend --name "业务应用名称"
-```
-
-- After scaffolding, replace template business language and bring the app to the current baseline: MUI ThemeProvider, Prism/OpenAPI mock, APIClient, env files, feature/shared layout, zustand stores, DTOs, locale files, and quality tooling.
 - Keep page components as orchestration layers. Split service methods, DTOs, feature constants, hooks, Dialogs/Drawers, tables, forms, and formatters by responsibility.
-- Single-file size: when any source file reaches 1500 lines, split it, refactor it, or extract shared capability before adding more. The hard limit is 2000 lines; exceeding 2000 lines requires explicit user confirmation before continuing. This applies to both frontend and backend source files.
+- Single-file size is enforced by the architecture test `file-split-boundary`: page/screen 400, hook 200, service 200, component 300, test 600, hard limit 800 (with `@generated` exemption). Split before reaching the type threshold; crossing the hard limit fails `quality:check`.
 - `@/* -> src/*` alias 与禁止 `../` 父级相对导入的规则权威定义见 [`./frontend-architecture.md`](./frontend-architecture.md),本文不重复。
 
 ## MUI Baseline
@@ -61,9 +53,9 @@ Frontend output must be genuinely usable, not a static screenshot:
 - Put API DTOs in `src/types/dto/`.
 - Keep TypeScript field names aligned with OpenAPI schemas, API docs, Prism examples, and service payloads.
 - Keep service methods stable so real HTTP calls can replace mock internals without rewriting pages.
-- Include env-based API switching even while mock mode is the default. New projects use `src/shared/tools/APIClient`; existing projects use their current request wrapper unless migration is approved.
+- Include env-based API switching even while mock mode is the default. New projects use `src/shared/tools/api-client.ts`; existing projects use their current request wrapper unless migration is approved.
 - New projects use `zustand` for store state: global app/runtime state goes in `src/shared/store/`, domain UI state goes in `src/features/<module>/store/`, and server data stays in request hooks unless it must be shared as editable client state.
-- Hooks, components, methods, services, and stores must follow single responsibility. Compose primitive hooks such as `useHttp` and `useDebounce` at the domain layer instead of creating mixed hooks like `useHttpDebounce`.
+- Hooks, components, methods, services, and stores must follow single responsibility. Compose primitive hooks such as `useRequest` and `useDebouncedValue` at the domain layer instead of creating mixed hooks like `useRequestDebounce`.
 
 ## UI Direction
 

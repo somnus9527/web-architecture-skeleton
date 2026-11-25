@@ -6,6 +6,11 @@
     "loading": "Loading...",
     "error": "Failed to load. Please try again.",
     "retry": "Retry",
-    "empty": "No data yet"
+    "empty": "No data yet",
+    "status": {
+      "pending": "Pending",
+      "active": "In progress",
+      "done": "Done"
+    }
   }
 }

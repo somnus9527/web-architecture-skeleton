@@ -10,6 +10,6 @@
 
 | 模板                 | 用途                                               | 对应规则                                  |
 | -------------------- | -------------------------------------------------- | ----------------------------------------- |
-| `feature-service.md` | feature service 层：调用 APIClient、保持方法名稳定 | `rules/frontend/api-contracts.md`         |
+| `feature-service.md` | feature service 层：调用 `api-client.ts` 的 `apiRequest`、保持方法名稳定 | `rules/frontend/api-contracts.md`         |
 | `feature-store.md`   | feature 级 zustand store：只放跨组件共享的 UI 状态 | `rules/frontend/store.md`                 |
 | `feature-page.md`    | 页面编排层：数据、筛选、弹窗状态与三态             | `rules/frontend/frontend-architecture.md` |

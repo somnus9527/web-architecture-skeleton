@@ -3,14 +3,20 @@
 基于 Expo + expo-router 的 React Native 骨架。目录遵循 `docs/rules/rn/architecture.md` 的分层契约：
 
 ```text
-app/                 expo-router 路由壳，只处理路由与壳层
-src/components/      UI 层：screen、业务组件、ui primitive、Provider
-src/domain/          业务逻辑：contracts、i18n、theme、store、formatter
-src/api/            网络层：client 与 endpoints
-src/storage/        持久化边界（当前为空，按需建）
-src/test/           测试（尚未引入）
-docs/rules/rn/      规范与代码模板
+app/                  expo-router 路由壳，只处理路由与壳层
+src/api/              网络层：client / config / errors / logger + endpoints/
+src/components/       UI 层：feature screen、ui primitive、providers
+src/domain/           业务逻辑：contracts、i18n、adapter、store（按需）
+src/theme/            设计 token、Paper theme 映射、ThemeProvider
+src/test/             单测、组件测试、架构测试、测试 Provider
+env/                  环境模板（env/.env.<environment>.example）
+docs/rules/rn/        规范与代码模板
+docs/initialization/  初始化清单
+scripts/              门禁、卫生、env 初始化脚本
 ```
+
+`src/storage/` 尚未创建：当前没有 SecureStore / AsyncStorage 调用。接入持久化时按
+`docs/rules/rn/storage.md` 新建该目录，并保持平台 storage 只能从这里 import。
 
 ## 初始化
 
@@ -29,9 +35,15 @@ node .agents/skills/initialize-rn-project/scripts/initialize-rn-project.mjs <pro
 
 ```bash
 pnpm install
-cp .env.example .env.local   # 按本地后端地址调整 EXPO_PUBLIC_API_BASE_URL
-pnpm start                   # 或 pnpm ios / pnpm android
+pnpm env:init dev        # 生成 env/.env.development（同样支持 test / prod / staging / mock）
+pnpm dev                 # = dev:development，用 node --env-file 注入 env 文件后启动 Expo
 ```
+
+`env:init` 只复制 `env/.env.<environment>.example`，真实取值写入被 gitignore 的
+`env/.env.<environment>`；`dev` 映射 development、`prod` 映射 production。
+
+`pnpm start` / `pnpm ios` / `pnpm android` 是不注入 env 的裸 Expo 命令，只在已自行导出
+`EXPO_PUBLIC_*` 的终端里可用；业务联调请用 `pnpm dev:development` 或 `pnpm dev:mock`。
 
 依赖版本按 Expo SDK 对齐；升级时用 `npx expo install --fix` 让 Expo 校准原生依赖，不要手工跳版本。
 
@@ -43,7 +55,7 @@ pnpm start                   # 或 pnpm ios / pnpm android
 
 ```bash
 pnpm typecheck      # tsc --noEmit
-pnpm lint           # eslint，含 I 前缀 interface 与 no-console
+pnpm lint           # eslint，含 I 前缀 interface、no-console、no-restricted-imports
 pnpm test           # jest + jest-expo + @testing-library/react-native
 pnpm format:check
 pnpm check:hygiene  # 仓库卫生：env、密钥、体积、包管理器混用
@@ -53,26 +65,38 @@ pnpm quality:check  # 一键跑完全部门禁
 
 测试约定：
 
-- 测试文件放 `src/test/**/*.test.ts?(x)`，`jest.config.js` 用 `jest-expo` 预设，`@/*` 由
-  `moduleNameMapper` 映射到 `src/*`。
+- 测试文件放 `src/test/**/*.test.ts?(x)`，`jest.config.js` 用 `jest-expo` 预设。
+- `tsconfig.json` 的七组 alias（`@app` / `@api` / `@components` / `@domain` / `@storage` / `@theme` /
+  `@test`）在 `jest.config.js` 的 `moduleNameMapper` 里一一对应；`@/*` 仅作兜底，业务代码不应再使用。
+- 组件测试统一用 `@test/utils/test-providers` 的 `TestProviders`，不要在测试里直接 `new QueryClient()`。
 - `@testing-library/react-native` v14 的 `render` 是 **async**，必须 `await`，否则 `screen` 不会被绑定。
-- Query 测试里把 `retry` 关掉、`gcTime` 设为 `Infinity`，避免残留定时器让 Jest 无法退出。
+- Query 测试里把 `retry` 关掉、`gcTime` 设为 `0`，避免残留定时器让 Jest 无法退出。
 
 ## 架构守卫
 
-`src/test/architecture/layering.test.ts` 用静态扫描守住分层契约，违反即测试失败：
+架构测试用静态扫描守住规则，违反即失败：
 
-| 约束                   | 检查方式                                                                     |
-| ---------------------- | ---------------------------------------------------------------------------- |
-| `app/` 只做路由壳      | 禁止导入 `@/api`、`@/storage`，禁止出现 `fetch(`                             |
-| `src/domain/` 不碰视图 | 禁止导入 `react-native`、`react-native-paper`、`expo-router`、`@/components` |
-| `src/api/` 只依赖契约  | 允许 `@/domain/contracts`，禁止其它 `@/domain`、UI、storage                  |
-| storage 边界唯一       | 只有 `src/storage/**` 可导入 `expo-secure-store` 与 `async-storage`          |
-| 组件不直接取数         | `src/components/**` 禁止 `fetch(`                                            |
-
-写这套测试时它当场抓到一个真实违规：`src/domain/theme/paper-theme.ts` 导入了 `react-native-paper`，
-按规则主题映射应放 `src/theme/`——已搬迁。
+| 约束                   | 测试                             | 检查方式                                                                                |
+| ---------------------- | -------------------------------- | --------------------------------------------------------------------------------------- |
+| `app/` 只做路由壳      | `layer-boundary.test.ts`         | 禁止 `@api`、`@storage`，禁止出现 `fetch(`                                              |
+| `src/domain/` 不碰视图 | `layer-boundary.test.ts`         | 禁止 `react-native`、`react-native-paper`、`expo-router`、`@components`                 |
+| `src/api/` 只依赖契约  | `layer-boundary.test.ts`         | 允许 `@domain/contracts`，禁止其它 `@domain`、UI、storage                               |
+| storage 边界唯一       | `layer-boundary.test.ts`         | 只有 `src/storage/**` 可导入 `expo-secure-store` 与 `async-storage`                     |
+| 组件不直接取数         | `layer-boundary.test.ts`         | `src/components/**` 禁止 `fetch(`                                                       |
+| alias 无冗余写法       | `layer-boundary.test.ts`         | `app/` 与 `src/` 不允许再出现 `@/` 开头的 import                                        |
+| alias 配置完整         | `alias-config.test.ts`           | tsconfig 必须声明 7 组 alias + `@/*` 兜底，且 jest 映射一致                             |
+| env 读取唯一入口       | `layer-boundary.test.ts`         | 只有 `src/api/config.ts` 可读 `process.env.EXPO_PUBLIC_*`                               |
+| Paper 边界             | `paper-boundary.test.ts`         | 只有 `paper-controls.tsx`、`paper-theme-provider.tsx`、`paper-theme.ts` 可 import Paper |
+| root layout 纪律       | `root-layout-discipline.test.ts` | 根布局不出现 `useQuery` / `fetch(` / `@api` / `@storage`，且 ≤ 30 行                    |
+| 测试 Provider 边界     | `test-provider-boundary.test.ts` | 测试统一用 `TestProviders`，不得直接 `new QueryClient()`                                |
 
 ## 尚未完成
 
 - **原生工程未生成**：`android/` 与 `ios/` 尚未 `expo prebuild`，需要原生定制或上架前再生成。
+- **发布管线未落全**：`docs/rules/rn/release.md` 要求的 `scripts/dev-env.mjs` / `build-env.mjs` /
+  `env-utils.mjs`、`eas.json` 与 EAS profile 一致性测试尚未建立；当前 `pnpm dev:*` 直接用
+  `node --env-file` 注入 env 文件。
+- **缺失 wrapper**：`@components/ui/image`（需要 `expo-image` 依赖）、`@domain/safe-url`、
+  `QueryOnlineBridge`（需要 `@react-native-community/netinfo`）尚未实现；依赖未加入 lockfile 前不写空壳。
+- **其余架构测试**：`file-split-boundary`、`button-action-state-boundary`、`eas-release-config` 等
+  规则点名的测试尚未全部落地。

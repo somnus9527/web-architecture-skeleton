@@ -1,8 +1,8 @@
 # Environments And Build(环境与构建)
 
 > Scope:SPA(Vite)与 SSR(Next App Router)通用基线。定义环境模型、`.env.*` 文件集、
-> pnpm 脚本矩阵、构建期 vs 运行期边界、SSR 产物与启动。配置的「读取与校验」边界以
-> [`./ssr-runtime-config.md`](./ssr-runtime-config.md) 为准,本文不重复 env 分类细节。
+> pnpm 脚本矩阵、构建期 vs 运行期边界、服务端产物与启动。配置的「读取与校验」边界由各变体的
+> config 层负责，本文只定义环境模型与脚本契约。
 >
 > 本文集中并固化"环境 + 脚本 + 构建"基线;[`./mock-and-integration.md`](./mock-and-integration.md) 的
 > _Env Scripts_ 段以本文为准(本文为硬基线,非 "should")。
@@ -35,8 +35,8 @@
 ## 4. 启动必须加载并校验 env(fail-fast)
 
 - 禁止缺少明确配置来源就直接启动:dev / build 经 `.env.<env>` 加载;生产 start 仅使用 PM2、部署平台或 secret manager 注入的进程环境,不依赖未随产物发布的 `.env.prod`。
-- 服务端启动做 runtime validation(Zod / envalid 等),缺关键 key **启动即失败**,不在请求中途才发现
-  (细则见 [`./ssr-runtime-config.md`](./ssr-runtime-config.md))。客户端 public config 单独 schema。
+- 服务端启动做 runtime validation(Zod / envalid 等),缺关键 key **启动即失败**,不在请求中途才发现;
+  SSR 的配置读取与校验细则见变体补段。客户端 public config 单独 schema。
 
 ## 5. 构建产物与部署
 
@@ -45,19 +45,15 @@
 ## 6. 验证(✅ 可机械门禁 / ⚠️ 人审)
 
 - ✅ `.env.example` 存在,key 与脚本矩阵自洽;`.env` 及凭证类 `.env.*` 已进 `.gitignore`。
-- ✅ 脚本矩阵存在,且 `dev:<env>` / `build:<env>` 带 env 加载(SPA `--mode`、SSR `--env-file`)。
-- ✅ SSR:`next.config` 含 `output: 'standalone'`;build 脚本含 standalone 资源拷贝;
-  存在 Server Action 时 `.env.example` 含 `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY`。
+- ✅ 脚本矩阵存在,且 `dev:<env>` / `build:<env>` 经统一入口加载对应 `.env.<env>`（`run-vite-with-env` / `run-next-with-env` 或等价脚本）。
 - ✅ 启用自动刷新时：标准构建入口可生成或取得合法 `releaseId`，同一产物内版本一致，版本端点为
   `no-store`，客户端有二次确认和同版本防循环。
-- ✅ `next dev` 在未设置 `NEXT_DEPLOYMENT_ID` 时可直接启动，且 development 页面不发起版本轮询。
 - ⚠️ key 是否真跨实例一致、运行时 secret 注入是否到位 → 交付证据 + 人审 / ops。
 
 ## 7. Handoff 必含
 
 - 各环境启动 / 构建命令(`mock → pnpm dev:mock`、`test → pnpm build:test` 等),及当前运行的是哪个。
 - `.env.*` key 清单、敏感级别、build-time vs runtime 注入方式。
-- SSR:standalone 启动命令、需拷贝的产物清单、`NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` 注入方式。
 - 发版刷新：release id 的生成或注入方式、构建日志定位方式、多实例一致性边界、版本端点、缓存头、
   检测周期、二次确认、发布后公网验证与回滚边界。
 
@@ -76,17 +72,17 @@ git rm --cached .env.dev .env.prod .env.test
 
 ## Environments And Build（SSR 变体）
 
-### 3.2 SSR(Next 无 `--mode`,用 `node --env-file=` 显式加载,不引入额外依赖)
+### 3.2 SSR（Next 无 `--mode`，经统一入口加载 `.env.<env>`）
 
 ```jsonc
 {
   "dev": "pnpm dev:mock",
-  "dev:mock": "concurrently -k \"pnpm mock:serve\" \"node --env-file=.env.mock node_modules/next/dist/bin/next dev\"",
-  "dev:dev": "node --env-file=.env.dev  node_modules/next/dist/bin/next dev",
-  "dev:test": "node --env-file=.env.test node_modules/next/dist/bin/next dev",
-  "build:dev": "node --env-file=.env.dev  node_modules/next/dist/bin/next build --webpack && node scripts/copy-standalone-assets.mjs",
-  "build:test": "node --env-file=.env.test node_modules/next/dist/bin/next build --webpack && node scripts/copy-standalone-assets.mjs",
-  "build:prod": "node --env-file=.env.prod node_modules/next/dist/bin/next build --webpack && node scripts/copy-standalone-assets.mjs",
+  "dev:mock": "concurrently -k \"pnpm mock:serve\" \"node scripts/run-next-with-env.mjs .env.mock dev -H 127.0.0.1\"",
+  "dev:dev": "node scripts/run-next-with-env.mjs .env.dev dev -H 127.0.0.1",
+  "dev:test": "node scripts/run-next-with-env.mjs .env.test dev -H 127.0.0.1",
+  "build:dev": "node scripts/run-next-with-env.mjs .env.dev build --webpack && node scripts/copy-standalone-assets.mjs",
+  "build:test": "node scripts/run-next-with-env.mjs .env.test build --webpack && node scripts/copy-standalone-assets.mjs",
+  "build:prod": "node scripts/run-next-with-env.mjs .env.prod build --webpack && node scripts/copy-standalone-assets.mjs",
   "build:dist": "pnpm build:dist:prod",
   "build:dist:dev": "pnpm build:dev && node scripts/package-pm2-dist.mjs",
   "build:dist:test": "pnpm build:test && node scripts/package-pm2-dist.mjs",
@@ -95,12 +91,14 @@ git rm --cached .env.dev .env.prod .env.test
 }
 ```
 
-- **铁律:SSR 每个 `build:<env>` 必须在构建时加载对应 `.env.<env>`**。原因:`NEXT_PUBLIC_*` 与
-  Server Action 加密 key 在 **build 时**烤进产物,且发布模型为「按环境覆盖 + 重启」→ 每环境一份构建。
-- Next 无 Vite 的 `--mode`;统一用 `node --env-file=.env.<env>`(Node 20.6+)显式加载,**不引入 `dotenv-cli`**。
-- 构建脚本显式使用 `next build --webpack`，保证当前 Next 主版本下的生产构建器稳定且可重复；开发脚本仍可使用默认 Turbopack。
-- 纯服务端 secret(后端 token、签名密钥)可不写进 `.env.<env>`,改由 PM2 / 平台运行时注入;
-  其余 build-time 值由 `.env.<env>` 或 CI / 云效构建环境变量提供。两者并存,但**每环境构建是基线**。
+- **铁律：SSR 每个 `build:<env>` 必须在构建时加载对应 `.env.<env>`**。原因：`NEXT_PUBLIC_*` 与
+  Server Action 加密 key 在 **build 时**烤进产物，且发布模型为「按环境覆盖 + 重启」→ 每环境一份构建。
+- Next 没有 Vite 的 `--mode`；统一经 `scripts/run-next-with-env.mjs` 加载 `.env.<env>`，由它生成或
+  校验一次 `NEXT_DEPLOYMENT_ID` 后再调用 Next，不能绕过入口直接 `next build`。
+- 构建脚本显式使用 `next build --webpack`，保证当前 Next 主版本下的生产构建器稳定且可重复；开发脚本
+  仍可使用默认 Turbopack。
+- 纯服务端 secret（后端 token、签名密钥）可不写进 `.env.<env>`，改由 PM2 / 平台运行时注入；
+  其余 build-time 值由 `.env.<env>` 或 CI / 云效构建环境变量提供。两者并存，但**每环境构建是基线**。
 
 ## 5. SSR 构建产物与部署
 
@@ -117,8 +115,7 @@ git rm --cached .env.dev .env.prod .env.test
   `.next/static`、`public`、`ecosystem.config.cjs` 与根目录 `deploy.sh`;`.env.*` 不进入发布包,
   构建和运行环境变量均由云效、PM2 或平台注入。
 - 流水线负责把发布包解压到目标目录，再执行 `bash deploy.sh`。部署脚本统一完成日志目录创建、
-  PM2 `startOrReload` 和健康探测；`bff-only` 默认探测成功后 `pm2 save`。`next-backend` 默认不自动
-  保存 PM2 状态，必须在 readiness、数据库只读和非破坏性业务 smoke 后由流水线显式保存。
+  PM2 `startOrReload` 和健康探测；探测成功后执行 `pm2 save`。
 - 部署脚本不得执行 Nginx reload，不得固定服务器发布路径，也不得在每次发布前默认 `pm2 delete`。
 
 参考实现 `scripts/copy-standalone-assets.mjs`:

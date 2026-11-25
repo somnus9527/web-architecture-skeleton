@@ -81,7 +81,7 @@ export const useSessionStore = create<ISessionState>()(
 );
 
 /**
- * 读取当前会话 token，供非 React 模块（APIClient）注入请求头。
+ * 读取当前会话 token，供非 React 模块（API client）注入请求头。
  *
  * @returns 当前 token，未登录时为 null。
  */

@@ -20,7 +20,7 @@
 - **禁止自建 i18n primitive**:不得手写 message accessor / formatter——例如自建 `getMessages` / `formatMessage` / 用字符串模板替换实现插值 / 把整个 messages 字典作为 props 逐层下传给组件。这类"看起来能跑"的简化实现绕过了 next-intl 的 locale 上下文、ICU、复数与缺失 key 处理,属于明确违规。
 - **必须的接入点(缺一即不合规)**:
   - **依赖**:项目必须**实际安装** `next-intl`(出现在 app `package.json` 的 dependencies 中),不能仅在文档或注释里声明"使用 next-intl"却不接入。
-  - **next.config**:挂 `createNextIntlPlugin('./src/i18n/request.ts')`(无 locale 路由场景的标准接法)。
+  - **next.config**:挂 `createNextIntlPlugin('./src/i18n/request.ts')`(公开区 locale route 与根 layout 共用的接法)。
   - **`src/i18n/request.ts`**:用 `getRequestConfig` 返回 `{ locale, messages }`;`locale` 按下文 `Locale Source` 的优先级解析;公开页的 URL 语言压在 cookie/header 之上,非公开页不使用 URL 语言;`messages` 从 `../locale/<locale>.json` 读取(落点见 `Messages And Copy`)。
   - **公开页 URL 语言的可见性**:URL 语言必须在**整棵渲染树**（含根 layout 的 `<html lang>` 与站点级 metadata）可见。next-intl 4.x 的 `requestLocale` 只来自 `setRequestLocale()` 缓存或它自家 middleware 写入的 `X-NEXT-INTL-LOCALE`，**不会**从 `[locale]` 段参数推导；而根 layout 位于 `[locale]` 之上、先于子 layout 渲染，子 layout 再调 `setRequestLocale()` 对本次请求无效（`getRequestConfig` 结果被 React `cache()` 记忆化）。因此在 `src/proxy.ts` 里对合法语言前缀写入受控请求头，并在 `request.ts` 的优先级链中读取它。该头必须由 proxy **先剥离入站值再写入**，客户端不可伪造。注入范围是**任意合法语言前缀**，不限于已登记公开路径：`/en-US/<未登记>`、`/zh-CN/login` 的 404 页也按 URL 语言渲染，否则同一个 URL 会随 cookie 变成另一种语言；路径是否可访问由 `src/proxy.ts` 的非法前缀拒绝（改写成路由层 404）与公开页入口的 `assertPublicLocaleSegment()`（兜 matcher 之外的含点路径）共同决定，404 文档由根 layout + 根级 `app/not-found.tsx` 提供）。
   - **root layout**:挂 `NextIntlClientProvider`(messages/locale 经 request config 流入);`<html lang>` 用 `getLocale()`。
@@ -136,7 +136,7 @@ ADR 中声明是否保留公开区 locale route。
 ## Messages And Copy
 
 - 用户可见文案必须来自 `next-intl` messages、后端 i18n 契约或 locale-aware mock 来源。
-- **messages JSON 文件位于 `apps/<app>/src/locale/<lang>.json`**,**不**用 next-intl 默认的 `apps/<app>/src/messages/`(脚手架默认值,与本规范冲突);`src/i18n/request.ts` 的 import **必须**从 `../locale/` 读取,例如 `import enUS from '../locale/en-US.json'`。
+- **messages JSON 文件位于 `src/locale/<lang>.json`**,**不**用 next-intl 默认的 `src/messages/`(脚手架默认值,与本规范冲突);`src/i18n/request.ts` 的 import **必须**从 `../locale/` 读取,例如 `import enUS from '../locale/en-US.json'`。
 - metadata、OG、错误页、not-found、unauthorized、forbidden、loading/empty/error 状态都必须读取当前 locale。
 - OpenAPI example 中会被 UI 直接展示的文案必须说明 locale 来源；mock 不能只内置单语言文案后假装多语言完成。
 - locale key 命名按业务模块组织，避免全局 message 文件变成无边界公共池。

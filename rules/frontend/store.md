@@ -47,25 +47,26 @@ Decide store ownership in this order:
 
 - Persist only state with a clear reload-survival requirement.
 - Locale, currency, theme, collapsed navigation, and other user preferences are good persist candidates.
-- Persisting tokens is a project security decision. When allowed, follow the credential storage clause in
-  [`frontend-security.md`](./frontend-security.md): persist only the minimal token/session identifier, rely on
-  server-side revocation for logout, clear it on 401/403, account switch and release migration, avoid persisting
-  sensitive user details, and keep the persisted key versioned. `localStorage` is the default carrier; use
-  `sessionStorage` only when the session must die with the tab.
+- Persisting tokens is not the default. Follow the credential storage clause in
+  [`frontend-security.md`](./frontend-security.md): prefer HttpOnly cookie or in-memory session. Only when the
+  approved Bearer exception applies may a minimal token be persisted; record that exception in the project ADR,
+  rely on server-side revocation for logout, clear it on 401/403, account switch and release migration, avoid
+  persisting sensitive user details, and keep the persisted key versioned. Do not treat `localStorage` as a
+  default carrier.
 - Do not persist server caches, large API responses, form drafts with sensitive data, or short-lived loading/error states unless the business explicitly requires recovery.
 - Use versioned persist config or migration logic when persisted state shape can change.
 
-## APIClient Runtime Context
+## API client Runtime Context
 
-- APIClient must not read scattered `localStorage` keys directly for auth, locale, currency, tenant, merchant, or workspace context.
-- APIClient should read request context from store getters or small non-React accessors backed by the relevant stores.
-- APIClient must inject `authorization` from session state when a backend token exists.
-- APIClient must inject `Accept-Language` from the current locale/preference state when backend i18n is part of the contract.
+- API client must not read scattered `localStorage` keys directly for auth, locale, currency, tenant, merchant, or workspace context.
+- API client should read request context from store getters or small non-React accessors backed by the relevant stores.
+- API client must inject `authorization` from session state when a backend token exists.
+- API client must inject `Accept-Language` from the current locale/preference state when backend i18n is part of the contract.
 - Tenant, organization, merchant, workspace, currency, or data-scope headers should be added from their owning stores only when the business contract requires them.
-- APIClient and other non-React modules must not call React hooks. Use Zustand `store.getState()` or exported getter functions.
+- API client and other non-React modules must not call React hooks. Use Zustand `store.getState()` or exported getter functions.
 
 ## Anti-Patterns
 
 - A single catch-all global store containing session, locale, cart, wishlist, modal state, filters, and server responses.
 - A generic reusable UI component importing `cartStore`, `sessionStore`, or any project-specific store directly.
-- APIClient building headers from ad hoc `localStorage` reads while the same data already lives in stores.
+- API client building headers from ad hoc `localStorage` reads while the same data already lives in stores.

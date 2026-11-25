@@ -8,18 +8,13 @@ const COMMON_ENV = {
   SESSION_COOKIE_NAME: 'ssr_app_auth',
 };
 
-function setServerConfigEnv(
-  appEnv: 'dev' | 'mock',
-  prismMockBaseUrl?: string,
-  backendMode: 'bff-only' | 'next-backend' = 'bff-only',
-): void {
+function setServerConfigEnv(appEnv: 'dev' | 'mock', prismMockBaseUrl?: string): void {
   const appOrigin = appEnv === 'mock' ? 'http://127.0.0.1:3001' : 'https://dev.example.com';
   const backendApiBaseUrl = appEnv === 'mock' ? 'http://127.0.0.1:4011' : 'https://backend.example.com';
 
   Object.assign(process.env, {
     APP_ENV: appEnv,
     APP_ORIGIN: appOrigin,
-    BACKEND_MODE: backendMode,
     BACKEND_API_BASE_URL: backendApiBaseUrl,
     CSRF_ENABLED: appEnv === 'mock' ? 'false' : 'true',
     NEXT_PUBLIC_APP_ENV: appEnv,
@@ -48,7 +43,6 @@ afterEach(() => {
   delete process.env.APP_ENV;
   delete process.env.APP_ORIGIN;
   delete process.env.BACKEND_API_BASE_URL;
-  delete process.env.BACKEND_MODE;
   delete process.env.CSRF_ENABLED;
   delete process.env.LOG_LEVEL;
   delete process.env.NEXT_PUBLIC_APP_ENV;
@@ -88,32 +82,12 @@ describe('server config', () => {
     expect(config.prismMockBaseUrl).toBe('http://127.0.0.1:4011');
   });
 
-  it('allows next-backend without a remote backend URL outside mock', async () => {
-    setServerConfigEnv('dev', undefined, 'next-backend');
-    delete process.env.BACKEND_API_BASE_URL;
-
-    const { getServerConfig } = await loadServerConfigModule();
-    const config = getServerConfig();
-
-    expect(config.backendMode).toBe('next-backend');
-    expect(config.backendApiBaseUrl).toBeUndefined();
-  });
-
-  it('requires a remote backend URL for bff-only outside mock', async () => {
+  it('requires a remote backend URL outside mock', async () => {
     setServerConfigEnv('dev');
     delete process.env.BACKEND_API_BASE_URL;
 
     const { getServerConfig } = await loadServerConfigModule();
 
-    expect(() => getServerConfig()).toThrow('BACKEND_API_BASE_URL is required for bff-only outside mock.');
-  });
-
-  it('requires an explicit backend mode', async () => {
-    setServerConfigEnv('dev');
-    delete process.env.BACKEND_MODE;
-
-    const { getServerConfig } = await loadServerConfigModule();
-
-    expect(() => getServerConfig()).toThrow(/BACKEND_MODE/u);
+    expect(() => getServerConfig()).toThrow('BACKEND_API_BASE_URL is required outside mock.');
   });
 });

@@ -3,8 +3,8 @@
 ## Goals
 
 - SSR / BFF 项目必须提供可追踪的请求证据链：浏览器请求、Route Handler、Server Component read、Server Action、BFF service、gateway 上游调用、缓存命中、降级和异常都能用同一个 request id 串起来。
-- `next-backend` 项目继续把同一 request id 传入 Application、事务和 Repository；后端错误、审计和
-  PM2 进程事件细则见 [`../next-backend/error-observability.md`](../next-backend/error-observability.md)。
+- 配套后端沿用同一 request id 记录 Application、事务和 Repository 日志；后端错误、审计和 PM2 进程事件
+  规则属于后端仓库，不在本骨架分发。
 - 日志和观测只服务排障、性能、审计和业务验收；不得把 token、cookie、密码、完整手机号/邮箱、支付敏感字段、后端堆栈或供应商原始敏感响应写入日志。
 - 本规则定义前端 SSR/BFF 侧的日志与可观测性边界，不替代后端 APM、数据仓库、BI 埋点或安全审计平台规范。
 

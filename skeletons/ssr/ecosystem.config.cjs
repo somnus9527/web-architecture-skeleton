@@ -26,20 +26,6 @@ const APPLICATION_ENV_KEYS = [
 ];
 
 /**
- * 读取显式后端模式，防止 PM2 绕过项目绑定并按隐式默认值启动。
- *
- * @returns {'bff-only' | 'next-backend'} 已校验的后端模式。
- */
-function readBackendMode() {
-  const value = process.env.BACKEND_MODE;
-  if (value !== 'bff-only' && value !== 'next-backend') {
-    throw new Error('BACKEND_MODE must be explicitly set to bff-only or next-backend.');
-  }
-
-  return value;
-}
-
-/**
  * 读取正整数型 PM2 参数，阻止无效值进入进程管理配置。
  *
  * @param {string} name - 环境变量名。
@@ -89,7 +75,6 @@ function buildProductionEnv() {
     NODE_ENV: 'production',
     HOSTNAME: '0.0.0.0',
     PORT: process.env.PORT ?? '3001',
-    BACKEND_MODE: readBackendMode(),
   };
 
   for (const key of allowedKeys) {

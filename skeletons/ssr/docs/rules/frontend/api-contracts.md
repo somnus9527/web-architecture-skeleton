@@ -11,7 +11,7 @@
 - Existing projects without OpenAPI may stay Markdown-first until the user approves contract migration.
 - Every frontend mock service method must have a matching API doc entry.
 - Scaffold demo endpoints shipped inside the skeleton repository itself (the demo paths in `mock/openapi.yaml`, such
-  as `/workspace/*` and `/auth/*`) are not business contracts: inside the skeleton they need no
+  as SPA `/workspace/*`、`/auth/*` 或 SSR `/health`、`/showcase`) are not business contracts: inside the skeleton they need no
   `docs/api/<module>.md` entry, but they must be marked as demo endpoints in the OpenAPI `info.description`. A
   project copied from the skeleton must replace them with the confirmed contract and then create the API docs
   required above; this exemption does not transfer to the derived project.
@@ -196,5 +196,5 @@ Required per endpoint:
 ## API Contracts（SSR 变体）
 
 - BFF 与前端共享同一份 `mock/openapi.yaml`；BFF gateway 不得自创第二套方法风格或路径规则。
-- BFF 的对外路由统一挂在 `/<project-id>-api/**` 下，前端只经 `src/shared/tools/APIClient` 访问，不直连 BFF 内部路径。
+- BFF 的对外路由统一挂在 `/<project-id>-api/**` 下；前端只经 feature service 调用 `src/bff/services`，不直连 BFF 内部路径。
 - server-only 的 DTO 与 gateway 实现不得进入浏览器可消费的包或 `src/shared`。

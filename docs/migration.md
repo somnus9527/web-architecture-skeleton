@@ -41,18 +41,13 @@
 
 ## 已知遗留
 
-1. **规则尚未抽取**：`skeletons/*/docs/rules/` 仍是各自副本，两变体间的 44 处分叉尚未合并。抽取后
-   `docs/rules/` 将由 `rules/` 物化生成。
-2. **断链待修**：以下文件仍引用已删除的 `docs/rules/backend` 或 `docs/rules/next-backend`：
-   `AGENTS.md`、`README.md`、`docs/rules/README.md`、`docs/initialization/*.md`、`docs/deployment/*.md`、
-   `.agents/architecture-rules-lock.json`、`.agents/skills/initialize-*/scripts/*.mjs`。
-   规则抽取与技能上提时一并修复。
-3. **技能仍在 skeleton 内**：`initialize-spa-project`、`initialize-ssr-project`、`sync-architecture-rules`
-   尚未上提到仓库根的 `skills/`。
-4. **RN 骨架不存在**：本机无 RN / Expo 工程，`skeletons/rn` 需按原 RN 规则与模板新建。
-5. **RN 骨架已建立，但门禁不完整**：`skeletons/rn` 是可运行的 Expo 工程，`docs/rules/rn/` 由物化生成。
-   未接 `check:gates`（`verify-gates` 依赖架构测试目录与 SPA/SSR 的 ESLint 规则），测试栈（`jest-expo`
-   - RNTL）也尚未引入，因此 `pnpm test` 目前不可用。
-6. **`templates/monorepo` 已落地但未接 Turbo**：按规则「两个以上信号才引入」，当前 1 app + 3 package
-   用 `pnpm -r` 足够；真实项目达到多 app + 缓存需求时再补 `turbo.json`。
-7. **RN 原生工程未生成**：`android/` 与 `ios/` 需要在上架或原生定制时再 `expo prebuild`。
+1. **RN 原生工程未生成**：`android/` 与 `ios/` 需要在上架或原生定制时再 `expo prebuild`。
+2. **RN 规则与骨架正在对齐**：alias、Paper 边界、API 层、env 初始化与架构测试按 `rules/rn/` 补齐；
+   未完成的项在 RN README 的待办中列出。
+3. **CI 只跑纯 Node 检查**：materialize、文档链接、初始化冒烟和 monorepo 边界；三个 skeleton 的
+   `quality:check` 仍由本地或项目 CI 执行。
+4. **SPA 演示会话使用 Bearer + localStorage**：这是 `frontend-security.md` Bearer 例外的演示实现，
+   正式项目应优先 HttpOnly cookie 并在 ADR 记录取舍。
+
+已完成：规则抽取为单源、技能上提、RN 骨架建立、`docs/rules/backend` 与 `next-backend` 移除、
+物化索引恢复必读分组。

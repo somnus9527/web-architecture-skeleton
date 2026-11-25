@@ -37,23 +37,20 @@
 
 ## Service Endpoints
 
-- BFF gateway 从配置层获取 backend / Prism base URL；`next-backend` 的本地 application 从 server config 获取后端 secret。
+- BFF gateway 从配置层获取 backend / Prism base URL。
   页面、Client Component、feature service 不拼 base URL，也不读取数据库或中间件配置。
 - 每个环境至少声明：
   - `APP_ENV`
   - `APP_ORIGIN`
-  - `BACKEND_MODE`
-  - `BACKEND_API_BASE_URL`（`bff-only` 的非 mock 环境必需，`next-backend` 可不配置）
+  - `BACKEND_API_BASE_URL`（非 mock 环境必需）
   - `PRISM_MOCK_BASE_URL` 或 mock endpoint
   - `LOG_LEVEL`
   - `SESSION_COOKIE_NAME`
   - `SESSION_COOKIE_SECURE`
   - `CSRF_ENABLED`
-  - `DATABASE_URL`（仅 `next-backend` 且 database capability 启用时）
   - cache / observability / feature flag 相关 key
 - base URL 必须限制协议和 host；生产不允许意外指向 localhost、mock、内网调试域名或未加 TLS 的公网 HTTP。
-- `BACKEND_MODE` 只能是 `bff-only` 或 `next-backend`，并且必须与项目绑定和 ADR 一致；不允许按请求动态修改。
-- `DATABASE_URL`、Redis/MQ URL 和连接池参数只能由 `src/server/config/**` 读取，不能进入 `NEXT_PUBLIC_*`。
+- 数据库、Redis/MQ URL 和连接池参数不属于本骨架；如由配套后端管理，不得进入 `NEXT_PUBLIC_*`。
 - 第三方 API URL、OAuth redirect URI、webhook callback URL 必须在配置和 API 文档中一致。
 
 ## Feature Flags

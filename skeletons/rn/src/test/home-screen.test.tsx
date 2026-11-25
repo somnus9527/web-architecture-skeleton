@@ -1,32 +1,26 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { PaperProvider } from 'react-native-paper';
 import { render, screen } from '@testing-library/react-native';
 
-import { HomeScreen } from '@/components/home/home-screen';
-import '@/domain/i18n';
-import { fetchHomeSummary } from '@/api/endpoints/home';
+import { fetchHomeSummary } from '@api/endpoints/home';
+import { HomeScreen } from '@components/home/home-screen';
+import { TestProviders } from '@test/utils/test-providers';
 
-import type { ReactElement } from 'react';
+import '@domain/i18n';
 
-jest.mock('@/api/endpoints/home');
+jest.mock('@api/endpoints/home');
 
 const mockedFetchHomeSummary = fetchHomeSummary as jest.MockedFunction<typeof fetchHomeSummary>;
 
 /**
- * 用真实 Provider 组合渲染首页，Query 关闭重试。
+ * 用统一 TestProviders 渲染首页。
  *
  * @param element - 待渲染节点。
  * @returns 渲染结果。
  */
-async function renderWithProviders(element: ReactElement) {
-  const client = new QueryClient({
-    defaultOptions: { queries: { retry: false, gcTime: Number.POSITIVE_INFINITY } },
-  });
-
+async function renderHomeScreen() {
   return await render(
-    <QueryClientProvider client={client}>
-      <PaperProvider>{element}</PaperProvider>
-    </QueryClientProvider>,
+    <TestProviders>
+      <HomeScreen />
+    </TestProviders>,
   );
 }
 
@@ -35,31 +29,32 @@ describe('home screen', () => {
     jest.clearAllMocks();
   });
 
-  it('should render items returned by the summary endpoint', async () => {
+  it('should render the summary items returned by the endpoint', async () => {
     mockedFetchHomeSummary.mockResolvedValue({
+      items: [{ id: '1', status: 'pending', title: '待处理订单' }],
       title: '工作台',
-      items: [{ id: '1', title: '待处理订单', status: 'pending' }],
     });
 
-    await renderWithProviders(<HomeScreen />);
+    await renderHomeScreen();
 
     expect(await screen.findByText('待处理订单')).toBeOnTheScreen();
     expect(screen.getByText('工作台')).toBeOnTheScreen();
   });
 
   it('should render the empty state when the summary has no items', async () => {
-    mockedFetchHomeSummary.mockResolvedValue({ title: '工作台', items: [] });
+    mockedFetchHomeSummary.mockResolvedValue({ items: [], title: '工作台' });
 
-    await renderWithProviders(<HomeScreen />);
+    await renderHomeScreen();
 
     expect(await screen.findByText('暂无数据')).toBeOnTheScreen();
   });
 
-  it('should render the error state when the request fails', async () => {
+  it('should render the error state and a retry action when the request fails', async () => {
     mockedFetchHomeSummary.mockRejectedValue(new Error('boom'));
 
-    await renderWithProviders(<HomeScreen />);
+    await renderHomeScreen();
 
     expect(await screen.findByText('加载失败，请稍后重试')).toBeOnTheScreen();
+    expect(screen.getByTestId('home-summary-retry')).toBeOnTheScreen();
   });
 });

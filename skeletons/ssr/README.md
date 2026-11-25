@@ -8,9 +8,9 @@
 - 公开 SSR 页面与 SEO 基础设施
 - 可选认证区和登录后工具区
 - BFF gateway / service / adapter / route / action 分层
-- 可选 `next-backend` 受控后端模式，保持 BFF 边界并支持后续绑定数据库能力
+- 固定 BFF-only 模式，不提供 `next-backend` 本地后端能力
 - OpenAPI + Prism mock
-- cookie 模式 i18n，不使用 locale route
+- 公开区 `app/[locale]` 语言段，非公开区 cookie + refresh
 - MUI SSR、Emotion、Tailwind CSS v4
 - standalone 构建、PM2 发布包和 Nginx 反向代理说明
 - production 发布版本检测与稳定确认后的自动整页刷新
@@ -22,17 +22,15 @@
 kebab-case 基础项目名：
 
 ```text
-$initialize-ssr-project --backend-mode bff-only --no-backend supply-chain
+$initialize-ssr-project --no-backend supply-chain
 ```
 
-初始化器会自动追加 `-web`，并同步项目标识、后端模式、仓库关系、BFF 路由、cookie、PM2、日志和发布刷新标识。
+初始化器会自动追加 `-web`，并同步项目标识、仓库关系、BFF 路由、cookie、PM2、日志和发布刷新标识。
 初始化完成后再开始业务开发或接入真实后端；需要偏离默认值时记录到基线 ADR。
-已有配套 Java 后端时使用 `--backend-mode bff-only --backend-root ../<backend-project>`；需要当前
-Next 应用承担受控后端能力时使用 `--backend-mode next-backend`。
+已有配套 Java 后端时使用 `--backend-root ../<backend-project>`；没有配套仓库时使用 `--no-backend`。
 
-`bff-only` 是 Web/SSR/BFF 模式，Next.js 仍包含服务端渲染和 BFF，但不承担领域、数据库或中间件
-基础设施。`next-backend` 在相同 Web/BFF 基线上增加受控本地后端实现。完整规则激活范围见
-[`docs/rules/README.md`](./docs/rules/README.md#backend-mode-scope)。
+SSR 骨架固定 BFF-only：Next.js 承担 SSR 与 BFF，但不承担领域、数据库或中间件基础设施。完整规则
+激活范围见 [`docs/rules/README.md`](./docs/rules/README.md)。
 
 默认派生关系：
 
@@ -49,7 +47,7 @@ log directory       = /data/logs/<project-id>-web
 
 ## 项目绑定
 
-本仓库承载前端、共享与 Next 后端规则；Java 后端规则不随前端骨架分发。
+本仓库承载前端与共享规则；Java 后端规则不随前端骨架分发。
 
 - 前端根：当前仓库。
 - 后端根与交付文档根：按项目实际路径绑定，没有配套 Java 后端时为 `N/A` 与当前仓库。
@@ -57,7 +55,7 @@ log directory       = /data/logs/<project-id>-web
 
 ## 同步架构规范
 
-正式项目可以从当前 SSR 骨架分支检查并同步最新 `docs/rules/**`：
+正式项目可以从上游 `skeletons/ssr/docs/rules/` 检查并同步最新规范：
 
 ```text
 $sync-architecture-rules
@@ -90,9 +88,8 @@ production 构建，构建脚本会优先使用 CI 注入的 `NEXT_DEPLOYMENT_ID
 ## 目录约定
 
 ```text
-src/app/        路由、布局、RSC、metadata、Route Handler
+src/app/        公开区 `[locale]` 路由、布局、RSC、metadata、Route Handler
 src/bff/        gateway、service、adapter、route、action 和服务端配置
-src/server/     next-backend 模式的 application、domain、infrastructure、config 和 composition
 src/features/   业务 UI 与 Client Component
 src/shared/     client-safe UI、配置、logger、hooks、utils、store
 src/i18n/       next-intl 请求配置
@@ -109,13 +106,12 @@ docs/           规范、初始化、ADR 和部署文档
 RSC / Route Handler / Server Action
   -> bff/routes|actions
   -> services
-     -> gateway -> backend / Prism
-     -> server/application -> server/domain -> server/infrastructure
+  -> gateway -> backend / Prism
   -> adapter -> view model
 ```
 
-`gateway` 是唯一 HTTP 出站边界，`adapter` 是 DTO/application result 到 view model 的唯一映射边界，
-Client Component 不消费 raw DTO。`next-backend` 模式的数据库和中间件不得穿透 BFF。
+`gateway` 是唯一 HTTP 出站边界，`adapter` 是 DTO 到 view model 的唯一映射边界，Client Component
+不消费 raw DTO。当前仓库不得创建或启用本地 Application、Domain 或 Infrastructure 后端实现。
 
 ## 发布基线
 

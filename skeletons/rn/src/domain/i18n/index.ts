@@ -1,9 +1,12 @@
 import { createInstance } from 'i18next';
 import { initReactI18next } from 'react-i18next';
 
-import enUS from '@/domain/i18n/locales/en-US.json';
-import zhCN from '@/domain/i18n/locales/zh-CN.json';
+import enUS from '@domain/i18n/locales/en-US.json';
+import zhCN from '@domain/i18n/locales/zh-CN.json';
 
+/**
+ * 支持的语言列表。
+ */
 export const SUPPORTED_LOCALES = ['zh-CN', 'en-US'] as const;
 
 /**

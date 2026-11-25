@@ -28,13 +28,31 @@ static root      = /var/www/<project-id>
 
 Nginx location 按 base path 配置，API upstream 与正式域名由发布环境绑定。
 
+## Placeholder Values
+
+当前 SPA 骨架使用以下占位值，初始化时必须替换：
+
+| Variable                  | Placeholder      |
+| ------------------------- | ---------------- |
+| `<project-name>`          | `SPA Application` |
+| `<project-id>`            | `spa-app`        |
+| `<frontend-package-name>` | `spa-app-web`    |
+
+复制为正式应用后执行：
+
+```bash
+rg -n "spa-app|SPA Application" .
+```
+
+命中项必须全部替换或确认属于说明性文字。
+
 ## Template Repository Binding
 
-模板仓库默认按同级目录协作：
+模板仓库默认按同级目录协作，不在规范里写死具体仓库名：
 
 ```text
 <frontend-root>     = .
-<backend-root>      = ../backend-architecture-skeleton
+<backend-root>      = 由 --backend-root 绑定
 <delivery-doc-root> = <backend-root>
 ```
 
@@ -46,10 +64,7 @@ Nginx location 按 base path 配置，API upstream 与正式域名由发布环�
 <delivery-doc-root> = .
 ```
 
-配套后端必须使用其 `.agents/skills/initialize-backend-project/SKILL.md` 初始化，并通过
-`--frontend-root` 反向绑定当前前端仓库。纯前端项目不创建空后端仓库，纯后端项目也不创建空前端
-仓库。
+配套后端必须使用其仓库自带的初始化技能完成绑定，不得从当前前端仓库引用后端文件。纯前端项目不创建
+空后端仓库，纯后端项目也不创建空前端仓库。
 
 父目录在每个人机器上可以不同，因此规则、文档、脚本和 handoff 中不得写个人绝对路径。
-
-`spa-app`、`spa-app-web` 和 `SPA Application` 仅是骨架占位值。

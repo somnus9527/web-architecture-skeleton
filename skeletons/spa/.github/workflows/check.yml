@@ -63,7 +63,6 @@ jobs:
           APP_ENV=prod
           VITE_APP_TITLE=SPA Application
           VITE_APP_BASE_PATH=/spa-app/
-          VITE_API_MODE=prod
           VITE_API_BASE_URL=/api
           EOF
 

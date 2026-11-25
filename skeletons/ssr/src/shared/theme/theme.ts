@@ -3,6 +3,8 @@ import { createTheme } from '@mui/material/styles';
 import { designTokens } from './design-tokens';
 
 declare module '@mui/material/styles' {
+  // MUI 的模块扩展要求固定接口名，不能按项目 I 前缀规则改名。
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   interface BreakpointOverrides {
     xs: true;
     sm: true;
@@ -13,6 +15,7 @@ declare module '@mui/material/styles' {
     laptop: true;
     desktop: true;
     wide: true;
+    ultra: true;
   }
 }
 
@@ -50,10 +53,7 @@ export const theme = createTheme({
       md: 900,
       lg: 1200,
       xl: 1536,
-      tablet: 768,
-      laptop: 1024,
-      desktop: 1280,
-      wide: 1440,
+      ...designTokens.breakpoints,
     },
   },
   typography: {

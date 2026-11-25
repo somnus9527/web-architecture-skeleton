@@ -27,7 +27,7 @@ src/
         ...             # structure like feature module
       index.tsx         # domain entry component
   shared/
-    tools/              # APIClient, pure functions, class, and business-agnostic helpers
+    tools/              # API client, pure functions, class, and business-agnostic helpers
     config/             # common config
     hooks/              # common react hooks
     store/              # global store
@@ -51,38 +51,39 @@ Use each folder by ownership, not by file extension alone:
 - `features/<module>/` owns one business domain. Domain pages, domain components, domain hooks, domain services, domain constants, domain stores, and domain-only tools stay together.
 - `features/<module>/view/` is only needed when a domain has nested child views or sub-flows with their own internal structure.
 - `shared/` is for cross-domain capabilities that have already proven reusable. Do not move one-off business code into `shared` just because it looks generic.
-- `types/dto/` is for API contract DTOs. Domain-only UI types should stay inside `features/<module>/types/`.
+- `types/dto/` is for API contract DTOs; SSR app-private DTOs may live in `src/bff/dto/`. Domain-only UI types
+  should stay inside `features/<module>/types/`.
 
 ## Import Alias
 
 - Configure a source alias `@/* -> src/*` in TypeScript and every active tool that resolves imports: Vite, test runner, lint/import checks, Storybook, Vitest/Jest, and any bundler-specific config present.
 - Do not introduce parent relative imports such as `../types`, `../../shared`, or `../../../tools`. Only same-directory imports such as `./formatters` may use relative paths; all other app imports must use the alias.
 
-## APIClient
+## API client
 
-- New projects must use `src/shared/tools/APIClient` as the only request entry.
+- New projects must use `src/shared/tools/api-client.ts` as the only request entry.
 - Pages, components, hooks, and services must not call `fetch` directly or build base URLs themselves.
-- APIClient handles base URL selection, path joining, `authorization`, JSON body, `Content-Type`, timeout, HTTP non-2xx, `code !== "200"`, network errors, and a consistent error object or message.
-- APIClient must not hardcode user-visible fallback messages. Missing config, timeout, network failure, malformed response, and other frontend-generated `codeMsg` values must use locale-backed messages or return stable error codes for the UI layer to translate.
+- API client handles base URL selection, path joining, `authorization`, JSON body, `Content-Type`, timeout, HTTP non-2xx, `code !== "200"`, network errors, and a consistent error object or message.
+- API client must not hardcode user-visible fallback messages. Missing config, timeout, network failure, malformed response, and other frontend-generated `codeMsg` values must use locale-backed messages or return stable error codes for the UI layer to translate.
 - Use env vars to choose mock, dev, test, or prod services; do not scatter service URLs through components.
-- `{ data, code, codeMsg }` 包装契约(success `code === "200"`、缺包装即契约错误、不得把裸 payload 当成功响应)权威定义见 [`./api-contracts.md`](./api-contracts.md),APIClient 在 mock/dev/test/prod 远程模式必须遵守,本文不重复。
-- When Prism/OpenAPI mock support exists, mock-mode service calls must reach Prism through APIClient or the approved request wrapper. Do not return hardcoded mock responses from runtime service code.
+- `{ data, code, codeMsg }` 包装契约(success `code === "200"`、缺包装即契约错误、不得把裸 payload 当成功响应)权威定义见 [`./api-contracts.md`](./api-contracts.md),API client 在 mock/dev/test/prod 远程模式必须遵守,本文不重复。
+- When Prism/OpenAPI mock support exists, mock-mode service calls must reach Prism through API client or the approved request wrapper. Do not return hardcoded mock responses from runtime service code.
 
 ## Stores
 
-- Read `store.md` before adding or changing Zustand stores, persisted state, auth/session state, locale/currency state, business-domain shared state, or APIClient runtime-context wiring.
+- Read `store.md` before adding or changing Zustand stores, persisted state, auth/session state, locale/currency state, business-domain shared state, or API client runtime-context wiring.
 - Store ownership follows scope first, then business ownership: global stores live in `src/shared/store/`; domain stores live in `src/features/<module>/store/`; component-tree-only state uses local state or React Context.
 - Do not create catch-all stores. Split global business stores by business concern and keep non-business global state grouped by runtime responsibility.
 
 ## Feature Hooks
 
 - Each business domain may have `features/<module>/hooks/` when there is real domain logic to share.
-- Domain request hooks such as `useItems` or `useSampleDashboard` must call APIClient through the domain service layer and expose at least `data`, `loading`, and `error`; add `refetch`/`mutate`/`reset` only when the flow needs them.
+- Domain request hooks such as `useItems` or `useSampleDashboard` must call API client through the domain service layer and expose at least `data`, `loading`, and `error`; add `refetch`/`mutate`/`reset` only when the flow needs them.
 - Cross-domain primitive hooks live in `src/shared/hooks/` and are catalogued in [`./shared-capabilities.md`](./shared-capabilities.md) (`useRequest`, `useAsyncAction`, `useDebouncedValue`, `useDisclosure`); business orchestration hooks stay in `src/features/<module>/hooks/`. Compose primitives — do not write a per-module request hook or a mixed hook like `useHttpDebounce`.
 
 ## DTOs And Types
 
-- Put API DTOs in `src/types/dto/`.
+- Put API DTOs in `src/types/dto/` (SSR app-private DTOs may live in `src/bff/dto/`).
 - TS 命名(`I` 前缀 interface、不强制 `T` 前缀的 `type`、enum/union 业务名)权威定义见 [`../shared/typescript.md`](../shared/typescript.md),本文不重复。
 - DTO fields must match OpenAPI schemas, API docs, Prism examples, and service payloads.
 - Required/optional flags, enums, nested object shapes, array item shapes, and error payloads must match OpenAPI. OpenAPI schemas for frontend-consumed data must be explicit enough to catch drift.
@@ -90,6 +91,6 @@ Use each folder by ownership, not by file extension alone:
 
 ## Component Split Rules
 
-- Components, hooks, methods, stores, and tools follow single responsibility. Page components orchestrate data loading, business sections, Dialog/Drawer state, and Snackbar coordination; business components render domain interaction and do not know APIClient details.
+- Components, hooks, methods, stores, and tools follow single responsibility. Page components orchestrate data loading, business sections, Dialog/Drawer state, and Snackbar coordination; business components render domain interaction and do not know API client details.
 - Keep constants and enum label maps inside the feature `constants` directory unless they are truly cross-domain.
-- Size heuristics: around 300 lines, evaluate splitting sections/forms/tables/Dialogs/hooks; above 500 hand-written lines, split unless it is generated code or the user wants one file. (Hard 1500/2000 limit is in [`./frontend-react.md`](./frontend-react.md).) Do not extract a single-use static JSX fragment under 20 lines without independent business meaning.
+- Size limits are enforced by `file-split-boundary`: page/screen 400, hook 200, service 200, component 300, test 600, hard limit 800 (`@generated` exempt). Around the type threshold, evaluate splitting sections/forms/tables/Dialogs/hooks; do not extract a single-use static JSX fragment under 20 lines without independent business meaning.

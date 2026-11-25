@@ -1,6 +1,6 @@
 # Next App Router MUI Provider Example
 
-本示例是 SSR 项目接入 MUI 的最小形态，用于生成或审查新项目时对齐 provider、Emotion cache、CSS layer 和 RSC 边界。示例默认 Next App Router，实际版本路径按项目 Next 主版本调整，例如 `v15-appRouter` 或目标版本对应路径。MUI baseline、theme token 与断点单一来源见 [`./frontend-react.md`](./frontend-react.md) 与 [`./responsive-and-breakpoints.md`](./responsive-and-breakpoints.md)。
+本示例是 SSR 项目接入 MUI 的最小形态，用于生成或审查新项目时对齐 provider、Emotion cache、CSS layer 和 RSC 边界。示例默认 Next App Router，实际版本路径按项目 Next 主版本调整；当前骨架使用 `@mui/material-nextjs/v16-appRouter`。MUI baseline、theme token 与断点单一来源见 [`./frontend-react.md`](./frontend-react.md) 与 [`./responsive-and-breakpoints.md`](./responsive-and-breakpoints.md)。
 
 ## Dependencies
 
@@ -13,14 +13,14 @@ pnpm add @mui/material @emotion/react @emotion/styled @mui/material-nextjs
 
 > 完整 provider 接线见模板;关键约束如下。
 
-文件分布:`src/app/layout.tsx`(挂 `<AppProviders>`) + `src/app/providers.tsx`(`'use client'`) + `src/shared/ui/theme.ts` + `src/app/globals.css`。
+文件分布：`src/app/layout.tsx`（挂 `<AppProviders>`）+ `src/app/providers.tsx`（`'use client'`）+ `src/shared/theme/theme.ts` + `src/app/globals.css`。
 
 ```tsx
 // providers.tsx —— 只承载浏览器安全 provider
 'use client';
-import { AppRouterCacheProvider } from '@mui/material-nextjs/v15-appRouter';
+import { AppRouterCacheProvider } from '@mui/material-nextjs/v16-appRouter';
 import { ThemeProvider } from '@mui/material/styles';
-import { theme } from '@/shared/ui/theme';
+import { theme } from '@/shared/theme/theme';
 
 export function AppProviders({ children }) {
   return (

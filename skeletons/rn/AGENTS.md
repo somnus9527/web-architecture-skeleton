@@ -1,6 +1,7 @@
 # Project AGENTS
 
-> 本文件由 `rules/rn/` 物化时同步维护；改规则请改 `rules/rn/`，不要直接改这里。
+> 本文件是骨架自身的手工说明，不由物化脚本生成；`docs/rules/rn/` 才是由 `rules/rn/` 物化出的规则副本。
+> 改规则请改 `rules/rn/`，不要直接改 `docs/rules/rn/`；改骨架说明再改本文件。
 
 ## 骨架状态
 

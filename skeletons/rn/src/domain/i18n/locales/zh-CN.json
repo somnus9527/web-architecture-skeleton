@@ -6,6 +6,11 @@
     "loading": "加载中...",
     "error": "加载失败，请稍后重试",
     "retry": "重试",
-    "empty": "暂无数据"
+    "empty": "暂无数据",
+    "status": {
+      "pending": "待处理",
+      "active": "进行中",
+      "done": "已完成"
+    }
   }
 }

@@ -211,7 +211,7 @@ function buildProjectBinding(values) {
 - 项目 ID 为 \`${values.projectId}\`，Expo 名称为 \`${values.displayName}\`。
 - URL scheme 为 \`${values.scheme}\`，与 \`app.json\` 保持一致。
 - 运行时环境变量只允许 \`EXPO_PUBLIC_*\` 前缀。
-- 分层契约以 \`docs/rules/rn/architecture.md\` 与 \`src/test/architecture/layering.test.ts\` 为准。
+- 分层契约以 \`docs/rules/rn/architecture.md\` 与 \`src/test/architecture/layer-boundary.test.ts\` 为准。
 
 ## Routing
 

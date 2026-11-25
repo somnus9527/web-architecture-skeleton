@@ -2,10 +2,10 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 import { DEFAULT_PUBLIC_URL_LOCALE, PUBLIC_LOCALE_HEADER, isLocaleCode } from '@/i18n/locale-config';
+import { readAllowedOrigin } from '@/shared/config/edge-env';
 import { resolveUrlLocale } from '@/shared/i18n/public-locale-routing';
 import { PRIVATE_ROUTE_PREFIXES } from '@/shared/navigation/public-route-visibility';
 
-const DEFAULT_ALLOWED_ORIGIN = 'http://127.0.0.1:3000';
 const ALLOWED_METHODS = 'GET, POST, OPTIONS';
 const ALLOWED_HEADERS = 'content-type, x-request-id, x-trace-id, traceparent';
 
@@ -228,7 +228,7 @@ function applyCorsHeaders(response: NextResponse, request: NextRequest): void {
  */
 function isAllowedOrigin(request: NextRequest): boolean {
   const origin = request.headers.get('origin');
-  const allowedOrigin = process.env.APP_ORIGIN ?? DEFAULT_ALLOWED_ORIGIN;
+  const allowedOrigin = readAllowedOrigin();
   return origin === allowedOrigin;
 }
 

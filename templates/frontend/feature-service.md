@@ -3,7 +3,7 @@
 放 `src/features/<module>/services/<module>-service.ts`。
 
 ```ts
-import { apiClient } from '@/shared/tools/api-client';
+import { apiRequest } from '@/shared/tools/api-client';
 
 import type { IItemDto, IItemQueryDto } from '@/types/dto/item.types';
 
@@ -14,7 +14,10 @@ import type { IItemDto, IItemQueryDto } from '@/types/dto/item.types';
  * @returns 条目列表。
  */
 export async function listItems(query: IItemQueryDto): Promise<IItemDto[]> {
-  const response = await apiClient.get<IItemDto[]>('/items', { params: query });
+  const search = new URLSearchParams(
+    Object.entries(query).filter(([, value]) => value !== undefined && value !== null),
+  );
+  const response = await apiRequest<IItemDto[]>(`/items?${search.toString()}`);
 
   return response.data;
 }
@@ -26,7 +29,10 @@ export async function listItems(query: IItemQueryDto): Promise<IItemDto[]> {
  * @returns 新建条目。
  */
 export async function createItem(payload: Pick<IItemDto, 'name'>): Promise<IItemDto> {
-  const response = await apiClient.post<IItemDto>('/items', payload);
+  const response = await apiRequest<IItemDto>('/items', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
 
   return response.data;
 }

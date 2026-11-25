@@ -1,16 +1,16 @@
 # Delivery Verification
 
 > 本文只覆盖**前端交付**验收。后端文档、API 契约和数据变更的验收清单见
-> [`../shared/module-documentation.md`](../shared/module-documentation.md) 与
-> [`../backend/README.md`](../backend/README.md)。
+> [`../shared/module-documentation.md`](../shared/module-documentation.md)；后端规则属于配套后端仓库，
+> 不在本骨架分发。
 
 ## Directory Constraints
 
 - 前端代码放 `apps/<app-name>/`(monorepo)或用户指定目录。
 - 开发文档输入只读:路径按 [`../shared/project-naming.md`](../shared/project-naming.md) 绑定的
   `<delivery-doc-root>` 和 `<backend-root>` 解析;不要猜测仓库名或绝对路径。
-- 新项目 mock 数据放 Prism examples(`{{mockDir}}/examples/`,相对单 app 根或所属 app 根);默认模板不要重新引入运行时 `src/mocks/mock-data.ts`。
-- Prism 契约:新单 app 在项目根 `{{mockDir}}/`,monorepo 在 `apps/<app-name>/{{mockDir}}/`。真实 API 切换逻辑在 app-local `src/shared/tools/APIClient`,除非能力明确提升到 `packages/tools`。
+- 新项目 mock 数据放 Prism examples（`{{mockDir}}/examples/`，相对单 app 根或所属 app 根）；小型单文件契约可以把 example 内联在 `openapi.yaml`，但不得把 example 写回运行时 `src/mocks/mock-data.ts`。
+- Prism 契约:新单 app 在项目根 `{{mockDir}}/`,monorepo 在 `apps/<app-name>/{{mockDir}}/`。真实 API 切换逻辑在 app-local `src/shared/tools/api-client.ts`,除非能力明确提升到 `packages/tools`。
 - DTO 在 `src/types/dto/`、locale 在 `src/locale/`;跨 app DTO 进 `packages/types`,app-private DTO 留在所属 app。
 - 不生成无关模板文档、空目录或不可用占位文件。
 
@@ -19,10 +19,10 @@
 验收要点(逐项 OK 或标注差异):
 
 - 依赖已安装;typecheck 或 build 通过。
-- **MUI / Dialog/Drawer / Snackbar** 行为(ThemeProvider 包裹、浮层而非页内伪 modal、Snackbar 默认 top-center / 3000ms 自动隐藏 / Slide 动画(均为默认,可覆盖)、新项目 MUI-first、旧复杂界面保留已批准视觉或标注 parity-safe)按 [`./frontend-react.md`](./frontend-react.md)(SSR 见 [`./ssr-ui-runtime.md`](./ssr-ui-runtime.md))验收,本文不重复。
+- **MUI / Dialog/Drawer / Snackbar** 行为(ThemeProvider 包裹、浮层而非页内伪 modal、Snackbar 默认 top-center / 3000ms 自动隐藏 / Slide 动画(均为默认,可覆盖)、新项目 MUI-first、旧复杂界面保留已批准视觉或标注 parity-safe)按 [`./frontend-react.md`](./frontend-react.md)(SSR 的 UI 运行时细则由 SSR 变体补段承载)验收,本文不重复。
 - 表单校验错误显示在对应表单控件下方;路由可达;核心交互可用:filter/search、create/edit、detail、status action、confirmation、error、empty、loading。
-- 所有请求走 app-local `src/shared/tools/APIClient`、明确提升的 `packages/tools` 请求工厂,或已批准的请求封装;domain fetch hook 至少暴露 `data`/`loading`/`error`。
-- **mock / Prism / OpenAPI / `{ data, code, codeMsg }` 包**(Prism 读 `{{mockDir}}/openapi.yaml`、example 用 `$ref` 拆分、每个运行时 service 方法映射 OpenAPI path+operationId、mock 返回字段与 OpenAPI/API 文档一致、缺包裹时 APIClient 报 contract error、`Planned`/未实现端点显式标注、schema 足以捕获 DTO 漂移)按 [`./mock-and-integration.md`](./mock-and-integration.md) 与 [`./api-contracts.md`](./api-contracts.md) 验收,本文不重复。
+- 所有请求走 app-local `src/shared/tools/api-client.ts`、明确提升的 `packages/tools` 请求工厂,或已批准的请求封装;domain fetch hook 至少暴露 `data`/`loading`/`error`。
+- **mock / Prism / OpenAPI / `{ data, code, codeMsg }` 包**(Prism 读 `{{mockDir}}/openapi.yaml`、example 用 `$ref` 拆分、每个运行时 service 方法映射 OpenAPI path+operationId、mock 返回字段与 OpenAPI/API 文档一致、缺包裹时 API client 报 contract error、`Planned`/未实现端点显式标注、schema 足以捕获 DTO 漂移)按 [`./mock-and-integration.md`](./mock-and-integration.md) 与 [`./api-contracts.md`](./api-contracts.md) 验收,本文不重复。
 - **i18n / 硬编码文案**(`zh-CN` 与 `en-US` 存在且 key order 对齐、用户可见文案全部 locale-backed、fallback `codeMsg`/校验/Snackbar/空/错/aria/placeholder/mock 展示文案均走 locale,品牌/协议名/日志/注释/测试除外)按 [`./i18n.md`](./i18n.md) 验收,本文不重复。
 - **环境、base URL 与认证传输**:`.env.mock/.dev/.test/.prod` 契约明确;mock=>real base URL 与确认的
   token 或 cookie/session 路径在真实联调交付时已记录或实现。变体专属的认证链路见补段。

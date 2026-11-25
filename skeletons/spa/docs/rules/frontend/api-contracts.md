@@ -11,7 +11,7 @@
 - Existing projects without OpenAPI may stay Markdown-first until the user approves contract migration.
 - Every frontend mock service method must have a matching API doc entry.
 - Scaffold demo endpoints shipped inside the skeleton repository itself (the demo paths in `mocks/openapi.yaml`, such
-  as `/workspace/*` and `/auth/*`) are not business contracts: inside the skeleton they need no
+  as SPA `/workspace/*`、`/auth/*` 或 SSR `/health`、`/showcase`) are not business contracts: inside the skeleton they need no
   `docs/api/<module>.md` entry, but they must be marked as demo endpoints in the OpenAPI `info.description`. A
   project copied from the skeleton must replace them with the confirmed contract and then create the API docs
   required above; this exemption does not transfer to the derived project.

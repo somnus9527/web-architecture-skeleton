@@ -51,7 +51,7 @@ version endpoint  = /<project-id>/version.json
 
 ## 同步架构规范
 
-正式项目可以从当前 SPA 骨架分支检查并同步最新 `docs/rules/**`：
+正式项目可以从上游 `skeletons/spa/docs/rules/` 检查并同步最新规范：
 
 ```text
 $sync-architecture-rules
@@ -63,6 +63,9 @@ $sync-architecture-rules
 
 ```bash
 pnpm install --frozen-lockfile
+pnpm env:init dev
+pnpm env:init test
+pnpm env:init prod
 pnpm dev
 pnpm dev:dev
 pnpm dev:test
@@ -74,8 +77,8 @@ pnpm test
 pnpm quality:check
 ```
 
-`pnpm dev` 默认同时启动 Prism 与 Vite mock 模式。`.env.dev`、`.env.test`、`.env.prod`
-不提交，由本地或 CI/CD 注入。
+`pnpm dev` 默认同时启动 Prism 与 Vite mock 模式。`.env.dev`、`.env.test`、`.env.prod` 不提交，
+本地用 `pnpm env:init <env>` 生成，CI/CD 直接注入。`quality:check` 中的 `build:prod` 需要 `.env.prod`。
 
 ## 构建与发布
 
@@ -84,7 +87,7 @@ pnpm build:prod
 bash scripts/deploy.sh
 ```
 
-`build:prod` 使用 Vite 标准构建，静态产物直接输出到 `dist/`：
+`build:prod` 经 `run-vite-with-env.mjs` 加载 `.env.prod` 并注入 release ID，静态产物直接输出到 `dist/`：
 
 ```text
 Vite build

@@ -2,10 +2,10 @@
 
 ## Required Gates
 
-- `.agents/ssr-project.md`、基线 ADR 和运行环境中的 `BACKEND_MODE` 必须一致。
-- `bff-only` 不得创建或启用 `src/server/**`，也不得引入数据库或中间件运行时。
-- `next-backend` 必须通过 BFF、Application、Domain、Infrastructure 架构边界测试。
-- `next-backend` 的 capability 状态必须与依赖、环境变量、migration、PM2 和发布交接一致。
+- `.agents/ssr-project.md` 与基线 ADR 中的项目身份、配套后端关系和交付文档根必须一致。
+- 仓库不得创建或启用 `src/server/**`，也不得引入数据库或中间件运行时。
+- 数据库、Redis、MQ、worker 和领域实现只能存在于配套 Java 后端仓库。
+- capability 状态必须与依赖、环境变量和 PM2 发布交接一致。
 
 ```bash
 pnpm check

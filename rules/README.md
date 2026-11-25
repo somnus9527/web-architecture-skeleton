@@ -2,13 +2,13 @@
 
 规则只有这一份源，`skeletons/<variant>/docs/rules/` 由 `tools/materialize.mjs` 生成。
 
-| 层          | 用途                                                        | 物化到                            |
-| ----------- | ----------------------------------------------------------- | --------------------------------- |
-| `shared/`   | 跨端共用（命名、注释、交付流程）                            | `docs/rules/shared/`              |
-| `frontend/` | SPA / SSR 通用前端规则                                      | `docs/rules/frontend/`            |
-| `spa/`      | SPA 专属规则与变体补段（`*-variant.md` 追加到同名通用文档） | `docs/rules/frontend/`            |
-| `ssr/`      | SSR 专属规则与变体补段                                      | `docs/rules/frontend/`            |
-| `rn/`       | RN 规则；`rn/templates/` 是随规则交付的代码模板             | **待定**：`skeletons/rn` 尚未建立 |
+| 层          | 用途                                                        | 物化到                                |
+| ----------- | ----------------------------------------------------------- | ------------------------------------- |
+| `shared/`   | 跨端共用（命名、注释、交付流程）                            | `docs/rules/shared/`                  |
+| `frontend/` | SPA / SSR 通用前端规则                                      | `docs/rules/frontend/`                |
+| `spa/`      | SPA 专属规则与变体补段（`*-variant.md` 追加到同名通用文档） | `docs/rules/frontend/`                |
+| `ssr/`      | SSR 专属规则与变体补段                                      | `docs/rules/frontend/`                |
+| `rn/`       | RN 规则；`rn/templates/` 是随规则交付的代码模板             | `docs/rules/rn/`（保留 `templates/`） |
 
 ## 约定
 

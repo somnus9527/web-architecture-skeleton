@@ -12,6 +12,9 @@ const RUNTIME_IDENTITY_FILES = [
   '.agents/verification.md',
   '.env.example',
   '.env.mock',
+  '.env.dev.example',
+  '.env.test.example',
+  '.env.prod.example',
   'ecosystem.config.cjs',
   'mock/openapi.yaml',
   'package.json',
@@ -64,14 +67,13 @@ function normalizeRelativePath(value, optionName) {
 }
 
 /**
- * 解析初始化命令，要求一个项目名，并按后端模式校验配套 Java 后端关系。
+ * 解析初始化命令，要求一个项目名，并校验配套 Java 后端关系。
  *
- * @returns {{ dryRun: boolean, projectId: string, backendMode: 'bff-only' | 'next-backend', backendRoot: string }} 初始化参数。
+ * @returns {{ dryRun: boolean, projectId: string, backendRoot: string }} 初始化参数。
  */
 function parseArguments() {
   const argumentsList = process.argv.slice(2);
   let dryRun = false;
-  let backendMode = 'bff-only';
   let backendRoot;
   let noBackend = false;
   const projectArguments = [];
@@ -80,13 +82,6 @@ function parseArguments() {
     const argument = argumentsList[index];
     if (argument === '--dry-run') {
       dryRun = true;
-    } else if (argument === '--backend-mode') {
-      const value = argumentsList[index + 1];
-      if (value !== 'bff-only' && value !== 'next-backend') {
-        throw new Error('--backend-mode 必须是 bff-only 或 next-backend。');
-      }
-      backendMode = value;
-      index += 1;
     } else if (argument === '--no-backend') {
       noBackend = true;
     } else if (argument === '--backend-root') {
@@ -105,22 +100,17 @@ function parseArguments() {
 
   if (projectArguments.length !== 1) {
     throw new Error(
-      '用法: node initialize-ssr-project.mjs [--dry-run] [--backend-mode bff-only] (--backend-root <path>|--no-backend) <project-id>\n' +
-        '   或: node initialize-ssr-project.mjs [--dry-run] --backend-mode next-backend <project-id>',
+      '用法: node initialize-ssr-project.mjs [--dry-run] (--backend-root <path>|--no-backend) <project-id>',
     );
   }
-  if (backendMode === 'next-backend' && (backendRoot || noBackend)) {
-    throw new Error('next-backend 模式不得同时使用 --backend-root 或 --no-backend。');
-  }
-  if (backendMode === 'bff-only' && Boolean(backendRoot) === noBackend) {
+  if (Boolean(backendRoot) === noBackend) {
     throw new Error('必须且只能选择 --backend-root <path> 或 --no-backend。');
   }
 
   return {
     dryRun,
     projectId: normalizeProjectId(projectArguments[0]),
-    backendMode,
-    backendRoot: backendMode === 'next-backend' ? 'N/A' : (backendRoot ?? 'N/A'),
+    backendRoot: backendRoot ?? 'N/A',
   };
 }
 
@@ -128,11 +118,10 @@ function parseArguments() {
  * 将项目 ID 派生为初始化所需的应用、路径、cookie 和版本标识。
  *
  * @param {string} projectId - 不带 -web 后缀的基础项目 ID。
- * @param {'bff-only' | 'next-backend'} backendMode - 项目后端模式。
  * @param {string} backendRoot - 配套 Java 后端相对路径或 N/A。
  * @returns {Record<string, string>} 所有受控替换值。
  */
-function deriveProjectValues(projectId, backendMode, backendRoot) {
+function deriveProjectValues(projectId, backendRoot) {
   const projectSnake = projectId.replace(/-/gu, '_');
   const appName = `${projectId}-web`;
 
@@ -140,23 +129,9 @@ function deriveProjectValues(projectId, backendMode, backendRoot) {
     projectId,
     projectSnake,
     appName,
-    backendMode,
     backendRoot,
     deliveryDocRoot: backendRoot === 'N/A' ? '.' : backendRoot,
-    backendImplementationRoot: backendMode === 'next-backend' ? '.' : backendRoot,
-    capabilityMatrix:
-      backendMode === 'next-backend'
-        ? `backendMode: next-backend
-database: enabled-unbound
-webAuthentication: enabled
-applicationAuthorization: enabled
-redis: disabled
-distributedLock: disabled
-backgroundWorker: disabled
-messageQueue: disabled
-scheduledJobs: disabled`
-        : `backendMode: bff-only
-database: disabled
+    capabilityMatrix: `database: disabled
 webAuthentication: enabled
 applicationAuthorization: disabled
 redis: disabled
@@ -232,8 +207,6 @@ function applyFileUpdate(relativePath, updated, dryRun, changedFiles) {
  */
 function replaceRuntimeIdentity(values, dryRun) {
   const replacements = [
-    ['BACKEND_MODE=bff-only', `BACKEND_MODE=${values.backendMode}`],
-    ['PM2_SAVE_AFTER_HEALTH=true', `PM2_SAVE_AFTER_HEALTH=${values.backendMode === 'next-backend' ? 'false' : 'true'}`],
     ['SSR Application Skeleton', values.appName],
     ['SSR Application', values.appName],
     ['SSR App', values.appName],
@@ -272,8 +245,6 @@ function buildProjectBinding(values) {
 - Auth cookie: \`${values.projectSnake}_auth\`
 - Locale cookie: \`${values.projectSnake}_locale\`
 - Next BFF prefix: \`${values.bffPrefix}\`
-- Backend mode: \`${values.backendMode}\`
-- Backend implementation root: \`${values.backendImplementationRoot}\`
 - PM2 app name: \`${values.appName}\`
 - Log directory: \`${values.logDirectory}\`
 - OpenAPI / Prism entry: \`mock/openapi.yaml\`
@@ -286,8 +257,9 @@ function buildProjectBinding(values) {
 ${values.capabilityMatrix}
 \`\`\`
 
-通用规则文件保留在当前仓库，但只启用与 \`${values.backendMode}\` 匹配的规则范围。后端地址、正式
-域名、密钥和图片白名单由对应环境与发布平台配置。仓库关系只记录相对路径，不得写个人绝对路径。
+通用规则文件保留在当前仓库；SSR 骨架固定 BFF-only，只启用 \`docs/rules/shared/**\` 与
+\`docs/rules/frontend/**\` 规则范围。后端地址、正式域名、密钥和图片白名单由对应环境与发布平台配置。
+仓库关系只记录相对路径，不得写个人绝对路径。
 `;
 }
 
@@ -309,8 +281,6 @@ function buildProjectNaming(values) {
 - \`<project-snake>\`: \`${values.projectSnake}\`
 - \`<frontend-package-name>\`: \`${values.appName}\`
 - \`<frontend-bff-prefix>\`: \`${values.projectId}-api\`
-- \`<backend-mode>\`: \`${values.backendMode}\`
-- \`<backend-implementation-root>\`: \`${values.backendImplementationRoot}\`
 - \`<frontend-root>\`: \`.\`
 - \`<backend-root>\`: \`${values.backendRoot}\`
 - \`<delivery-doc-root>\`: \`${values.deliveryDocRoot}\`
@@ -363,14 +333,12 @@ function buildProjectAdr(values) {
 - Project ID: \`${values.projectId}\`
 - App name: \`${values.appName}\`
 - BFF prefix: \`${values.bffPrefix}\`
-- Backend mode: \`${values.backendMode}\`
-- Backend implementation root: \`${values.backendImplementationRoot}\`
 
 ## 默认决策
 
 - Framework: Next.js 16 App Router + React 19
 - Middleware: \`src/proxy.ts\`
-- Locale route: 不使用；cookie + refresh
+- Locale route: 公开区 app/[locale]，非公开区 cookie + refresh
 - Auth cookie: \`${values.projectSnake}_auth\`
 - Locale cookie: \`${values.projectSnake}_locale\`
 - Build: Next standalone
@@ -384,13 +352,8 @@ function buildProjectAdr(values) {
 ${values.capabilityMatrix}
 \`\`\`
 
-${
-  values.backendMode === 'next-backend'
-    ? `本项目允许 Next.js 承载受控后端能力。所有 Web 业务必须经过 \`src/bff/**\`，本地实现只能通过
-\`src/server/application\` 公开入口进入；数据库和中间件只能位于 \`src/server/infrastructure/**\`。
-数据库技术、迁移和连接池完成绑定前，\`database: enabled-unbound\` 不得进入真实数据实现。`
-    : `本项目使用 BFF-only 模式，不在当前 Next.js 仓库内实现数据库、Redis、MQ、worker 或完整领域能力。`
-}
+本项目固定 BFF-only：所有 Web 业务必须经过 \`src/bff/**\`，当前 Next.js 仓库不实现数据库、Redis、
+MQ、worker 或完整领域能力。
 
 ## 例外
 
@@ -416,50 +379,6 @@ function updateReadme(source, values) {
     'README.md',
   );
   updated = replaceRequired(updated, '骨架默认提供：', '项目基线提供：', 'README.md');
-  updated = replaceRequired(
-    updated,
-    '- 可选 `next-backend` 受控后端模式，保持 BFF 边界并支持后续绑定数据库能力\n',
-    values.backendMode === 'next-backend'
-      ? '- 当前项目启用 `next-backend` 受控后端模式，所有本地后端能力保持 BFF 边界\n'
-      : '',
-    'README.md',
-  );
-  updated = replaceRequired(
-    updated,
-    'src/server/     next-backend 模式的 application、domain、infrastructure、config 和 composition\n',
-    values.backendMode === 'next-backend'
-      ? 'src/server/     application、domain、infrastructure、config 和 composition\n'
-      : '',
-    'README.md',
-  );
-  const genericDataFlow = `RSC / Route Handler / Server Action
-  -> bff/routes|actions
-  -> services
-     -> gateway -> backend / Prism
-     -> server/application -> server/domain -> server/infrastructure
-  -> adapter -> view model`;
-  const projectDataFlow =
-    values.backendMode === 'next-backend'
-      ? `RSC / Route Handler / Server Action
-  -> bff/routes|actions
-  -> services
-     -> gateway -> remote backend / Prism
-     -> server/application -> server/domain -> server/infrastructure
-  -> adapter -> view model`
-      : `RSC / Route Handler / Server Action
-  -> bff/routes|actions
-  -> services
-  -> gateway -> backend / Prism
-  -> adapter -> view model`;
-  updated = replaceRequired(updated, genericDataFlow, projectDataFlow, 'README.md');
-  updated = replaceRequired(
-    updated,
-    '`gateway` 是唯一 HTTP 出站边界，`adapter` 是 DTO/application result 到 view model 的唯一映射边界，\nClient Component 不消费 raw DTO。`next-backend` 模式的数据库和中间件不得穿透 BFF。',
-    values.backendMode === 'next-backend'
-      ? '`gateway` 是唯一 HTTP 出站边界，`adapter` 是 DTO/application result 到 view model 的唯一映射边界，\nClient Component 不消费 raw DTO。数据库和中间件不得穿透 BFF。'
-      : '`gateway` 是唯一 HTTP 出站边界，`adapter` 是 DTO 到 view model 的唯一映射边界，Client Component\n不消费 raw DTO。当前仓库不得创建或启用本地 Application、Domain 或 Infrastructure 后端实现。',
-    'README.md',
-  );
 
   const backendSectionStart = updated.indexOf('## 项目绑定');
   const rulesSyncStart = updated.indexOf('## 同步架构规范');
@@ -468,23 +387,15 @@ function updateReadme(source, values) {
   }
 
   const backendBinding =
-    values.backendMode === 'next-backend'
-      ? `当前项目使用 \`next-backend\`，后端实现根和交付文档根均为当前仓库 \`.\`。所有 Web 业务
-仍须经过 BFF，本地后端能力按项目 ADR 与能力开关表管理。`
-      : values.backendRoot === 'N/A'
-        ? `当前项目使用 \`bff-only\`，没有配套、由当前项目维护的 Java 后端仓库，后端仓库为
-\`N/A\`，交付文档根为当前仓库 \`.\`。SSR 自身 BFF 和外部 API 仍按已确认契约管理。`
-        : `当前项目使用 \`bff-only\`，配套 Java 后端仓库和默认交付文档根为
-\`${values.backendRoot}\`。后端仓库必须使用自己的 \`$initialize-backend-project\` 完成初始化，并
-反向绑定当前前端路径。`;
-  const activeRules =
-    values.backendMode === 'next-backend'
-      ? `当前项目启用 \`docs/rules/shared/**\`、\`frontend/**\` 和 \`next-backend/**\`；Java
-后端规则不生效。`
-      : `当前项目启用 \`docs/rules/shared/**\` 和 \`frontend/**\`；\`next-backend/**\` 不生效。`;
+    values.backendRoot === 'N/A'
+      ? `没有配套、由当前项目维护的 Java 后端仓库，后端仓库为 \`N/A\`，交付文档根为当前仓库
+\`.\`。SSR 自身 BFF 和外部 API 仍按已确认契约管理。`
+      : `配套 Java 后端仓库和默认交付文档根为 \`${values.backendRoot}\`。后端仓库必须使用自己的
+\`$initialize-backend-project\` 完成初始化，并反向绑定当前前端路径。`;
   const backendSection = `## 后端与规则关系
 
-${activeRules}
+当前项目启用 \`docs/rules/shared/**\` 和 \`docs/rules/frontend/**\`；Next.js 侧固定 BFF-only，
+不承担数据库、中间件或领域实现。
 
 ${backendBinding}
 所有仓库关系只记录相对路径，不得沿用模板仓库名或写个人绝对路径。
@@ -503,8 +414,6 @@ package/service/PM2 = ${values.appName}
 auth cookie         = ${values.projectSnake}_auth
 locale cookie       = ${values.projectSnake}_locale
 BFF prefix          = ${values.bffPrefix}
-backend mode        = ${values.backendMode}
-backend impl root   = ${values.backendImplementationRoot}
 log directory       = ${values.logDirectory}
 \`\`\`
 
@@ -521,44 +430,25 @@ log directory       = ${values.logDirectory}
  */
 function updateAgents(source, values) {
   const skeletonState = `- 本仓库是可复制的 SSR/BFF 项目骨架，不是正式业务应用。
-- 本仓库承载前端、共享与 Next 后端规则；Java 后端规则不随前端骨架分发。
+- 本仓库承载前端、共享与 Next 前端规则；Java 后端规则不随前端骨架分发。
 - 没有配套 Java 后端仓库的 SSR 项目仍可使用自身 BFF 或外部 API，不需要创建占位后端仓库。
-- 初始化时必须选择 \`bff-only\` 或 \`next-backend\`；初始化 CLI 未传模式时仅为兼容旧命令回退到
-  \`bff-only\`，正式运行时仍必须显式配置 \`BACKEND_MODE\`。
-- \`next-backend\` 允许当前 Next 应用承载受控后端能力，但所有 Web 业务仍必须经过 \`src/bff/**\`，
-  数据库和中间件不得穿透 BFF。
+- SSR 骨架固定 BFF-only：Next.js 只承担 Web、SSR 和 BFF，不实现数据库、Redis、MQ、worker 或
+  完整领域能力。
 - 新应用复制后，必须先完成 \`docs/rules/shared/project-naming.md\` 的项目变量绑定。
 - 未完成项目变量绑定，不得开始业务功能开发或接入真实后端。`;
-  const backendModeState =
-    values.backendMode === 'next-backend'
-      ? `- 当前项目使用 \`next-backend\`；所有 Web 业务必须经过 \`src/bff/**\`，本地后端实现只能由 BFF service
-  通过 \`src/server/application\` 公开入口调用，数据库和中间件只能位于 \`src/server/infrastructure/**\`。`
-      : `- 当前项目使用 \`bff-only\`；当前 Next.js 仓库不实现数据库、Redis、MQ、worker 或完整领域能力。`;
-  const projectRuleState =
-    values.backendMode === 'next-backend'
-      ? `- 当前项目启用共享、前端和 Next 后端规则；Java 后端规则不生效。
-- 后端模式为 \`next-backend\`，后端实现根和交付文档根为 \`.\`。`
-      : `- 当前项目启用共享和前端规则；Next 后端规则不生效。
-- 后端模式为 \`bff-only\`，后端实现根为 \`${values.backendImplementationRoot}\`。
-- 配套 Java 后端仓库为 \`${values.backendRoot}\`，交付文档根为 \`${values.deliveryDocRoot}\`。`;
   const projectState = `- 当前项目是基于 SSR/BFF 骨架初始化的正式应用。
 - 项目 ID 为 \`${values.projectId}\`，package、service 与 PM2 名称为 \`${values.appName}\`。
-${projectRuleState}
-- BFF Route Handler 使用 \`${values.bffPrefix}/**\`，不得直接占用 \`/api/**\`。
-${backendModeState}`;
+- 当前项目启用共享和前端规则；Java 后端规则不生效。
+- 当前项目固定 BFF-only：所有 Web 业务必须经过 \`src/bff/**\`，当前 Next.js 仓库不实现数据库、
+  Redis、MQ、worker 或完整领域能力。
+- 配套 Java 后端仓库为 \`${values.backendRoot}\`，交付文档根为 \`${values.deliveryDocRoot}\`。`;
   let updated = replaceRequired(source, skeletonState, projectState, 'AGENTS.md');
-  const genericDataFlow = `- 所有 Web 数据流先进入 \`bff/routes|actions -> services\`；远程能力经 \`gateway\`，本地
-  \`next-backend\` 能力经 \`server/application -> domain -> infrastructure\`，结果统一由 \`adapter\`
-  映射为 view model。
-- \`gateway\` 是唯一 HTTP 出站边界，\`adapter\` 是 DTO 或 application result 到 view model 的唯一映射边界。`;
-  const projectDataFlow =
-    values.backendMode === 'next-backend'
-      ? `- 所有 Web 数据流先进入 \`bff/routes|actions -> services\`；远程能力经 \`gateway\`，本地能力经
-  \`server/application -> domain -> infrastructure\`，结果统一由 \`adapter\` 映射为 view model。
-- \`gateway\` 是唯一 HTTP 出站边界，\`adapter\` 是 DTO 或 application result 到 view model 的唯一映射边界。`
-      : `- 所有 Web 数据流统一为 \`bff/routes|actions -> services -> gateway -> backend / Prism -> adapter\`。
-- \`gateway\` 是唯一 HTTP 出站边界，\`adapter\` 是 DTO 到 view model 的唯一映射边界。`;
-  updated = replaceRequired(updated, genericDataFlow, projectDataFlow, 'AGENTS.md');
+  updated = replaceRequired(
+    updated,
+    '- BFF Route Handler 默认使用 `/<project-id>-api/**`，不得直接占用 `/api/**`。',
+    `- BFF Route Handler 使用 \`${values.bffPrefix}/**\`，不得直接占用 \`/api/**\`。`,
+    'AGENTS.md',
+  );
   updated = replaceRequired(
     updated,
     '- 当前骨架的 `ssr-app`、`ssr-app-web`、`ssr_app_auth` 和 `/ssr-app-api` 都是待替换占位值。',
@@ -567,7 +457,7 @@ ${backendModeState}`;
   );
   return updated.replace(
     `- 用户要求初始化复制后的 SSR 骨架并提供一个 kebab-case 项目名时，使用
-  \`.agents/skills/initialize-ssr-project/SKILL.md\`，并确认 \`--backend-mode\` 及适用的后端关系参数，
+  \`.agents/skills/initialize-ssr-project/SKILL.md\`，并确认 \`--backend-root\` 或 \`--no-backend\`，
   不要手工进行全仓库替换。
 `,
     '',
@@ -641,8 +531,8 @@ function assertNoRuntimePlaceholders() {
  * @returns {void}
  */
 function initializeProject() {
-  const { dryRun, projectId, backendMode, backendRoot } = parseArguments();
-  const values = deriveProjectValues(projectId, backendMode, backendRoot);
+  const { dryRun, projectId, backendRoot } = parseArguments();
+  const values = deriveProjectValues(projectId, backendRoot);
   assertPristineSkeleton();
   const routeDirectory = getBffRouteDirectory(projectId);
   const changedFiles = [...replaceRuntimeIdentity(values, dryRun), ...updateProjectDocuments(values, dryRun)];
@@ -656,9 +546,7 @@ function initializeProject() {
     `${dryRun ? '[dry-run] ' : ''}SSR 项目初始化${dryRun ? '计划' : '完成'}\n` +
       `project-id: ${values.projectId}\n` +
       `app-name: ${values.appName}\n` +
-      `backend-mode: ${values.backendMode}\n` +
       `backend-root: ${values.backendRoot}\n` +
-      `backend-implementation-root: ${values.backendImplementationRoot}\n` +
       `delivery-doc-root: ${values.deliveryDocRoot}\n` +
       `bff-prefix: ${values.bffPrefix}\n` +
       `log-directory: ${values.logDirectory}\n` +

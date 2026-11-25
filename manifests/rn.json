@@ -24,7 +24,10 @@
     "sync-architecture-rules"
   ],
   "gates": [
-    "hygiene"
+    "hygiene",
+    "arch-tests",
+    "quality-check",
+    "ci"
   ],
   "mustRead": [
     "rn/architecture.md",

@@ -23,6 +23,9 @@ jobs:
           node tools/materialize.mjs
           git diff --exit-code
 
+      - name: Documentation links
+        run: node tools/check-doc-links.mjs
+
       - name: Init smoke test
         run: node tools/check-init-smoke.mjs
 

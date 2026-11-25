@@ -26,7 +26,7 @@ const DATABASE_PACKAGE_NAMES = [
 ];
 
 /**
- * 递归收集生产 TypeScript 文件；可选目录不存在时返回空列表，兼容 bff-only 骨架。
+ * 递归收集生产 TypeScript 文件；可选目录不存在时返回空列表，兼容固定 BFF-only 骨架。
  *
  * @param directory - 起始目录绝对路径。
  * @returns 目录中的 TypeScript 文件绝对路径。
@@ -118,7 +118,7 @@ function formatSourcePath(filePath: string): string {
 
 const sourceFiles = collectTypeScriptFiles(srcDirectory).filter((filePath) => !filePath.includes('/test/'));
 
-describe('next backend architecture boundary', () => {
+describe('server architecture boundary', () => {
   it('prevents app and features from importing server implementation', () => {
     const violations: string[] = [];
 

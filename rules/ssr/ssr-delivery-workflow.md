@@ -23,7 +23,7 @@
 - Next 执行约定：特殊文件、route group、parallel/intercepting routes、`template.tsx`、`default.tsx`、metadata files、sitemap/robots/manifest。
 - 业务面向 B 端还是 C 端；页面是否公开可访问、可分享、需要 SEO 或服务端首屏数据。
 - 页面类型：公开 SEO、登录态、权限态、后台操作、webhook、健康检查、外部 REST。
-- i18n 策略：使用 `next-intl`，不使用 locale 路由；语言切换刷新当前页面相关接口并提供 loading/pending 状态。
+- i18n 策略：使用 `next-intl`；公开区使用 locale 路由，非公开区使用 cookie + refresh；语言切换刷新当前页面相关接口并提供 loading/pending 状态。
 - 数据源：Prism mock、真实后端、第三方 API、backend gap。
 - 鉴权方式：浏览器会话、BFF authorization header、角色/权限/租户模型。
 - 安全基线：security headers、cookie 属性、CSRF、CORS、输入校验、redirect allowlist、上传下载、source map、私有数据缓存。

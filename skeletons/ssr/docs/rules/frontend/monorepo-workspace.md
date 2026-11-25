@@ -80,7 +80,7 @@ packages/<package-name>/src/
 
 - 放跨 app 复用的 UI primitives、布局片段、业务 UI 组件、主题 token、图标封装和可访问性模式。
 - Web UI、SSR-safe UI、React Native UI 不能混在同一个无边界入口；需要时使用子入口或独立包，例如 `packages/ui/web`、`packages/ui/native`。
-- 业务 UI 可以依赖 `packages/types` 的稳定 view model，但不得直接调用 APIClient、BFF gateway、Prism、数据库或读取 app env。
+- 业务 UI 可以依赖 `packages/types` 的稳定 view model，但不得直接调用 API client、BFF gateway、Prism、数据库或读取 app env。
 - 组件 copy 默认通过 app 的 i18n 注入，`packages/ui` 不硬编码业务展示文案；通用 aria label 或默认文案需要可覆盖。
 - MUI-first Web 组件必须声明 ThemeProvider 依赖和 SSR 兼容性；不在共享 UI 中创建隐式全局 provider。
 

@@ -1,6 +1,6 @@
 # Responsive And Breakpoints
 
-> Scope: device support matrix, named breakpoints, MUI/Tailwind alignment, adaptation order, app-scale, and acceptance viewports. Applies to all apps (SPA + SSR/BFF). The single source for breakpoint values is `packages/ui`.
+> Scope: device support matrix, named breakpoints, MUI/Tailwind alignment, adaptation order, app-scale, and acceptance viewports. Applies to all apps (SPA + SSR/BFF). The single source for breakpoint values is `src/shared/theme/design-tokens.ts`.
 
 ## Device Support Matrix
 
@@ -12,8 +12,9 @@
 | Mobile  | `<48rem`    | must-support / best-effort / not-supported |
 | Tablet  | `48-64rem`  | same                                       |
 | Laptop  | `64-80rem`  | same                                       |
-| Desktop | `80-120rem` | same                                       |
-| Wide/4K | `>=120rem`  | same                                       |
+| Desktop | `80-90rem`  | same                                       |
+| Wide    | `90-120rem` | same                                       |
+| Ultra   | `>=120rem`  | same                                       |
 
 - If an app has not declared a matrix, do not assume one. Flag it for the owner before building responsive structure.
 

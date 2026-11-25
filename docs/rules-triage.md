@@ -80,8 +80,8 @@
 两条内容修正：
 
 - `frontend-security.md` 原 SSR 版末尾的「本工程现状与待办」属于项目状态，不属于规则，已删除。
-- `project-naming` 仍保留 `--backend-root` 与 `initialize-backend-project` 的描述。按 D7 已不再分发
-  backend 规则，这些表述需要在技能上提时一并清理（**待办**）。
+- `project-naming` 已拆分：公共正文只保留通用绑定，SSR 专属占位值、PM2、BFF 与后端关系移到
+  `rules/ssr/project-naming-variant.md`；对后端仓库只保留文字说明，不再引用其文件。
 
 ## 3. 物化机制
 
@@ -114,6 +114,5 @@
 
 遗留：
 
-- 生成的索引只列「文件 + 标题」，原 README 的「必读 / 按需读取」分组丢失；后续可用 `rules/index.json`
-  元数据补回分组，仍由脚本生成，避免手写漂移。
-- `project-naming` 中 `--backend-root` 与 `initialize-backend-project` 的表述需在技能上提时清理。
+- 索引的「必读 / 其余规则」分组已由 manifest 的 `mustRead` 生成，不再需要 `rules/index.json`。
+- `next-backend` 模式已删除，SSR 固定 BFF-only；相关规则与文档引用已清理。
