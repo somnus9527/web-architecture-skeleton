@@ -193,7 +193,7 @@ node tools/check-init-smoke.mjs
 - 已处理：P1-11（RN 规则/骨架对齐：alias、Paper 边界、API 层、env 初始化、Provider/测试栈）。
 - P2 中的文档状态、断链、Nginx、MUI、i18n 路径、DTO/断点、模板/API 命名等已顺带修正；
   RN 仍保留 `expo-image`/`netinfo` wrapper、EAS 发布脚本与部分架构测试为待办（见 RN README）。
-- 仍保留：P2-15 的 CI 覆盖范围（CI 仍以纯 Node 检查为主，skeleton 的 `quality:check` 由本地/项目 CI 执行）、
-  P2-22 的跨端卫生白名单取舍。
+- 已处理：P2-15（新增 `.github/workflows/quality.yml`，三个 skeleton 跑完整 `quality:check`）。
+- 仍保留：P2-22 的跨端卫生白名单取舍。
 
 > 本文是 2026-11-25 的审计快照；行号对应审计时的 `main`（`e2b4ef2`）。

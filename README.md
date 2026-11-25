@@ -53,7 +53,8 @@ rm -rf .git
 
 ## 自检
 
-仓库自身有三条检查，CI 会跑：
+仓库自身有三条纯 Node 检查，`.github/workflows/skeleton.yml` 会跑；
+`.github/workflows/quality.yml` 另外对三个 skeleton 跑完整 `pnpm quality:check`：
 
 ```bash
 node tools/materialize.mjs && git diff --exit-code   # 物化产物与源一致
@@ -62,4 +63,5 @@ node tools/check-init-smoke.mjs                      # 三个变体能初始化�
 ```
 
 第一条防止有人手改 `skeletons/*/docs/rules`；第二条防止跨仓库/跨变体死链；第三条防止改文档时破坏
-初始化脚本的替换锚点，这是改 AGENTS/README 时最容易踩的坑。
+初始化脚本的替换锚点，这是改 AGENTS/README 时最容易踩的坑。质量矩阵会安装依赖、生成生产 env
+并执行 `check:gates → typecheck → lint → hygiene → test → format → build`。

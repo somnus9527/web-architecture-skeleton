@@ -44,8 +44,8 @@
 1. **RN 原生工程未生成**：`android/` 与 `ios/` 需要在上架或原生定制时再 `expo prebuild`。
 2. **RN 规则与骨架正在对齐**：alias、Paper 边界、API 层、env 初始化与架构测试按 `rules/rn/` 补齐；
    未完成的项在 RN README 的待办中列出。
-3. **CI 只跑纯 Node 检查**：materialize、文档链接、初始化冒烟和 monorepo 边界；三个 skeleton 的
-   `quality:check` 仍由本地或项目 CI 执行。
+3. **CI 分两层**：`skeleton.yml` 跑 materialize、文档链接、初始化冒烟与 monorepo 边界；
+   `quality.yml` 对三个 skeleton 安装依赖并跑完整 `quality:check`。
 4. **SPA 演示会话使用 Bearer + localStorage**：这是 `frontend-security.md` Bearer 例外的演示实现，
    正式项目应优先 HttpOnly cookie 并在 ADR 记录取舍。
 

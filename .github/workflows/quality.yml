@@ -1,0 +1,55 @@
+name: quality
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: quality-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  skeleton-quality:
+    name: ${{ matrix.variant }} quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - variant: spa
+            pnpm: 11.9.0
+          - variant: ssr
+            pnpm: 10.7.1
+          - variant: rn
+            pnpm: 11.9.0
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ matrix.pnpm }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: skeletons/${{ matrix.variant }}/pnpm-lock.yaml
+
+      - name: Install dependencies
+        working-directory: skeletons/${{ matrix.variant }}
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate production env
+        if: matrix.variant != 'rn'
+        working-directory: skeletons/${{ matrix.variant }}
+        run: pnpm env:init prod
+
+      - name: Quality gate
+        working-directory: skeletons/${{ matrix.variant }}
+        run: pnpm quality:check
