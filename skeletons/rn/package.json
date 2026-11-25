@@ -55,7 +55,7 @@
     "@types/node": "^24.10.1",
     "@types/react": "^19.3.0",
     "babel-preset-expo": "~58.0.26",
-    "eslint": "^9.39.1",
+    "eslint": "^9.39.5",
     "eslint-config-expo": "^58.0.4",
     "husky": "^9.1.7",
     "jest": "^30.5.2",

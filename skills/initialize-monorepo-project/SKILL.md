@@ -25,7 +25,7 @@ monorepo 是多应用的组织方式，不是项目类型：每个应用仍是 `
      --id <project-id> --target <目标目录> --app spa:web --app ssr:site --dry-run
    ```
 
-2. 正式生成（`--install` 可选，生成后立即安装依赖）：
+2. 正式生成（默认会执行 `pnpm install` 生成锁文件；加 `--no-install` 可跳过）：
 
    ```bash
    node skills/initialize-monorepo-project/scripts/initialize-monorepo-project.mjs \

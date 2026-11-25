@@ -6,7 +6,7 @@
  *
  * 用法：
  *   node skills/initialize-monorepo-project/scripts/initialize-monorepo-project.mjs \
- *     --id acme --target ../acme --app spa:web --app ssr:site [--install] [--dry-run]
+ *     --id acme --target ../acme --app spa:web --app ssr:site [--no-install] [--dry-run]
  */
 
 import { spawnSync } from 'node:child_process';
@@ -58,7 +58,7 @@ const HOISTED_SCRIPTS = ['prepare', 'quality:check', 'check:hygiene', 'check:gat
 function parseArguments() {
   const argumentList = process.argv.slice(2);
   let dryRun = false;
-  let install = false;
+  let install = true;
   let id;
   let target;
   const apps = [];
@@ -67,8 +67,8 @@ function parseArguments() {
     const argument = argumentList[index];
     if (argument === '--dry-run') {
       dryRun = true;
-    } else if (argument === '--install') {
-      install = true;
+    } else if (argument === '--no-install') {
+      install = false;
     } else if (argument === '--id' || argument === '--target' || argument === '--app') {
       const value = argumentList[index + 1];
       if (!value || value.startsWith('--')) {

@@ -132,6 +132,7 @@ function checkMonorepo() {
         'spa:web',
         '--app',
         'ssr:site',
+        '--no-install',
       ],
       { cwd: ROOT, stdio: 'pipe' },
     );
