@@ -176,6 +176,15 @@ function updateAppConfig(values, dryRun, changedFiles) {
   }
   source = source.replaceAll('com.example.rnapp', values.applicationId);
   writeText('app.json', source, dryRun, changedFiles);
+
+  const safeUrlConfigPath = 'src/domain/safe-url-config.ts';
+  const safeUrlConfig = replaceRequired(
+    readText(safeUrlConfigPath),
+    "APP_DEEP_LINK_SCHEME = 'rnapp'",
+    `APP_DEEP_LINK_SCHEME = '${values.scheme}'`,
+    safeUrlConfigPath,
+  );
+  writeText(safeUrlConfigPath, safeUrlConfig, dryRun, changedFiles);
 }
 
 /**

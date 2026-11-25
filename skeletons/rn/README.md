@@ -6,7 +6,7 @@
 app/                  expo-router 路由壳，只处理路由与壳层
 src/api/              网络层：client / config / errors / logger + endpoints/
 src/components/       UI 层：feature screen、ui primitive、providers
-src/domain/           业务逻辑：contracts、i18n、adapter、store（按需）
+src/domain/           业务逻辑：contracts、i18n、network、safe-url、adapter、store（按需）
 src/theme/            设计 token、Paper theme 映射、ThemeProvider
 src/test/             单测、组件测试、架构测试、测试 Provider
 env/                  环境模板（env/.env.<environment>.example）
@@ -58,6 +58,9 @@ npx eas build --profile production
 `eas.json` 的三个 profile 必须与 `env/.env.<environment>.example` 的 `EXPO_PUBLIC_*` 保持一致，
 由 `src/test/architecture/eas-release-config.test.ts` 守护。
 
+骨架只提供发布规范、脚本与 profile 配置，不在骨架仓执行 EAS 云端构建；签名、商店凭据、
+`expo prebuild` 原生工程和真实出包属于正式项目接入与发版时的工作。
+
 依赖版本按 Expo SDK 对齐；升级时用 `npx expo install --fix` 让 Expo 校准原生依赖，不要手工跳版本。
 
 **两个依赖被刻意钉在小版本上**：`@tanstack/react-query@5.108.3` 与 `i18next@27.2.4`。更新的版本发布不足
@@ -107,8 +110,5 @@ pnpm quality:check  # 一键跑完全部门禁
 ## 尚未完成
 
 - **原生工程未生成**：`android/` 与 `ios/` 尚未 `expo prebuild`，需要原生定制或上架前再生成。
-- **缺失 wrapper**：`@domain/safe-url` 尚未实现（host 白名单属于项目配置，未写空壳）。
 - **其余架构测试**：`file-split-boundary`、`button-action-state-boundary`、`expo-app-identity`、
   `expo-app-assets` 等规则点名的测试尚未全部落地。
-- **EAS 真机构建未跑**：`eas.json` 与本地脚本已就绪，但还没有在 EAS 云端实际出包；`eas init` /
-  签名与商店凭据属于项目接入时的操作。
