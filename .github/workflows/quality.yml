@@ -72,6 +72,13 @@ jobs:
         working-directory: skeletons/${{ matrix.variant }}
         run: ${{ matrix.install }}
 
+      # 只卡运行时依赖：devDependency 的告警常年存在且不影响产物，交给 Dependabot/renovate
+      # 跟踪；把它们放进阻塞式门禁只会训练团队忽略红灯。
+      - name: Dependency vulnerability audit (prod)
+        if: matrix.cached
+        working-directory: skeletons/${{ matrix.variant }}
+        run: pnpm audit --prod --audit-level=high
+
       - name: Generate production env
         if: matrix.prodEnv
         working-directory: skeletons/${{ matrix.variant }}

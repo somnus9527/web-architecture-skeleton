@@ -52,6 +52,16 @@ function checkSource(relative) {
     fail(`${relative}: 日志事件名必须使用稳定英文/拼音，不得使用中文 UI 文案`);
   }
 
+  // 事件名必须是字面量：模板拼接会让 SLS 上的事件名无法聚合，也让告警规则无法写死。
+  for (const call of source.matchAll(
+    /(?:serverLogger|clientLogger|logger)\.(?:debug|info|warn|error)\(\s*([^\n,)]*)/gu,
+  )) {
+    const firstArgument = call[1].trim();
+    if (firstArgument && !/^['"][^'"]*['"]$/u.test(firstArgument)) {
+      fail(`${relative}: 日志事件名必须是字符串字面量（当前 ${firstArgument.slice(0, 40)}）`);
+    }
+  }
+
   const loggerCall = source.match(/(?:serverLogger|clientLogger|logger)\.(?:debug|info|warn|error)\([\s\S]{0,500}?\)/u);
   // 事件名允许出现 cookie/token 等词；只检查第一个参数之后的上下文。
   const loggerArgs = loggerCall ? loggerCall[0].slice(loggerCall[0].indexOf(',') + 1) : '';

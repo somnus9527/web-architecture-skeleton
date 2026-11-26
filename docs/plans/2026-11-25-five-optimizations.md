@@ -937,3 +937,44 @@ CDN 缓存治理已经按“源站头 + 前端防御 + 刷新钩子 + 公网检�
 
 - 两个变体当前 lint 全绿，说明现有业务代码本来就遵守边界；新增规则的作用是**防止回归**。
 - `check-ui.mjs` 这个文件名没有落地：等价能力在 `check-ui-boundary.mjs`，已接在 pre-commit、pre-push 与 `quality:check` 中，不再另造一个同名脚本。
+
+## 20. P2 批次实施记录（2026-11-26）
+
+P2 组原文有五项，逐项核对后发现两项此前已经落地（i18n 硬编码扫描 `check-i18n-copy.mjs`、依赖改动的 `Dependency:` trailer 在 `check-commit-evidence.mjs`），本批补的是真正缺的四件。
+
+### 20.1 API 契约漂移（新增 `check-contract-drift.mjs`）
+
+- 读 `mock/openapi.yaml`（或 `mocks/openapi.yaml`）的 `components.schemas`，与 `src/{bff,types,shared}/**/dto/*.ts` 里的接口逐字段比对：字段集合、必填性、粗粒度类型。
+- 匹配策略零误报优先：只在「schema 与 DTO 都存在」时比对；接口名按 `I<Schema>DTO` / `I<Schema>` 约定查找；信封内联负载用 `ALIASES` 显式登记（当前只有 `ShowcaseListResponse.data → IShowcaseListDTO`）。
+- 引用类型按名字归一后比对（`IShowcaseItemDTO[]` 对 `ShowcaseItem[]`），避免大小写/前缀差异造成假失败。
+- 已接入两个变体的 `quality:check` 与 `verify-gates` 必需脚本；SSR 侧为此补了 `yaml` devDependency（SPA 原本已有）。
+- 负向验证：DTO 多一个 schema 未声明的字段时立即失败。
+
+### 20.2 依赖审计进 CI
+
+`quality.yml` 在安装后、构建前增加审计步骤，只对带锁文件的变体执行（monorepo 无锁文件，跳过）。
+
+口径是 `pnpm audit --prod --audit-level=high`：**只卡运行时依赖**。全量审计实测在 spa 有 48 条（25 high）、
+ssr 有 4 条（2 high），绝大多数来自 `eslint-plugin-react-hooks > zod`、`@stoplight/prism-cli > @faker-js/faker`
+这类 devDependency —— 它们不进产物，把它们放进阻塞式门禁只会训练团队忽略红灯。dev 依赖的告警交给
+Dependabot/renovate 跟踪。SPA/SSR 的骨架内 CI（派生项目用）同步改成同一口径。
+
+上口径后 spa 仍有 2 条 high，是运行时真问题：`react-router >=7.0.0 <7.18.2` 命中两个公告
+（GHSA-mrhx-c7xc-m3w5、GHSA-qwww-vcr4-c8h2）。已升到 `^7.18.7`，`pnpm audit --prod` 变为
+"No known vulnerabilities found"，升级后完整 `quality:check`（含 build）通过。
+
+### 20.3 事件名与日志 PII
+
+- `check-logging.mjs` 增加一条硬规则：logger 的第一个参数必须是**字符串字面量**。模板拼接会让 SLS 上同一事件名无法聚合，告警规则也没法写死；负向验证用 `` `bff route ${id}` `` 触发失败。
+- PII 断言此前已在同一脚本里（按 PII 词表扫描 logger 参数，并豁免 `hasSessionCookie` 这类布尔摘要字段），本批未重复实现。
+
+### 20.4 无障碍基线
+
+- 新增 `eslint-plugin-jsx-a11y`（SPA 与 SSR 的 devDependency），启用 `flatConfigs.recommended`；两个变体当前实现零违规，负向验证：无 `alt` 的 `<img>` 按 `jsx-a11y/alt-text` 失败。
+- 既有的 `check-a11y.mjs` 静态扫描保留（img alt、非交互元素 onClick、图标按钮可访问名称），与 ESLint 形成提交期 + 编辑器双保险。
+- **未做**：组件级 axe 测试。它不是「加个依赖」就能落地——axe 多数规则依赖真实布局，在 jsdom 里结果不可信，需要引入浏览器测试基础设施（Playwright 类）。这笔成本与收益需要单独决策，不以假绿的方式塞进质量门禁。
+
+### 20.5 仍未覆盖
+
+- `SRI` 与许可证检查：需要在构建产物层面接，且要先定「哪些依赖允许进入产物」的策略。
+- 错误码/事件名**目录化**（把散落字面量收敛成常量表）：属于迁移型改造，动的是各业务调用点，应与事件命名规范一起排期，不适合和本轮门禁混做。

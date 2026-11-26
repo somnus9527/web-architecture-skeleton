@@ -5,6 +5,7 @@ import importPlugin from 'eslint-plugin-import';
 import reactHooks from 'eslint-plugin-react-hooks';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
+import jsxA11y from 'eslint-plugin-jsx-a11y';
 
 /**
  * ESLint flat config：覆盖 Next.js App Router、TypeScript、React 与项目命名基线。
@@ -82,6 +83,7 @@ export default tseslint.config(
       'no-console': 'off',
     },
   },
+  jsxA11y.flatConfigs.recommended,
   {
     // UI 边界（UI-001/UI-002）：业务层只能走 @/shared/ui。
     // 判定与 scripts/check-ui-boundary.mjs 保持一致：脚本兜底 CI，这里给编辑器即时反馈。
