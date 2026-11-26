@@ -92,23 +92,30 @@ pnpm quality:check  # 一键跑完全部门禁
 
 架构测试用静态扫描守住规则，违反即失败：
 
-| 约束                   | 测试                             | 检查方式                                                                                |
-| ---------------------- | -------------------------------- | --------------------------------------------------------------------------------------- |
-| `app/` 只做路由壳      | `layer-boundary.test.ts`         | 禁止 `@api`、`@storage`，禁止出现 `fetch(`                                              |
-| `src/domain/` 不碰视图 | `layer-boundary.test.ts`         | 禁止 `react-native`、`react-native-paper`、`expo-router`、`@components`                 |
-| `src/api/` 只依赖契约  | `layer-boundary.test.ts`         | 允许 `@domain/contracts`，禁止其它 `@domain`、UI、storage                               |
-| storage 边界唯一       | `layer-boundary.test.ts`         | 只有 `src/storage/**` 可导入 `expo-secure-store` 与 `async-storage`                     |
-| 图片/网络边界          | `network-boundary.test.ts`       | 只有 `image.tsx` 可 import `expo-image`，只有 `network-store.ts` 可 import NetInfo      |
-| 组件不直接取数         | `layer-boundary.test.ts`         | `src/components/**` 禁止 `fetch(`                                                       |
-| alias 无冗余写法       | `layer-boundary.test.ts`         | `app/` 与 `src/` 不允许再出现 `@/` 开头的 import                                        |
-| alias 配置完整         | `alias-config.test.ts`           | tsconfig 必须声明 7 组 alias + `@/*` 兜底，且 jest 映射一致                             |
-| env 读取唯一入口       | `layer-boundary.test.ts`         | 只有 `src/api/config.ts` 可读 `process.env.EXPO_PUBLIC_*`                               |
-| Paper 边界             | `paper-boundary.test.ts`         | 只有 `paper-controls.tsx`、`paper-theme-provider.tsx`、`paper-theme.ts` 可 import Paper |
-| root layout 纪律       | `root-layout-discipline.test.ts` | 根布局不出现 `useQuery` / `fetch(` / `@api` / `@storage`，且 ≤ 30 行                    |
-| 测试 Provider 边界     | `test-provider-boundary.test.ts` | 测试统一用 `TestProviders`，不得直接 `new QueryClient()`                                |
+| 约束                   | 测试                                   | 检查方式                                                                                |
+| ---------------------- | -------------------------------------- | --------------------------------------------------------------------------------------- |
+| `app/` 只做路由壳      | `layer-boundary.test.ts`               | 禁止 `@api`、`@storage`，禁止出现 `fetch(`                                              |
+| `src/domain/` 不碰视图 | `layer-boundary.test.ts`               | 禁止 `react-native`、`react-native-paper`、`expo-router`、`@components`                 |
+| `src/api/` 只依赖契约  | `layer-boundary.test.ts`               | 允许 `@domain/contracts`，禁止其它 `@domain`、UI、storage                               |
+| storage 边界唯一       | `layer-boundary.test.ts`               | 只有 `src/storage/**` 可导入 `expo-secure-store` 与 `async-storage`                     |
+| 图片/网络边界          | `network-boundary.test.ts`             | 只有 `image.tsx` 可 import `expo-image`，只有 `network-store.ts` 可 import NetInfo      |
+| 组件不直接取数         | `layer-boundary.test.ts`               | `src/components/**` 禁止 `fetch(`                                                       |
+| alias 无冗余写法       | `layer-boundary.test.ts`               | `app/` 与 `src/` 不允许再出现 `@/` 开头的 import                                        |
+| alias 配置完整         | `alias-config.test.ts`                 | tsconfig 必须声明 7 组 alias + `@/*` 兜底，且 jest 映射一致                             |
+| env 读取唯一入口       | `layer-boundary.test.ts`               | 只有 `src/api/config.ts` 可读 `process.env.EXPO_PUBLIC_*`                               |
+| Paper 边界             | `paper-boundary.test.ts`               | 只有 `paper-controls.tsx`、`paper-theme-provider.tsx`、`paper-theme.ts` 可 import Paper |
+| root layout 纪律       | `root-layout-discipline.test.ts`       | 根布局不出现 `useQuery` / `fetch(` / `@api` / `@storage`，且 ≤ 30 行                    |
+| 测试 Provider 边界     | `test-provider-boundary.test.ts`       | 测试统一用 `TestProviders`，不得直接 `new QueryClient()`                                |
+| 组件行数               | `file-split-boundary.test.ts`          | `app/` 与 `src/components/` 的 `.tsx` ≤ 500 行；451–500 行必须在债务清单登记            |
+| 异步按钮状态           | `button-action-state-boundary.test.ts` | 触发异步的 `<Button>` 必须带 `loading` 或 `disabled`；primitive 由 `loading` 派生禁用   |
+| App 身份               | `expo-app-identity.test.ts`            | name / slug / version / scheme 合规，iOS 与 Android 标识一致，店档自动递增版本号        |
+| 启动资源               | `expo-app-assets.test.ts`              | `app.json` 引用的本地资源存在，图标为方形 PNG 且达到商店尺寸                            |
+
+451–500 行的组件登记在 `src/test/architecture/architecture-debts.json`，条目必须写 `owner` 与 `plan`；
+文件收敛到 450 行以下或已删除时要同步删条目，否则 `file-split-boundary.test.ts` 会判定为死条目。
 
 ## 尚未完成
 
 - **原生工程未生成**：`android/` 与 `ios/` 尚未 `expo prebuild`，需要原生定制或上架前再生成。
-- **其余架构测试**：`file-split-boundary`、`button-action-state-boundary`、`expo-app-identity`、
-  `expo-app-assets` 等规则点名的测试尚未全部落地。
+- **图标是占位资源**：`assets/icon.png` 与 `assets/adaptive-icon.png` 只是模板占位，初始化项目后必须
+  替换为正式品牌图标，再进店档构建。

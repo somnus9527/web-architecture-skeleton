@@ -45,6 +45,35 @@ function frontendVersionPlugin(releaseId: string, basePath: string): Plugin {
 }
 
 /**
+ * 把变化最少的运行时依赖拆成独立 vendor chunk。
+ *
+ * 路由已经按页面 lazy 加载，但 React / React Router 会随入口常驻。单独切出来以后，
+ * 业务代码每次发版只让入口 chunk 变哈希，vendor 命中长期缓存。
+ *
+ * 这里**故意不拆 antd**：按包名把 antd 归进一个 chunk，会把只在登录页用的
+ * `antd/es/input` 从 lazy chunk 提升到首屏，首屏体积反而变大。让 Rolldown 按真实
+ * 依赖图自行切分，lazy 页面仍然只带自己用到的组件。
+ *
+ * @param id - Rollup 模块 id。
+ * @returns chunk 名；返回 undefined 时交给 Rolldown 默认策略。
+ */
+function splitVendorChunk(id: string): string | undefined {
+  if (!id.includes('node_modules')) {
+    return undefined;
+  }
+
+  if (/node_modules\/(?:react|react-dom|react-router|scheduler)\//u.test(id)) {
+    return 'vendor-react';
+  }
+
+  if (/node_modules\/lucide-react\//u.test(id)) {
+    return 'vendor-icons';
+  }
+
+  return undefined;
+}
+
+/**
  * Vite SPA 构建配置，集中注册 React、发布版本插件和源码 alias。
  */
 export default defineConfig(({ mode }) => {
@@ -64,6 +93,11 @@ export default defineConfig(({ mode }) => {
         compress: {
           drop_console: true,
           drop_debugger: true,
+        },
+      },
+      rollupOptions: {
+        output: {
+          manualChunks: splitVendorChunk,
         },
       },
     },

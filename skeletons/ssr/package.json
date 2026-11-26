@@ -44,8 +44,9 @@
     "mock:check": "node scripts/check-openapi-mock.mjs",
     "mock:serve": "prism mock mock/openapi.yaml --host 127.0.0.1 --port 4011",
     "prepare": "husky",
-    "quality:check": "pnpm check:gates && pnpm typecheck && pnpm lint && pnpm check:hygiene && pnpm check:security && pnpm check:seo && pnpm check:ui && pnpm check:logs && pnpm check:i18n && pnpm check:a11y && pnpm mock:check && pnpm check:contract && pnpm test && pnpm format:check && pnpm build:prod",
+    "quality:check": "pnpm check:gates && pnpm typecheck && pnpm lint && pnpm check:hygiene && pnpm check:security && pnpm check:seo && pnpm check:ui && pnpm check:logs && pnpm check:i18n && pnpm check:a11y && pnpm mock:check && pnpm check:contract && pnpm test:coverage && pnpm format:check && pnpm build:prod",
     "start:prod": "node .next/standalone/server.js",
+    "test:coverage": "vitest run --coverage",
     "test": "vitest run",
     "typecheck": "tsc -b"
   },
@@ -85,6 +86,7 @@
     "@types/node": "^24.10.1",
     "@types/react": "19.3.0",
     "@types/react-dom": "^19.3.0",
+    "@vitest/coverage-v8": "^4.1.12",
     "concurrently": "^9.2.2",
     "eslint": "^10.15.0",
     "eslint-config-prettier": "^10.1.8",

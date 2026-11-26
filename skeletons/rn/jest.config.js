@@ -17,4 +17,22 @@ module.exports = {
     '^@test/(.*)$': '<rootDir>/src/test/$1',
     '^@/(.*)$': '<rootDir>/src/$1',
   },
+  // 覆盖率只卡共享层（API / domain / theme / ui primitive）；screen 与 provider 是编排层。
+  // 阈值按 2026-11-26 实测值下浮 2 个点，新增共享代码未补测试时会先掉红。
+  collectCoverageFrom: [
+    'src/api/**/*.{ts,tsx}',
+    'src/domain/**/*.{ts,tsx}',
+    'src/theme/**/*.{ts,tsx}',
+    'src/components/ui/**/*.{ts,tsx}',
+    '!src/**/*.d.ts',
+  ],
+  coverageReporters: ['text-summary'],
+  coverageThreshold: {
+    global: {
+      statements: 77,
+      branches: 52,
+      functions: 75,
+      lines: 77,
+    },
+  },
 };

@@ -69,7 +69,7 @@ jobs:
           EOF
 
       - name: Test
-        run: pnpm test
+        run: pnpm test:coverage
 
       - name: Build production assets
         run: pnpm build:prod

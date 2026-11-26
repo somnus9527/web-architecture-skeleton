@@ -18,5 +18,19 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./src/test/setup/vitest-setup.ts'],
+    // 覆盖率只卡共享层：BFF 路由与页面是编排层，不是这轮要约束的对象。
+    // 阈值按 2026-11-26 实测值下浮 2 个点。
+    coverage: {
+      provider: 'v8',
+      include: ['src/shared/**/*.{ts,tsx}'],
+      exclude: ['src/shared/**/*.test.{ts,tsx}', 'src/shared/**/*.d.ts'],
+      reporter: ['text-summary'],
+      thresholds: {
+        statements: 65,
+        branches: 52,
+        functions: 58,
+        lines: 65,
+      },
+    },
   },
 });

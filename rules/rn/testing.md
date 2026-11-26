@@ -339,7 +339,7 @@ CI 触发：PR / nightly / pre-release。
 
 - **APM / 崩溃上报**：标准不强制接入 Sentry / Bugsnag 等 APM SDK；未接入期间以本地 diagnostics（日志持久化 + 用户主动上传）作为问题排查兜底，`IErrorReporter` 注入点常驻，业务方决定接入时按 `docs/rules/rn/observability.md` drop-in。无 APM 是有意取舍，不计为缺口。
 - **E2E 自动化**：标准以「Jest 多屏 Flow 测试覆盖主链路 + 发布清单平台手测」为默认基线，不强制引入 Maestro / Detox；引入触发条件见上方 E2E 小节。E2E 自动化（设备级）可选，但主链路的 Jest Flow 测试为必须（见下）。
-- **覆盖率门禁**：项目应在 `jest.config.js` 配置 `coverageThreshold`，以仓库实测值向下取整设全局基线，并对关键域（支付 / 下单 / API client 等）设更高门槛；CI 测试步骤带 `--coverage` 校验。基线随测试增长逐步抬高，不一次设理想值导致 CI 长红。
+- **覆盖率门禁**：`jest.config.js` 已配置 `collectCoverageFrom` 与 `coverageThreshold`，只统计共享层（`src/api`、`src/domain`、`src/theme`、`src/components/ui`），基线取实测值下浮 2 个点；`pnpm test:coverage` 是 `quality:check` 与 CI 的一部分。项目可按关键域（支付 / 下单 / API client）再设更高门槛，基线随测试增长逐步抬高，不一次设理想值导致 CI 长红。
 - **构建产物冒烟**：CI 除 typecheck / lint / 单测外，应包含一步构建产物冒烟（如 `expo-doctor` / `expo export` / `prebuild` 干跑），在 PR 阶段暴露 `app.json`、plugin、依赖、native 配置错误，而非留到发布。详见 `docs/rules/rn/release.md`。
 - **主链路 Flow 测试**：钱链路 / 核心提交链路必须有 Jest 多屏 Flow 测试（多 screen、mock API、断言到结果态），作为 E2E 的自动化替代；并以架构测试守护其文件存在，防止被静默删除。
 

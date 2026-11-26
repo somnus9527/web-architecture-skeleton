@@ -90,4 +90,4 @@ jobs:
           node scripts/check-seo-runtime.mjs --base-url http://127.0.0.1:4311 --origin https://distribution.example.com
 
       - name: Test
-        run: pnpm test
+        run: pnpm test:coverage

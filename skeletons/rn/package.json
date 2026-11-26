@@ -22,8 +22,9 @@
     "ios": "expo start --ios",
     "lint": "eslint . --max-warnings=0",
     "prepare": "husky",
-    "quality:check": "pnpm check:gates && pnpm typecheck && pnpm lint && pnpm check:hygiene && pnpm test && pnpm format:check",
+    "quality:check": "pnpm check:gates && pnpm typecheck && pnpm lint && pnpm check:hygiene && pnpm test:coverage && pnpm format:check",
     "start": "expo start",
+    "test:coverage": "jest --ci --coverage",
     "test": "jest --ci",
     "typecheck": "tsc --noEmit",
     "build:development": "node --env-file=env/.env.development scripts/build-env.mjs",
@@ -53,6 +54,7 @@
     "zustand": "^5.1.0"
   },
   "devDependencies": {
+    "@babel/runtime": "^8.1.3",
     "@testing-library/react-native": "^14.1.0",
     "@types/jest": "^30.0.0",
     "@types/node": "^24.10.1",

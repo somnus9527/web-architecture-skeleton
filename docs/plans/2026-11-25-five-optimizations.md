@@ -601,6 +601,10 @@ node tools/check-init-smoke.mjs
 
 - Phase 3：无。ESLint 边界（UI-001 原生交互标签、UI-002 直引 antd/lucide）与 catalog 双向校验（UI-003）已在 §19 落地；`check-ui-boundary.mjs` 与 `src/shared/ui/index.ts` barrel 此前就已存在，本批补的是编辑器期与登记期的约束。
 - Phase 1 剩余：无。`SafeHtml`/`JsonLd` 唯一出口、SSR CSP nonce、SEC-008/012/014/015 均已在 §18 落地（012/014/015 由 `check-security` 覆盖，008 早前已覆盖）。
+- P2 覆盖率门槛：已在 §23 落地（三端都接了 `test:coverage`，阈值按实测值下浮 2 个点）。
+- RN 架构测试：已在 §23 落地（`file-split-boundary`、`button-action-state-boundary`、`expo-app-identity`、`expo-app-assets`）。
+- SPA 包体：已在 §23 落地（入口 chunk 594 kB → 340 kB，React 运行时独立成 vendor chunk）。
+- 仍未做：SRI/许可证检查、错误码/事件名目录化、axe 组件级测试、暗色模式与视觉回归、RN `android/`/`ios/` prebuild。
 - Phase 2：复用体系按 2026-11-26 决策暂缓。
 
 ## 13. 鉴权接口：为什么需要 `/auth/session`
@@ -1041,3 +1045,77 @@ Dependabot/renovate 跟踪。SPA/SSR 的骨架内 CI（派生项目用）同步�
 | 1100 行纯 token 文件 | ✅ 通过（豁免生效）                                         |
 
 现状：最大的源码样式表是 `spa/src/app/styles/app.css` 549 行，距上限还有一倍余量；`tokens.css` 60 行，豁免与否都不影响。
+
+## 23. 第三批实施记录（2026-11-26）
+
+本批三件事：RN 四个架构测试、三端覆盖率门槛、SPA 入口包体拆分。三件都不依赖原生工程，也不依赖 CDN。
+
+### 23.1 RN 架构测试补齐
+
+规则文档此前点名了四个测试却不存在（`architecture.md:66`、`frontend.md:23`、`ui-components.md:144`、
+`release.md:127-128`），属于「文档说有守护、实际没有」。本批把四个测试补齐，让引用变成事实：
+
+| 测试                                   | 守什么                                                                                                  |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `file-split-boundary.test.ts`          | `app/` 与 `src/components/` 的 `.tsx` ≤ 500 行；451–500 行必须在债务清单登记 owner 与计划               |
+| `button-action-state-boundary.test.ts` | `Button` primitive 由 `loading` 派生禁用；触发异步的 `<Button>` 必须带 `loading` 或 `disabled`          |
+| `expo-app-identity.test.ts`            | name / slug / version / scheme 合规，iOS 与 Android 标识一致，EAS 店档自动递增，env 包名与 app 标识同步 |
+| `expo-app-assets.test.ts`              | `app.json` 引用的本地资源存在、图标是方形 PNG 且达到商店尺寸                                            |
+
+顺带补了两个前置缺口：
+
+- **模板原来没有图标**。`app.json` 没有 `icon`，`assets/` 也不存在，`expo-app-assets` 无从校验。新增
+  `assets/icon.png`（1024²）与 `assets/adaptive-icon.png`（1024²，透明底），并在 `app.json` 配 `icon` 与
+  `android.adaptiveIcon`；README 明确它们是占位资源，初始化项目后必须替换。
+- **债务清单** 落在 `src/test/architecture/architecture-debts.json`（默认空），条目必须带 `owner` 与 `plan`；
+  文件收敛到 450 行以下或已删除时测试会报死条目，避免清单变成垃圾场。
+
+四个测试都做了负向验证：460 行未登记 → 失败；补登记 → 通过；520 行 → 硬限失败；异步按钮缺状态 → 失败；
+`android.package` 与 iOS 不一致 → 失败；`icon` 指向不存在的文件 → 失败。
+
+### 23.2 覆盖率门槛（只卡共享层）
+
+此前 `vitest run` / `jest` 完全不统计覆盖率。本批只卡共享层，不卡页面与编排层——后者卡比例只会逼出假测试。
+
+| 变体 | 统计范围                                                  | 实测（stmts / branch / funcs / lines） | 门槛        |
+| ---- | --------------------------------------------------------- | -------------------------------------- | ----------- |
+| SPA  | `src/shared/**/*.{ts,tsx}`                                | 74.78 / 59.45 / 68.6 / 74.4            | 72/57/66/72 |
+| SSR  | `src/shared/**/*.{ts,tsx}`                                | 67.62 / 54.62 / 60.16 / 67.59          | 65/52/58/65 |
+| RN   | `src/api`、`src/domain`、`src/theme`、`src/components/ui` | 79.14 / 54.48 / 77.58 / 79.8           | 77/52/75/77 |
+
+- 阈值一律取「实测值下浮 2 个点」：现状必过，新增共享代码不补测试就会先掉红，也给 V8 统计口径留了余量。
+- 入口是 `pnpm test:coverage`，已接进三端 `quality:check` 与各自 CI 的 Test 步骤；pre-push 增量检查不带覆盖率。
+- 补了共享层原本没有测试的两个 hook：`use-debounced-value`、`use-disclosure`（写在
+  `shared-assets/src/test/shared/`，由 `materialize` 下发到 SPA/SSR），SPA 函数覆盖率因此从 58 抬到 68.6。
+- 踩到一个 pnpm 专属坑：RN 开覆盖率后 5 个测试套件报
+  `Cannot find module '@babel/runtime/helpers/interopRequireDefault'`——istanbul 注入的 helper 依赖
+  `@babel/runtime`，而 pnpm 严格布局不会把它提升到根。补一条 `@babel/runtime` devDependency 即可。
+- 负向验证：把 SPA `lines` 临时改成 99 → CI 退出码 1 并报
+  `Coverage for lines (74.4%) does not meet global threshold (99%)`；RN 改 99 → Jest 报
+  `Coverage for lines (79.8%) does not meet "global" threshold (99%)`。
+
+### 23.3 SPA 入口包体拆分
+
+路由本来就是 `lazy` 加载，594 kB 的主 chunk 其实是 React 运行时 + antd 被入口常驻。本批把变化最少的运行时
+单独切出，**没有**按包名把 antd 归成一个大 chunk：
+
+| 方案                               | 入口 chunk    | 首屏 JS 合计                       | 结论                                                       |
+| ---------------------------------- | ------------- | ---------------------------------- | ---------------------------------------------------------- |
+| 原状                               | 594.49 kB     | ≈ 660 kB（含 `jsx-runtime` 65 kB） | 每次发版整包换哈希                                         |
+| antd 也归一个 vendor chunk         | 13.29 kB      | ≈ 796 kB                           | ❌ 把登录页才用的 `antd/es/input`（52 kB）从 lazy 提到首屏 |
+| 只切 React / Router / 图标（采用） | **339.86 kB** | ≈ 662 kB                           | ✅ 入口降 43%，首屏不变，vendor 长期缓存                   |
+
+- `manualChunks` 只认 `react` / `react-dom` / `react-router` / `scheduler`（→ `vendor-react`，308 kB）与
+  `lucide-react`（→ `vendor-icons`，13 kB），其余交给 Rolldown 按真实依赖图切分。
+- 没有调整 `chunkSizeWarningLimit`：入口 340 kB、最大的 vendor 308 kB 都低于默认 500 kB，构建不再有告警。
+- 规则同步：`rules/spa/frontend-react-variant.md` 写明分层与「不要按包名归 antd」的原因。
+
+### 23.4 验证
+
+| 项                             | 结果                                                         |
+| ------------------------------ | ------------------------------------------------------------ |
+| RN 架构测试                    | 11 套 42 用例通过（含新增 4 套）                             |
+| SPA / SSR / RN `test:coverage` | 通过，覆盖率满足各自门槛                                     |
+| SPA `build:prod`               | 入口 339.86 kB、`vendor-react` 308.42 kB，无大 chunk 告警    |
+| 负向探针                       | 6 组（行数×3、按钮状态、标识不一致、资源缺失）全部按预期失败 |
+| 文档                           | `materialize` 幂等，新增两条规则已下发到各变体               |
