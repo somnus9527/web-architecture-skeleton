@@ -44,6 +44,14 @@ function checkSource(relative) {
     fail(`${relative}: 业务代码禁止裸 console，请走 logger`);
   }
 
+  if (
+    /(?:serverLogger|clientLogger|logger)\.(?:debug|info|warn|error)\(\s*['"][^'"]*[\u4e00-\u9fff][^'"]*['"]/u.test(
+      source,
+    )
+  ) {
+    fail(`${relative}: 日志事件名必须使用稳定英文/拼音，不得使用中文 UI 文案`);
+  }
+
   const loggerCall = source.match(/(?:serverLogger|clientLogger|logger)\.(?:debug|info|warn|error)\([\s\S]{0,500}?\)/u);
   // 事件名允许出现 cookie/token 等词；只检查第一个参数之后的上下文。
   const loggerArgs = loggerCall ? loggerCall[0].slice(loggerCall[0].indexOf(',') + 1) : '';

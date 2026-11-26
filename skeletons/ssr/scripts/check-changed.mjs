@@ -40,6 +40,7 @@ const ARCH_TESTS = {
   ],
   bff: [
     'src/test/architecture/bff-layers.test.ts',
+    'src/test/architecture/logging-boundary.test.ts',
     'src/test/architecture/server-boundary.test.ts',
     'src/test/architecture/client-boundary.test.ts',
   ],
