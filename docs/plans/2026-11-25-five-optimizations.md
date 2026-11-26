@@ -593,6 +593,7 @@ node tools/check-init-smoke.mjs
 - **共享复用与 UI 设计**：新增 `docs/plans/2026-11-26-shared-reuse-and-ui-foundation.md`，覆盖 registry/检测/生成器/agent 流程，以及 SPA/SSR 统一、撤 Tailwind、原生 CSS + CSS 变量、UI catalog 与迁移阶段；UI 实施等前置决策。
 - **UI 基础迁移**：SPA/SSR 已切换到 Ant Design 6 + 原生 CSS + `tokens.css`，共享 UI 统一到 `@/shared/ui`（`Input`/`Select` 为 facade，`Button`/`PageHeader` 等为 composite）；已移除 MUI/Emotion/Tailwind 依赖与配置，新增 `ui-stack` 边界测试，两端 build 通过。
 - **SEO/多语言提交门禁**：新增 `check-seo-routing`、`check-seo-content`、`check-seo-runtime`；pre-commit 接入路由/语义检查，pre-push 映射 `seo-boundary`/`public-locale-routing`，CI 增加构建后真实 HTML/sitemap/robots/404 冒烟；补充 Google 语义化 HTML 规则（一个 h1/main、标题层级、描述性锚文本、图片 alt/尺寸、结构化数据一致性、canonical 200）。
+- **SSR traceId 串联方案**：新增 `docs/plans/2026-11-26-ssr-trace-id-correlation.md`，定义 proxy/request-context/gateway/response/日志的 requestId、traceparent、tlogTraceId 链路、测试与实施顺序；代码实施待新 session 按方案执行。
 - **P1 检查与日志**：pre-commit 增加 UI 边界、日志边界、i18n 硬编码、无障碍、架构分片；SPA 生产构建用 Terser `drop_console`，性能走 Performance API、营销走 dataLayer；SSR PM2 stdout/stderr 合并为单个 JSONL，BFF 补入口/上游请求/上游响应/出口日志，payload 脱敏且完整内容只进 debug。OpenAPI/Prism 契约按裁定不做强制提交校验。
 
 尚未落地（按优先级）：

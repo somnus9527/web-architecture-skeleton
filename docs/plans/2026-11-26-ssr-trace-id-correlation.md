@@ -2,7 +2,7 @@
 
 - 日期：2026-11-26
 - 仓库：`/Users/somnuszyy9527/workspace/test/web-architecture-skeleton`
-- 当前基线：`23f5ad34 feat: 增加 SEO/UI/日志提交门禁并完善 SSR 日志`
+- 方案落库基线：`dbe948cb docs: 落 SSR traceId 串联方案并补齐日志检查`；代码现状以当前 `git rev-parse HEAD` 为准。
 - 状态：方案待实施；本文只定义设计与验收，不改代码。
 - 关联文档：[SSR 日志规则](../../rules/ssr/ssr-observability-and-logging.md)、[SSR BFF 边界](../../rules/ssr/ssr-bff-boundaries.md)、[日志规则](../../rules/frontend/logging.md)
 
@@ -292,7 +292,7 @@ tlogTraceId: "yyy"
 ## 10. 新 Session 交接 Prompt
 
 ```text
-你接手的是 /Users/somnuszyy9527/workspace/test/web-architecture-skeleton，当前 main 基线 23f5ad34。
+你接手的是 /Users/somnuszyy9527/workspace/test/web-architecture-skeleton，当前 main 基线以 `git rev-parse HEAD` 为准（方案落库提交 dbe948cb）。
 
 先完整阅读：
 - docs/plans/2026-11-26-ssr-trace-id-correlation.md
