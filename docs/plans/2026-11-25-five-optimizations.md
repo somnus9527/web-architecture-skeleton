@@ -594,12 +594,13 @@ node tools/check-init-smoke.mjs
 - **UI 基础迁移**：SPA/SSR 已切换到 Ant Design 6 + 原生 CSS + `tokens.css`，共享 UI 统一到 `@/shared/ui`（`Input`/`Select` 为 facade，`Button`/`PageHeader` 等为 composite）；已移除 MUI/Emotion/Tailwind 依赖与配置，新增 `ui-stack` 边界测试，两端 build 通过。
 - **SEO/多语言提交门禁**：新增 `check-seo-routing`、`check-seo-content`、`check-seo-runtime`；pre-commit 接入路由/语义检查，pre-push 映射 `seo-boundary`/`public-locale-routing`，CI 增加构建后真实 HTML/sitemap/robots/404 冒烟；补充 Google 语义化 HTML 规则（一个 h1/main、标题层级、描述性锚文本、图片 alt/尺寸、结构化数据一致性、canonical 200）。
 - **SSR traceId 串联方案**：新增 `docs/plans/2026-11-26-ssr-trace-id-correlation.md`，定义 proxy/request-context/gateway/response/日志的 requestId、traceparent、tlogTraceId 链路、测试与实施顺序；代码实施待新 session 按方案执行。
+- **第二批安全与 CI 收口（2026-11-26，见 §18）**：CSP 生产去掉 `script-src 'unsafe-inline'`，改为每请求 nonce（纯函数 `buildContentSecurityPolicy` + 运行时断言）；`SEC-012` 重定向唯一出口、`SEC-014` 出站 URL 同源/私网校验、`SEC-015` 用户态响应 no-store 与 `unstable_cache` 禁用，三条都进了 `check-security` 并有负向验证；monorepo 纳入质量矩阵（`pnpm check && pnpm build`），并修掉它暴露的 `apps/example-app` 缺 vitest 依赖。
 - **P1 检查与日志**：pre-commit 增加 UI 边界、日志边界、i18n 硬编码、无障碍、架构分片；SPA 生产构建用 Terser `drop_console`，性能走 Performance API、营销走 dataLayer；SSR PM2 stdout/stderr 合并为单个 JSONL，BFF 补入口/上游请求/上游响应/出口日志，payload 脱敏且完整内容只进 debug。OpenAPI/Prism 契约按裁定不做强制提交校验。
 
 尚未落地（按优先级）：
 
 - Phase 3：`check-ui.mjs`、shared UI barrel/catalog、原生标签与直引 MUI 的 ESLint 边界；因此 `UI-001/002/003` 目前还没有执行。
-- Phase 1 剩余：`SafeHtml`/`JsonLd` 唯一出口、SSR CSP nonce、SEC-008/012/014/015 的完整检查。
+- Phase 1 剩余：无。`SafeHtml`/`JsonLd` 唯一出口、SSR CSP nonce、SEC-008/012/014/015 均已在 §18 落地（012/014/015 由 `check-security` 覆盖，008 早前已覆盖）。
 - Phase 2：复用体系按 2026-11-26 决策暂缓。
 
 ## 13. 鉴权接口：为什么需要 `/auth/session`
@@ -870,3 +871,44 @@ CDN 缓存治理已经按“源站头 + 前端防御 + 刷新钩子 + 公网检�
 如果只做一批，建议：**SafeHtml/JsonLd + SEC-012/015/008**。这四项都不依赖 CDN、不依赖 UI 大改、都能配可失败检查，投入约 2 天，能直接把当前最实际的安全缺口补掉。
 
 如果还能多给一周：**再加 UI 边界 + 基础原语**，把原第 4 项真正落地；CSP nonce 作为独立小批次，避免和 UI 改造混在一起。
+
+## 18. 第二批实施记录（2026-11-26）
+
+本批只做三件不依赖 UI 大改、不依赖 CDN 的事：SSR CSP nonce、SEC-012/014/015 的可失败检查、monorepo 纳入质量矩阵。下面记录与 §16 设计相比的落地决定，避免后来者按旧假设改。
+
+### 18.1 CSP nonce 落地决定
+
+- **抽取纯函数**：CSP 构造从 `proxy.ts` 抽到 `src/shared/security/content-security-policy.ts` 的 `buildContentSecurityPolicy(nonce)`，proxy 只负责生成 nonce 与写头。纯函数可单测，proxy 不再承担策略拼装。
+- **nonce 生成**：proxy 每请求 `crypto.randomUUID()`（Edge runtime 没有 `randomBytes`），写入响应 CSP 的 `'nonce-…'`，并同步塞进请求头 `x-nonce` 供 RSC/客户端读取。Next 会解析响应 CSP 里的 nonce 并加到框架自身的 inline/bootstrap script 上。
+- **生产去掉 `script-src 'unsafe-inline'`**；开发环境仍保留 `'unsafe-eval'`（React Refresh）。`style-src 'unsafe-inline'` 保留，理由是 **antd cssinjs 运行时注入**——原注释写「兼容 Emotion SSR 注入」已过期（MUI/Emotion 早已移除），本次一并清理。
+- **JSON-LD 不受影响**：`<script type="application/ld+json">` 是数据块，不执行，不受 `script-src` 约束；仍按 §16.1 做转义。
+- **验收**：`content-security-policy` 单测（有 nonce、无 `script-src 'unsafe-inline'`、两次请求 nonce 不同）+ 构建后的运行时断言（响应头含 `nonce-`，HTML 里 Next 的 inline script 带同一 nonce）。
+
+### 18.2 SEC-012 重定向唯一出口
+
+- 新增 `redirectToInternalPath(target, fallback)` 到 `shared-assets/src/shared/security/safe-redirect.ts`：先用 `safeRedirect()` 收敛成站内相对路径，再执行跳转。
+- 扫描规则：`location.assign(`、`location.replace(`、`location.href =`、`document.location` 只允许出现在 `src/shared/security/safe-redirect.ts`；其余位置一律失败。`window.location.reload()` 与 `window.location.origin` 读取不属于重定向，不拦。
+- `skeletons/ssr/src/shared/utils/auth-redirect.ts` 改为调用该 helper，同时消掉 Next 的 `no-location-assign-relative-destination` 告警。
+
+### 18.3 SEC-014 出站 URL 校验
+
+- 新增 `src/shared/security/outbound-url.ts` 的 `resolveOutboundUrl(baseUrl, path, { allowPrivateNetwork })`：
+  - 只接受 `http:`/`https:`；
+  - 用 `new URL(path, base)` 归并后**必须与 base 同源**（防 `//evil.com`、绝对 URL 逃逸，这是字符串拼接换成 `URL` 后最容易引入的洞）；
+  - 拒绝带 userinfo 的 URL；
+  - 非 mock/dev 环境拒绝环回、私网、链路本地、`*.local`、云 metadata 地址。
+- `http-client.ts` 里两处 `fetch(url)` 的 url 统一由该函数产出；扫描规则：`src/bff/**` 禁止出现裸 `fetch(`（只允许 `http-client.ts`），也禁止用 `new URL(` 直接拼出站地址。
+
+### 18.4 SEC-015 用户态缓存
+
+两条可失败规则：
+
+1. `Response.json(`/`NextResponse.json(` 只允许出现在 `src/bff/shared/http-response.ts`；其他位置出现时，同文件必须显式包含 `no-store`。当前 `health`、`version` 两个公开端点都自带 `no-store`，能过。
+2. `unstable_cache(` 禁止出现在 `src/bff/**` 与 `src/app/**`：它就是「cache key 丢租户/用户维度」的高发点。公开只读缓存走 `createBffSuccessResponse({ cacheControl })` + CDN 头。
+
+`revalidatePath`/`revalidateTag` 在 server action 里做失效属于合法用法（`locale-actions`、`showcase-action`），**不**纳入本规则，避免为了「严格」把正常写法判违规。
+
+### 18.5 monorepo 纳入质量矩阵
+
+- 模板按设计不带 `pnpm-lock.yaml`（各派生仓库自行解析，见 2026-11-25 决定），所以 CI 里 monorepo 用 `pnpm install`，不能 `--frozen-lockfile`；setup-node 的 pnpm 缓存只对有锁文件的变体启用。
+- gate 用 `pnpm check && pnpm build`：`check` 聚合 workspace 边界、typecheck、lint、hygiene、test、format:check，`build` 补上「结构合法但跑不起来」的缺口。

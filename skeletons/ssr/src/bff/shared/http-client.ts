@@ -6,6 +6,7 @@ import { redactLogValue } from '@/shared/logger/logger-core';
 
 import { serverLogger } from '@/bff/shared/logger/server-logger';
 import { getServerConfig } from '@/bff/shared/server-config';
+import { resolveOutboundUrl } from '@/shared/security/outbound-url';
 import {
   BffAuthError,
   createSessionExpiredAuthError,
@@ -124,7 +125,9 @@ export async function requestBackend<TData, TBody extends object | undefined = u
   const dataPolicy = request.dataPolicy ?? 'required';
   const startedAt = Date.now();
   const abortState = createAbortState(request.signal, timeoutMs);
-  const url = `${resolveBaseUrl()}${request.path}`;
+  const url = resolveOutboundUrl(resolveBaseUrl(), request.path, {
+    allowPrivateNetwork: getServerConfig().appEnv !== 'prod',
+  });
   let upstreamTraceId: string | undefined;
 
   serverLogger.info('bff upstream request started', {
@@ -241,7 +244,9 @@ export async function requestBackendBinary<TBody extends object>(
   const timeoutMs = request.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   const startedAt = Date.now();
   const abortState = createAbortState(request.signal, timeoutMs);
-  const url = `${resolveBaseUrl()}${request.path}`;
+  const url = resolveOutboundUrl(resolveBaseUrl(), request.path, {
+    allowPrivateNetwork: getServerConfig().appEnv !== 'prod',
+  });
   let upstreamTraceId: string | undefined;
 
   serverLogger.info('bff upstream request started', {

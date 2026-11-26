@@ -51,3 +51,24 @@ export function safeRedirect(target: string | null | undefined, fallback: string
 
   return value;
 }
+
+/**
+ * 跳到站内相对路径，是客户端执行重定向的唯一出口。
+ *
+ * 先经 `safeRedirect()` 收敛成站内路径，再执行跳转；服务端渲染时不做任何跳转，返回 null 让调用方
+ * 自己决定是否继续。用 `replace()` 而不是 `assign()`：登录跳转不该留在回退栈里。
+ *
+ * @param target - 期望跳转目标（可能来自查询参数）。
+ * @param fallback - 目标不安全时使用的站内默认路径。
+ * @returns 实际跳转的站内路径；非浏览器环境返回 null。
+ */
+export function redirectToInternalPath(target: string | null | undefined, fallback: string): string | null {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  const safePath = safeRedirect(target, fallback);
+  window.location.replace(safePath);
+
+  return safePath;
+}
