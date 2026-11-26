@@ -49,7 +49,21 @@
 - `service`：应用或前端服务名。
 - `env`：`mock`、`dev`、`test`、`staging`、`prod` 或项目等价环境。
 - `requestId`：入口生成或透传的请求 id。
-- `traceparent`：存在上游 trace 时透传；没有时不强造虚假链路。
+- `traceparent`：存在合法上游 trace 时透传；缺失或格式非法时由 proxy 重新生成，不透传脏值。
+- `tlogTraceId`：仅来自后端响应头，回填后写入日志与 `X-TLog-Trace-Id` 响应头。
+
+**四个 ID 的语义不能混用**（详见 `docs/plans/2026-11-26-ssr-trace-id-correlation.md` §3）：
+
+| 字段          | 语义                                 | 生成方                      | 传输                                               |
+| ------------- | ------------------------------------ | --------------------------- | -------------------------------------------------- |
+| `requestId`   | Next/BFF 请求关联 ID，不是后端 trace | proxy 入口生成或沿用可信值  | `X-Request-Id` 请求/响应头、BFF body、首屏 `meta`  |
+| `traceparent` | W3C 分布式 trace 上下文              | proxy 缺失时生成            | W3C `traceparent` header，只服务端链路             |
+| `tracestate`  | W3C 附属上下文                       | 仅在 traceparent 合法时透传 | W3C `tracestate` header                            |
+| `tlogTraceId` | Java TLog 链路 ID                    | 后端响应头                  | 日志、`X-TLog-Trace-Id` 响应头；不接受客户端入站值 |
+
+- 新代码只用 `X-Request-Id` 做请求关联；`X-Trace-Id` 是为兼容旧后端保留的别名，等同 `requestId`，不得当成 TLog ID。
+- 客户端伪造的 `tlogTraceId` / `X-TLog-Trace-Id` 入站头必须由 proxy 剥离，后端是唯一来源。
+- `requestId` 参与日志关联但不参与鉴权；不要把 `traceparent` 暴露给浏览器。
 - `span`：`route_handler`、`server_component`、`server_action`、`bff_service`、`gateway`、`adapter` 等。
 - `routeId`：页面路由、API 路由或业务能力标识，避免只记录动态 path。
 - `method`、`path`、`status`、`durationMs`：入口或出站请求摘要。

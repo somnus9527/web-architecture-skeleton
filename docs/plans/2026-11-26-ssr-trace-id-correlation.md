@@ -3,7 +3,7 @@
 - 日期：2026-11-26
 - 仓库：`/Users/somnuszyy9527/workspace/test/web-architecture-skeleton`
 - 方案落库基线：`dbe948cb docs: 落 SSR traceId 串联方案并补齐日志检查`；代码现状以当前 `git rev-parse HEAD` 为准。
-- 状态：方案待实施；本文只定义设计与验收，不改代码。
+- 状态：已实施（2026-11-26）；代码按第 8 节顺序落地，测试与运行时 smoke 见第 7 节。
 - 关联文档：[SSR 日志规则](../../rules/ssr/ssr-observability-and-logging.md)、[SSR BFF 边界](../../rules/ssr/ssr-bff-boundaries.md)、[日志规则](../../rules/frontend/logging.md)
 
 ## 1. 背景
