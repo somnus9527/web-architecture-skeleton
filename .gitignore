@@ -7,3 +7,6 @@ dist/
 .turbo/
 coverage/
 *.tsbuildinfo
+
+# monorepo 模板按设计不带锁文件：派生仓库首次 install 时自行生成并提交
+/skeletons/monorepo/pnpm-lock.yaml

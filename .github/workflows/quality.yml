@@ -18,12 +18,33 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # 三个变体共用同一套工具链版本：Node 取各 skeleton 的 .nvmrc，pnpm 取各自
+        # 四个变体共用同一套工具链版本：Node 取各 skeleton 的 .nvmrc，pnpm 取各自
         # package.json 的 packageManager，不在 matrix 里另写一份。
-        variant:
-          - spa
-          - ssr
-          - rn
+        #
+        # monorepo 模板按设计不带 pnpm-lock.yaml（派生仓库自行解析），所以它不能跑
+        # --frozen-lockfile，也不参与 setup-node 的 pnpm 缓存。
+        include:
+          - variant: spa
+            install: pnpm install --frozen-lockfile
+            gate: pnpm quality:check
+            prodEnv: true
+            cached: true
+          - variant: ssr
+            install: pnpm install --frozen-lockfile
+            gate: pnpm quality:check
+            prodEnv: true
+            cached: true
+          - variant: rn
+            install: pnpm install --frozen-lockfile
+            gate: pnpm quality:check
+            prodEnv: false
+            cached: true
+          - variant: monorepo
+            # 模板不带锁文件，而 GitHub Actions 默认 CI=true 会让 pnpm 走 frozen，必须显式关掉。
+            install: pnpm install --no-frozen-lockfile
+            gate: pnpm check && pnpm build
+            prodEnv: false
+            cached: false
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -33,22 +54,29 @@ jobs:
         with:
           package_json_file: skeletons/${{ matrix.variant }}/package.json
 
-      - name: Setup Node
+      - name: Setup Node (with pnpm cache)
+        if: matrix.cached
         uses: actions/setup-node@v7
         with:
           node-version-file: skeletons/${{ matrix.variant }}/.nvmrc
           cache: pnpm
           cache-dependency-path: skeletons/${{ matrix.variant }}/pnpm-lock.yaml
 
+      - name: Setup Node (no cache)
+        if: ${{ !matrix.cached }}
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: skeletons/${{ matrix.variant }}/.nvmrc
+
       - name: Install dependencies
         working-directory: skeletons/${{ matrix.variant }}
-        run: pnpm install --frozen-lockfile
+        run: ${{ matrix.install }}
 
       - name: Generate production env
-        if: matrix.variant != 'rn'
+        if: matrix.prodEnv
         working-directory: skeletons/${{ matrix.variant }}
         run: pnpm env:init prod
 
       - name: Quality gate
         working-directory: skeletons/${{ matrix.variant }}
-        run: pnpm quality:check
+        run: ${{ matrix.gate }}

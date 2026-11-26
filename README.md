@@ -79,7 +79,7 @@ Node 24（`.nvmrc` + `engines.node` 写 `>=24.0.0 <25`）、pnpm 12.4.1（`packa
 ## 自检
 
 仓库自身有四条纯 Node 检查，`.github/workflows/skeleton.yml` 会跑；
-`.github/workflows/quality.yml` 另外对三个 skeleton 跑完整 `pnpm quality:check`：
+`.github/workflows/quality.yml` 另外对四个 skeleton 跑质量门禁（三个跑 `pnpm quality:check`，monorepo 跑 `pnpm check && pnpm build`）：
 
 ```bash
 node tools/materialize.mjs && git diff --exit-code   # 物化产物与源一致
