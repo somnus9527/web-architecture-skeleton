@@ -599,7 +599,7 @@ node tools/check-init-smoke.mjs
 
 尚未落地（按优先级）：
 
-- Phase 3：`check-ui.mjs`、shared UI barrel/catalog、原生标签与直引 MUI 的 ESLint 边界；因此 `UI-001/002/003` 目前还没有执行。
+- Phase 3：无。ESLint 边界（UI-001 原生交互标签、UI-002 直引 antd/lucide）与 catalog 双向校验（UI-003）已在 §19 落地；`check-ui-boundary.mjs` 与 `src/shared/ui/index.ts` barrel 此前就已存在，本批补的是编辑器期与登记期的约束。
 - Phase 1 剩余：无。`SafeHtml`/`JsonLd` 唯一出口、SSR CSP nonce、SEC-008/012/014/015 均已在 §18 落地（012/014/015 由 `check-security` 覆盖，008 早前已覆盖）。
 - Phase 2：复用体系按 2026-11-26 决策暂缓。
 
@@ -912,3 +912,28 @@ CDN 缓存治理已经按“源站头 + 前端防御 + 刷新钩子 + 公网检�
 
 - 模板按设计不带 `pnpm-lock.yaml`（各派生仓库自行解析，见 2026-11-25 决定），所以 CI 里 monorepo 用 `pnpm install`，不能 `--frozen-lockfile`；setup-node 的 pnpm 缓存只对有锁文件的变体启用。
 - gate 用 `pnpm check && pnpm build`：`check` 聚合 workspace 边界、typecheck、lint、hygiene、test、format:check，`build` 补上「结构合法但跑不起来」的缺口。
+
+## 19. Phase 3 实施记录（2026-11-26）
+
+本批把 UI 边界从「只有 CI 脚本扫描」补成「编辑器期 + 提交期 + 登记期」三层，`UI-001/002/003` 从编号变成会失败的门禁。
+
+### 19.1 UI-001 / UI-002：ESLint 边界
+
+`eslint.config.js`（SPA 与 SSR 同步）新增一个只覆盖业务层的配置块：
+
+- 覆盖范围：`src/{features,app,router}/**/*.{ts,tsx}`，排除 `global-error.tsx`、`error.tsx`、`app/providers*` 与测试。
+- `no-restricted-imports`：禁止 `antd`、`antd/*`、`@ant-design/icons`、`@ant-design/nextjs-registry`、`lucide-react`（UI-002）。
+- `no-restricted-syntax`：禁止原生 `<button>/<input>/<select>/<textarea>/<dialog>/<table>`（UI-001），用 esquery 选择器实现，不需要额外插件。
+
+判定范围与 `scripts/check-ui-boundary.mjs` 保持一致：**脚本兜底 CI 全量扫描，ESLint 负责编辑器即时反馈**，两者允许名单相同（`src/shared/ui/**`、`src/shared/theme/antd-theme.ts`、`src/app/providers*`）。
+
+### 19.2 UI-003：catalog 双向校验
+
+`src/test/architecture/ui-catalog.test.ts` 原来只做「文档 → 代码」：catalog 里登记的组件必须存在。新增反向校验：`src/shared/ui/**.tsx` 每个文件都必须在 catalog 文档里出现，否则失败。
+
+反向校验第一次运行就抓到真实漂移：SSR 的 `src/shared/ui/link-button.tsx` 从未登记。已补 `rules/ssr/ui-style-and-components-variant.md`（变体专属共享 UI 表），并明确反向校验看整篇文档——变体专属组件登记在末尾的变体补段里同样算数，否则通用表会逼迫 SPA 引用不存在的文件。
+
+### 19.3 现状与遗留
+
+- 两个变体当前 lint 全绿，说明现有业务代码本来就遵守边界；新增规则的作用是**防止回归**。
+- `check-ui.mjs` 这个文件名没有落地：等价能力在 `check-ui-boundary.mjs`，已接在 pre-commit、pre-push 与 `quality:check` 中，不再另造一个同名脚本。

@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
@@ -13,5 +13,16 @@ describe('shared ui catalog', () => {
 
     expect(paths.length).toBeGreaterThan(0);
     expect(paths.filter((path) => !existsSync(join(process.cwd(), path)))).toEqual([]);
+  });
+
+  it('should require every shared ui component to be registered in the catalog (UI-003)', () => {
+    // 反向校验看整篇文档：变体专属组件登记在末尾的变体补段里，同样算已登记。
+    const catalog = readFileSync(CATALOG, 'utf8');
+    const shipped = readdirSync(join(process.cwd(), 'src', 'shared', 'ui'))
+      .filter((name) => name.endsWith('.tsx'))
+      .map((name) => `src/shared/ui/${name}`);
+
+    expect(shipped.length).toBeGreaterThan(0);
+    expect(shipped.filter((path) => !catalog.includes(path))).toEqual([]);
   });
 });

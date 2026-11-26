@@ -82,6 +82,43 @@ export default tseslint.config(
       'no-console': 'off',
     },
   },
+  {
+    // UI 边界（UI-001/UI-002）：业务层只能走 @/shared/ui。
+    // 判定与 scripts/check-ui-boundary.mjs 保持一致：脚本兜底 CI，这里给编辑器即时反馈。
+    files: ['src/{features,app,router}/**/*.{ts,tsx}'],
+    ignores: [
+      'src/app/global-error.tsx',
+      'src/app/error.tsx',
+      'src/app/providers.tsx',
+      'src/app/providers/**',
+      'src/test/**',
+      '**/*.test.{ts,tsx}',
+    ],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            { name: 'antd', message: 'UI-002 业务层禁止直引 antd，请从 @/shared/ui 导入' },
+            { name: 'lucide-react', message: 'UI-002 图标请从 @/shared/ui 导入' },
+          ],
+          patterns: [
+            {
+              group: ['antd/*', '@ant-design/icons', '@ant-design/icons/*', '@ant-design/nextjs-registry'],
+              message: 'UI-002 业务层禁止直引 antd 生态包，请从 @/shared/ui 导入',
+            },
+          ],
+        },
+      ],
+      'no-restricted-syntax': [
+        'error',
+        ...['button', 'input', 'select', 'textarea', 'dialog', 'table'].map((tag) => ({
+          selector: `JSXOpeningElement[name.name='${tag}']`,
+          message: `UI-001 业务层禁止原生 <${tag}>，请使用 @/shared/ui 的原语`,
+        })),
+      ],
+    },
+  },
   // eslint-config-prettier 放最后：关掉与 Prettier 冲突的格式化规则，格式化交给 Prettier。
   eslintConfigPrettier,
 );
