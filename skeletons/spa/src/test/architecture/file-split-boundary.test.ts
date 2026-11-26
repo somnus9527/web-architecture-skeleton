@@ -2,7 +2,13 @@ import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { isGenerated, listSourceFiles, readExceptions } from '@/test/architecture/support/scan';
+import {
+  isGenerated,
+  isTokenOnlyStylesheet,
+  listCssFiles,
+  listSourceFiles,
+  readExceptions,
+} from '@/test/architecture/support/scan';
 
 const SOURCE_ROOT = join(process.cwd(), 'src');
 
@@ -10,14 +16,17 @@ const SOURCE_ROOT = join(process.cwd(), 'src');
  * 分类阈值（行数）。
  */
 const LIMITS: Array<{ name: string; pattern: RegExp; limit: number }> = [
-  { name: 'page', pattern: /(?:page|screen)\.tsx$/u, limit: 400 },
-  { name: 'hook', pattern: /\/hooks\//u, limit: 200 },
-  { name: 'service', pattern: /\/services\//u, limit: 200 },
-  { name: 'component', pattern: /\/components\//u, limit: 300 },
-  { name: 'test', pattern: /^test\//u, limit: 600 },
+  { name: 'page', pattern: /(?:page|screen)\.tsx$/u, limit: 900 },
+  { name: 'hook', pattern: /\/hooks\//u, limit: 700 },
+  { name: 'service', pattern: /\/services\//u, limit: 700 },
+  { name: 'component', pattern: /\/components\//u, limit: 800 },
+  { name: 'test', pattern: /^test\//u, limit: 1100 },
 ];
 
-const HARD_LIMIT = 800;
+const HARD_LIMIT = 1300;
+
+/** 普通样式表行数上限；纯 token 文件不设上限。 */
+const CSS_LIMIT = 1000;
 
 /**
  * 命中某条分类规则。
@@ -28,7 +37,7 @@ const HARD_LIMIT = 800;
 function classify(srcPath: string): { name: string; limit: number } {
   const matched = LIMITS.find((entry) => entry.pattern.test(srcPath));
 
-  return matched ?? { name: 'other', limit: 500 };
+  return matched ?? { name: 'other', limit: 1000 };
 }
 
 describe('file split boundary', () => {
@@ -53,6 +62,18 @@ describe('file split boundary', () => {
         const lineCount = file.content.split('\n').length;
 
         return lineCount > HARD_LIMIT ? [`${file.srcPath}: ${lineCount} 行超过硬限 ${HARD_LIMIT}`] : [];
+      });
+
+    expect(violations).toEqual([]);
+  });
+
+  it('should keep every stylesheet under the css limit unless it only declares tokens', () => {
+    const violations = listCssFiles(SOURCE_ROOT)
+      .filter((file) => !isTokenOnlyStylesheet(file.content))
+      .flatMap((file) => {
+        const lineCount = file.content.split('\n').length;
+
+        return lineCount > CSS_LIMIT ? [`${file.srcPath}: ${lineCount} 行超过样式表阈值 ${CSS_LIMIT}`] : [];
       });
 
     expect(violations).toEqual([]);

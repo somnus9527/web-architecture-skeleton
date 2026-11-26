@@ -105,3 +105,80 @@ export function isGenerated(content: string): boolean {
 export function describeViolations(violations: string[]): string {
   return violations.length === 0 ? '无违规' : `\n${violations.join('\n')}`;
 }
+
+const STYLESHEET_PATTERN = /\.css$/u;
+
+/**
+ * 递归列出 src 下的样式文件。
+ *
+ * @param sourceRoot - src 绝对路径。
+ * @returns 样式文件列表。
+ */
+export function listCssFiles(sourceRoot: string): ISourceFile[] {
+  const walk = (directory: string): ISourceFile[] =>
+    readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+      const absolute = join(directory, entry.name);
+      if (entry.isDirectory()) {
+        return walk(absolute);
+      }
+      if (!STYLESHEET_PATTERN.test(entry.name)) {
+        return [];
+      }
+
+      return [
+        {
+          path: relative(process.cwd(), absolute).replaceAll('\\', '/'),
+          srcPath: relative(sourceRoot, absolute).replaceAll('\\', '/'),
+          content: readFileSync(absolute, 'utf8'),
+        },
+      ];
+    });
+
+  return walk(sourceRoot);
+}
+
+/**
+ * 判断样式文件是否只是 token 定义（`:root` / `[data-theme=…]` 里的自定义属性）。
+ *
+ * 用途：纯变量定义的主题文件统一放一个文件是合理的，不该受行数上限约束；一旦出现真实选择器或
+ * 大量普通声明，就按普通样式表管。判定要宽容一点——`color-scheme` 这类标准声明允许与变量混排。
+ *
+ * @param content - 样式文本。
+ * @returns 是否属于纯 token 文件。
+ */
+export function isTokenOnlyStylesheet(content: string): boolean {
+  const withoutComments = content.replace(/\/\*[\s\S]*?\*\//gu, '');
+  const blocks = [...withoutComments.matchAll(/([^{}]+)\{([^{}]*)\}/gu)];
+  if (blocks.length === 0) {
+    return false;
+  }
+
+  let declarations = 0;
+  let variables = 0;
+
+  for (const [, selector, body] of blocks) {
+    const selectors = selector
+      .split(',')
+      .map((entry) => entry.trim())
+      .filter(Boolean);
+    // `@media` 之类的包装块不算 token 选择器：真出现说明文件已经承担了响应式逻辑。
+    if (
+      selectors.length === 0 ||
+      !selectors.every((entry) => /^:root$/u.test(entry) || /^\[data-theme=/u.test(entry))
+    ) {
+      return false;
+    }
+
+    for (const declaration of body
+      .split(';')
+      .map((entry) => entry.trim())
+      .filter(Boolean)) {
+      declarations += 1;
+      if (declaration.startsWith('--')) {
+        variables += 1;
+      }
+    }
+  }
+
+  return declarations > 0 && variables / declarations >= 0.8;
+}

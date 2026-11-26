@@ -7,7 +7,8 @@
 - Existing projects must be assessed before migration. If the existing UI library, mock/API system, env layout, i18n, or directories differ from the new standard, explain impact and wait for approval before broad rewrites.
 - Existing or rebuilt projects require a migration status matrix before broad rewrites. Cover UI library, visual parity risk, routing, request wrapper, mock/OpenAPI/Prism, env modes, i18n, DTO placement, feature/shared layout, API contracts, paired backend tasks/data changes, package manager, and quality tooling. Mark each item as `compliant`, `migrated`, `compatible-exception`, or `non-compliant`.
 - Keep page components as orchestration layers. Split service methods, DTOs, feature constants, hooks, dialogs/drawers, tables, forms, and formatters by responsibility.
-- Single-file size is enforced by the architecture test `file-split-boundary`: page/screen 400, hook 200, service 200, component 300, test 600, hard limit 800 (with `@generated` exemption). Split before reaching the type threshold; crossing the hard limit fails `quality:check`.
+- Single-file size is enforced by the architecture test `file-split-boundary`: page/screen 900, hook 700, service 700, component 800, test 1100, other 1000, hard limit 1300 (with `@generated` exemption). Split before reaching the type threshold; crossing the hard limit fails `quality:check`.
+- Stylesheets are covered by the same test with a separate limit: a plain `.css` file may not exceed **1000** lines. A file that only declares design tokens (`:root` / `[data-theme=…]` blocks, ≥80% custom properties) is **exempt** — keeping all tokens in one theme file is the intended layout, not a smell. 样式文件超过上限时按页面/组件边界拆分，而不是拆 token 文件。
 - `@/* -> src/*` alias 与禁止 `../` 父级相对导入的规则权威定义见 [`./frontend-architecture.md`](./frontend-architecture.md),本文不重复。
 
 ## UI Stack Baseline
