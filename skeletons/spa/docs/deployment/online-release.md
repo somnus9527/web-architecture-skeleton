@@ -20,6 +20,22 @@ APP_ROOT=/var/www/<project-id> bash scripts/deploy.sh rollback
 发布根目录由 `--app-root`/`APP_ROOT` 指定；不需要 `rsync`。服务器不允许软链时见
 [`no-symlink-release.md`](./no-symlink-release.md)。
 
+## 服务器工具链安装
+
+服务器只装一次工具链，之后据此发布：
+
+```bash
+bash scripts/install-toolchain.sh          # 按 .nvmrc 与 packageManager 安装并校验
+bash scripts/install-toolchain.sh --check  # 只校验（发布前或排查时）
+```
+
+脚本从 `.nvmrc` 取 Node 主版本、从 `package.json` 的 `packageManager` 取 pnpm 精确版本，装完再断言
+一次；版本不符直接非零退出并打印期望值。
+
+禁止 `npm i -g pnpm` 这类不带精确版本的安装：npm 的 `latest` tag 会漂，2026-11 在测试服务器上实测
+装出过 pnpm 7。pnpm 7 不认识 `packageManager` 字段、也读不了当前锁文件，装错不会当场失败，而是等到
+构建或产物阶段才炸。
+
 ## 发布模型
 
 > 服务器不允许软链时，按 [`no-symlink-release.md`](./no-symlink-release.md) 的固定目录/入口原子替换或版本目录模型发布。
