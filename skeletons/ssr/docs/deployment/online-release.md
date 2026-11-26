@@ -116,8 +116,9 @@ pnpm build:dist:prod
 
 ## PM2
 
-默认应用名为 `<project-id>-web`，日志目录为 `/data/logs/<project-id>-web`，日志文件分为 out 和
-error。可通过 `PM2_APP_NAME`、`PM2_LOG_DIRECTORY` 覆盖。
+默认应用名为 `<project-id>-web`，日志目录为 `/data/logs/<project-id>-web`；stdout/stderr 合并为单个
+`<project-id>-web.log`（JSONL，`log_type: json`），便于接入阿里云 SLS。可通过 `PM2_APP_NAME`、
+`PM2_LOG_DIRECTORY` 覆盖目录。
 
 ```bash
 tar -xf package.tgz -C <release-root>

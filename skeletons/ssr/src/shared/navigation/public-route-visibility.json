@@ -1,0 +1,4 @@
+{
+  "routes": [{ "path": "/", "indexable": true, "localeRouting": true }],
+  "privatePrefixes": ["/login", "/showcase-console", "/ssr-app-api/"]
+}

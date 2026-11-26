@@ -3,6 +3,7 @@ import 'server-only';
 import { BffAuthError, buildBackendAuthHeaders } from '../transform/session-auth-transform';
 
 import { createBffErrorResponse, createBffSuccessResponse } from '@/bff/shared/http-response';
+import { serverLogger } from '@/bff/shared/logger/server-logger';
 import { createRequestContext } from '@/bff/shared/request-context';
 import { getServerConfig } from '@/bff/shared/server-config';
 
@@ -23,12 +24,38 @@ export interface ISessionViewModel {
 export async function handleGetSessionRoute(request: Request, locale: string): Promise<Response> {
   const context = createRequestContext(request.headers, locale);
   const config = getServerConfig();
+  const startedAt = Date.now();
+  const hasSessionCookie = Boolean(request.headers.get('cookie'));
+  serverLogger.info('bff route request', {
+    requestId: context.requestId,
+    routeId: 'route:session',
+    span: 'route_handler',
+    fields: { method: request.method, locale, actorType: hasSessionCookie ? 'user' : 'guest', hasSessionCookie },
+  });
 
   try {
     const auth = buildBackendAuthHeaders(request.headers, config.sessionCookieName);
     const data: ISessionViewModel = { isAuthenticated: true, userType: auth.xUserType };
-    return createBffSuccessResponse(data, context);
+    const response = createBffSuccessResponse(data, context);
+    serverLogger.info('bff route response', {
+      requestId: context.requestId,
+      routeId: 'route:session',
+      span: 'route_handler',
+      fields: { status: response.status, durationMs: Date.now() - startedAt, isAuthenticated: true },
+    });
+    return response;
   } catch (error) {
+    const status = error instanceof BffAuthError ? error.status : 500;
+    serverLogger[status >= 500 ? 'error' : 'warn']('bff route response', {
+      requestId: context.requestId,
+      routeId: 'route:session',
+      span: 'route_handler',
+      fields: {
+        status,
+        durationMs: Date.now() - startedAt,
+        errorKind: error instanceof BffAuthError ? error.code : 'unexpected',
+      },
+    });
     if (error instanceof BffAuthError) {
       return createBffErrorResponse(error.code, error.codeMsg, context, error.status);
     }

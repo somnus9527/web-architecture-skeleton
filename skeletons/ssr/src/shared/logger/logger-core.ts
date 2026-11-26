@@ -17,6 +17,10 @@ export interface ILogContext {
    * 当前 gateway 调用从后端响应头读取的 traceId。
    */
   upstreamTraceId?: string;
+  /**
+   * W3C traceparent，存在时透传以对齐分布式追踪。
+   */
+  traceparent?: string;
   routeId?: string;
   span?: string;
   fields?: Record<string, unknown>;
@@ -40,6 +44,11 @@ const LEVEL_WEIGHT: Record<LogLevel, number> = {
 };
 
 const REDACTED = '[redacted]';
+const SENSITIVE_VALUE_PATTERNS = [
+  /\bBearer\s+[A-Za-z0-9._~+/=-]+/iu,
+  /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/iu,
+  /\b1[3-9]\d{9}\b/u,
+];
 const SENSITIVE_KEYS = new Set([
   'authorization',
   'cookie',
@@ -71,6 +80,10 @@ export function shouldLog(level: LogLevel, threshold: LogLevel): boolean {
 export function redactLogValue(value: unknown): unknown {
   if (Array.isArray(value)) {
     return value.map((item) => redactLogValue(item));
+  }
+
+  if (typeof value === 'string') {
+    return SENSITIVE_VALUE_PATTERNS.some((pattern) => pattern.test(value)) ? REDACTED : value;
   }
 
   if (value && typeof value === 'object') {

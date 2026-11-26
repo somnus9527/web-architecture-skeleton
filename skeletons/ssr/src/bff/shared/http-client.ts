@@ -2,6 +2,8 @@ import 'server-only';
 
 import { rememberTlogTraceId, type IRequestContext } from './request-context';
 
+import { redactLogValue } from '@/shared/logger/logger-core';
+
 import { serverLogger } from '@/bff/shared/logger/server-logger';
 import { getServerConfig } from '@/bff/shared/server-config';
 import {
@@ -125,6 +127,22 @@ export async function requestBackend<TData, TBody extends object | undefined = u
   const url = `${resolveBaseUrl()}${request.path}`;
   let upstreamTraceId: string | undefined;
 
+  serverLogger.info('bff upstream request started', {
+    requestId: request.context.requestId,
+    routeId: `gateway:${request.endpointId}`,
+    span: 'gateway',
+    fields: {
+      endpointId: request.endpointId,
+      operationId: request.operationId,
+      method: request.method,
+      path: request.path,
+      requestBody: summarizePayload(request.body),
+      actorType: request.authHeaders ? 'user' : 'guest',
+      hasAuth: Boolean(request.authHeaders),
+      traceparent: request.context.traceparent,
+    },
+  });
+
   try {
     const response = await fetch(url, {
       method: request.method,
@@ -165,6 +183,19 @@ export async function requestBackend<TData, TBody extends object | undefined = u
       durationMs: Date.now() - startedAt,
       timeoutMs,
       upstreamTraceId,
+      responseBody: summarizePayload(payload.data),
+    });
+
+    serverLogger.debug('bff upstream payload', {
+      requestId: request.context.requestId,
+      routeId: `gateway:${request.endpointId}`,
+      span: 'gateway',
+      fields: {
+        endpointId: request.endpointId,
+        operationId: request.operationId,
+        requestBody: summarizePayload(request.body),
+        responseBody: summarizePayload(payload.data),
+      },
     });
 
     return payload.data as TData;
@@ -212,6 +243,22 @@ export async function requestBackendBinary<TBody extends object>(
   const abortState = createAbortState(request.signal, timeoutMs);
   const url = `${resolveBaseUrl()}${request.path}`;
   let upstreamTraceId: string | undefined;
+
+  serverLogger.info('bff upstream request started', {
+    requestId: request.context.requestId,
+    routeId: `gateway:${request.endpointId}`,
+    span: 'gateway',
+    fields: {
+      endpointId: request.endpointId,
+      operationId: request.operationId,
+      method: request.method,
+      path: request.path,
+      requestBody: summarizePayload(request.body),
+      actorType: request.authHeaders ? 'user' : 'guest',
+      hasAuth: Boolean(request.authHeaders),
+      traceparent: request.context.traceparent,
+    },
+  });
 
   try {
     const response = await fetch(url, {
@@ -599,6 +646,26 @@ function createHttpClientError<TBody extends object | undefined>(
 /**
  * 输出脱敏后的上游调用摘要。默认不记录 body、authorization、cookie 或完整响应体。
  */
+/**
+ * 把请求/响应 payload 归一成可安全写入日志的摘要；完整 payload 只在 debug 级别出现。
+ *
+ * @param value - 原始 payload。
+ * @returns 脱敏且截断的摘要。
+ */
+function summarizePayload(value: unknown): unknown {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  const redacted = redactLogValue(value);
+  try {
+    const text = JSON.stringify(redacted);
+    return text.length > 2000 ? `${text.slice(0, 2000)}...` : redacted;
+  } catch {
+    return '[unserializable]';
+  }
+}
+
 function logUpstream<TBody extends object | undefined>(
   level: 'info' | 'warn' | 'error',
   request: IHttpClientRequest<TBody>,
@@ -612,6 +679,10 @@ function logUpstream<TBody extends object | undefined>(
      * 当前后端调用响应头返回的 TLog traceId。
      */
     upstreamTraceId?: string;
+    /**
+     * 脱敏后的响应摘要；完整 payload 只在 debug 日志出现。
+     */
+    responseBody?: unknown;
   },
 ): void {
   serverLogger[level]('bff upstream request completed', {
@@ -629,8 +700,12 @@ function logUpstream<TBody extends object | undefined>(
       durationMs: fields.durationMs,
       timeoutMs: fields.timeoutMs,
       errorKind: fields.errorKind,
+      actorType: request.authHeaders ? 'user' : 'guest',
       hasAuth: Boolean(request.authHeaders),
       hasTraceparent: Boolean(request.context.traceparent),
+      traceparent: request.context.traceparent,
+      requestBody: summarizePayload(request.body),
+      responseBody: fields.responseBody,
     },
   });
 }

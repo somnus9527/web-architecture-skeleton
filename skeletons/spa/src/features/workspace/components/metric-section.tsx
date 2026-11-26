@@ -1,6 +1,6 @@
 import type { IMetricItem, MetricTone } from '@/features/workspace/types/workspace.types';
 import { t } from '@/locale';
-import { DollarOutlined, InboxOutlined, LineChartOutlined, WarningOutlined } from '@/shared/ui';
+import { Activity, CircleDollarSign, PackageCheck, ShieldAlert } from '@/shared/ui';
 
 /**
  * 指标区组件参数。
@@ -23,7 +23,7 @@ const TONE_CLASS_BY_TONE: Record<MetricTone, string> = {
   danger: 'metric-card__icon--danger',
 };
 
-const ICONS = [DollarOutlined, LineChartOutlined, InboxOutlined, WarningOutlined];
+const ICONS = [CircleDollarSign, Activity, PackageCheck, ShieldAlert];
 
 /**
  * 渲染工作台关键指标。

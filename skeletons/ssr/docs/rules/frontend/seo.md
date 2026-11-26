@@ -103,7 +103,13 @@ sitemap、robots、`<html lang>` 是搜索面必备项,与本选择无关。
 - **一页一个有意义的 `<h1>`**,再逻辑嵌套 `h2` / `h3`。不跳级、不出现多个 `<h1>`、不为了样式滥用标题标签。
 - **导航用真锚点** —— `<a href>` / next `<Link href>`。凡是希望爬虫跟进的跳转,绝不用 `<div onClick>`,那种链接对搜索**等于不存在**。
 - **`<img>` 带有意义的 `alt`**(纯装饰图才用 `alt=""`)。优先 `next/image` 以控制尺寸 / CWV。
-- Landmark:页面区域包进 `header` / `nav` / `main`(一页一个)/ `footer`。
+- Landmark:页面区域包进 `header` / `nav` / `main`(一页一个)/ `footer`；`main` 不得为 0 个或多个。
+- 标题层级不得跳级：`h1 → h2 → h3`，不能从 `h1` 直接到 `h3`；标题只表达结构，不为了字号选标签。
+- 锚文本必须有描述性：禁止“点击这里 / 了解更多 / click here / read more”；锚文本要能脱离上下文说明目标内容。
+- 图片必须有有意义的 `alt`；装饰图用 `alt=""`。公开页图片同时提供 `width`/`height` 或 `aspect-ratio`，避免 CLS。
+- 可索引内容必须出现在服务端首屏 HTML；不得只依赖 `useEffect`、客户端状态、`ssr:false` 或 hydration 后才出现的内容。
+- 结构化数据必须与可见内容一致：首页用 `Organization` + `WebSite`，文章用 `Article`，列表用 `ItemList`，面包屑用 `BreadcrumbList`；不得输出页面上不存在的字段（cloaking）。
+- canonical 必须指向返回 200 的自指 URL；404、登录页、工具页不得输出 canonical 或伪造 hreflang。
 - 分区标签(`<article>` / `<section>` / `<aside>`)是**可访问性与可维护性优先**,直接排名权重很小 —— 为正确性用它们,不要当排名手段。别指望把 `<div>` 改成 `<section>` 就涨排名。
 
 ## 结构化数据(JSON-LD)
@@ -159,6 +165,13 @@ CWV 是明确的排名输入项;[`ssr-cache-and-performance.md`](./ssr-cache-and
 - 无语言信号(含多数爬虫、不带 `Accept-Language` 的客户端)一律兜底 **en-US**(`NO_SIGNAL_FALLBACK_LOCALE`):URL 语言只对带合法前缀的公开页生效,非公开页与无前缀 404 页仍需要确定的兜底语言。2026-10-13 项目口径,取代此前「删除该机制、回落 UI 默认语言」的做法。骨架**不**保留 UI 默认语言常量(`DEFAULT_LOCALE` 已于 2026-10-13 删除),默认公开语言 URL 由 `DEFAULT_PUBLIC_URL_LOCALE` 单独承担。
 - 详细机制、目录落点、解析优先级与验收矩阵见 [`./ssr-i18n.md`](./ssr-i18n.md)；历史提案不随规则分发，
   不再作为引用来源。
+
+## 提交前与发布前校验
+
+- `scripts/check-seo-routing.mjs --staged`：公开页登记、守卫、metadata helper、proxy 308/语言头、sitemap/robots、noindex、404 约束。
+- `scripts/check-seo-content.mjs --staged`：公开首页的 `h1`/`main`、图片 alt、空链接、危险 HTML sink。
+- `scripts/check-seo-runtime.mjs --base-url <url>`：构建后的 `308`、`<html lang>`、`h1`、canonical、hreflang、OG、sitemap、robots 和 404 实际响应。
+- `check-architecture-staged.mjs` / `check-changed.mjs`：把 `seo-boundary`、`public-locale-routing` 挂到 pre-commit / pre-push，而不是只跑全量测试。
 
 ## 验证
 

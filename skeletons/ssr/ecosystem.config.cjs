@@ -111,8 +111,10 @@ module.exports = {
       exp_backoff_restart_delay: readPositiveInteger('PM2_RESTART_BACKOFF_MS', 100),
       max_memory_restart: readMaxMemoryRestart(),
       merge_logs: true,
-      out_file: `${logDirectory}/${appName}-out.log`,
-      error_file: `${logDirectory}/${appName}-error.log`,
+      // stdout/stderr 合并到同一个 JSONL 文件，避免 out/error 两个文件破坏 SLS 采集与时间顺序。
+      out_file: `${logDirectory}/${appName}.log`,
+      error_file: `${logDirectory}/${appName}.log`,
+      log_type: 'json',
       env: productionEnv,
       env_prod: productionEnv,
       env_production: productionEnv,

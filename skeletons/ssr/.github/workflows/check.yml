@@ -79,5 +79,16 @@ jobs:
       - name: Build
         run: pnpm build:prod
 
+      - name: SEO runtime smoke
+        run: |
+          PORT=4311 HOSTNAME=127.0.0.1 node --env-file=.env.prod .next/standalone/server.js > /tmp/ssr-seo.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+          for i in $(seq 1 30); do
+            if curl -fsS -o /dev/null http://127.0.0.1:4311/ssr-app-api/health; then break; fi
+            sleep 1
+          done
+          node scripts/check-seo-runtime.mjs --base-url http://127.0.0.1:4311 --origin https://distribution.example.com
+
       - name: Test
         run: pnpm test

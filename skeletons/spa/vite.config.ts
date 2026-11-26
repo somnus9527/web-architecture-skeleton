@@ -57,6 +57,16 @@ export default defineConfig(({ mode }) => {
   return {
     base,
     plugins: [react(), frontendVersionPlugin(releaseId, base)],
+    // 生产包删除 console/debugger；性能事件走 Performance API，营销事件走 dataLayer，均不依赖 console。
+    build: {
+      minify: mode === 'prod' || mode === 'production' ? 'terser' : false,
+      terserOptions: {
+        compress: {
+          drop_console: true,
+          drop_debugger: true,
+        },
+      },
+    },
     resolve: {
       alias: {
         '@': fileURLToPath(new URL('./src', import.meta.url)),

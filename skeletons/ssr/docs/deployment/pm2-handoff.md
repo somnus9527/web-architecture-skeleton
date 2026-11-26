@@ -2,21 +2,22 @@
 
 正式应用交接时必须填写：
 
-| Item              | Value                             |
-| ----------------- | --------------------------------- |
-| PM2 app name      | `<project-id>-web`                |
-| Working directory | `<release-root>/dist`             |
-| Deploy entry      | `bash deploy.sh`                  |
-| Entry             | `server.js`                       |
-| Hostname          | `0.0.0.0`                         |
-| Port              | `<port>`                          |
-| Log directory     | `/data/logs/<project-id>-web`     |
-| Env source        | 平台变量组 / secret manager / PM2 |
-| Log rotation      | `<platform-or-logrotate-policy>`  |
-| Health endpoint   | `/<project-id>-api/health`        |
-| Release identity  | Git SHA + UTC build time          |
-| Paired backend    | `<backend-root>` 或 `N/A`         |
-| PM2 save gate     | `<health-only-or-full-smoke>`     |
+| Item              | Value                                              |
+| ----------------- | -------------------------------------------------- |
+| PM2 app name      | `<project-id>-web`                                 |
+| Working directory | `<release-root>/dist`                              |
+| Deploy entry      | `bash deploy.sh`                                   |
+| Entry             | `server.js`                                        |
+| Hostname          | `0.0.0.0`                                          |
+| Port              | `<port>`                                           |
+| Log directory     | `/data/logs/<project-id>-web`                      |
+| Log file          | `<project-id>-web.log`（stdout/stderr 合并 JSONL） |
+| Env source        | 平台变量组 / secret manager / PM2                  |
+| Log rotation      | `<platform-or-logrotate-policy>`                   |
+| Health endpoint   | `/<project-id>-api/health`                         |
+| Release identity  | Git SHA + UTC build time                           |
+| Paired backend    | `<backend-root>` 或 `N/A`                          |
+| PM2 save gate     | `<health-only-or-full-smoke>`                      |
 
 生产密钥不得随 `dist/` 发布包传输。`NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` 在构建和运行阶段必须一致，并在同一环境的多实例之间保持一致。
 

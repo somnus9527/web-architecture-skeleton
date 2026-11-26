@@ -77,7 +77,9 @@ const requiredScripts = [
   'check:hygiene',
   'check:gates',
   'env:init',
-  ...(isWebVariant ? ['check:security', 'check:changed', 'check:architecture'] : []),
+  ...(isWebVariant
+    ? ['check:security', 'check:changed', 'check:architecture', 'check:seo', 'check:ui', 'check:logs']
+    : []),
 ];
 
 for (const script of requiredScripts) {
@@ -96,6 +98,14 @@ if (isWebVariant) {
     'check-commit-evidence.mjs',
     'check-changed.mjs',
     'check-version-cache.mjs',
+    'check-seo-routing.mjs',
+    'check-seo-content.mjs',
+    'check-seo-runtime.mjs',
+    'check-ui-boundary.mjs',
+    'check-logging.mjs',
+    'check-i18n-copy.mjs',
+    'check-a11y.mjs',
+    'check-architecture-staged.mjs',
     'build.sh',
     'deploy.sh',
   ]) {

@@ -1,3 +1,5 @@
+import routeVisibility from './public-route-visibility.json';
+
 /**
  * 公开区路由登记表：SEO 与语言路由的唯一事实源。
  *
@@ -34,14 +36,12 @@ export interface IPublicRouteVisibility {
  * 公开区路由登记。认证入口等「可收录但不做语言镜像」的路由不要写进来，
  * 它们的可索引性由自身 layout 的 `robots` metadata 表达。
  */
-export const PUBLIC_ROUTE_VISIBILITY: readonly IPublicRouteVisibility[] = [
-  { path: '/', indexable: true, localeRouting: true },
-];
+export const PUBLIC_ROUTE_VISIBILITY: readonly IPublicRouteVisibility[] = routeVisibility.routes;
 
 /**
  * 私有路由前缀：`robots.ts` 的屏蔽清单，也是架构测试断言不得出现语言前缀的范围。
  */
-export const PRIVATE_ROUTE_PREFIXES: readonly string[] = ['/login', '/showcase-console', '/ssr-app-api/'];
+export const PRIVATE_ROUTE_PREFIXES: readonly string[] = routeVisibility.privatePrefixes;
 
 /**
  * 参与语言路由且可索引的公开路由，供 `sitemap.ts` 生成多语言条目。

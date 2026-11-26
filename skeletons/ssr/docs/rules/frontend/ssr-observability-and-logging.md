@@ -137,15 +137,34 @@
 - 使用 Next `instrumentation.ts` 时，只做运行时初始化、全局错误/trace SDK 注册或轻量配置；不要在其中放业务规则或请求态变量。
 - source map 上传、release version、build id、commit sha 应进入客户端错误和 Web Vitals 上下文，便于定位线上版本。
 
+## BFF Request Evidence
+
+Route Handler 和 Server Action 的入口/出口日志必须至少包含：
+
+- `requestId`、`routeId`、`span`、`method`、`path`、`locale`、`status`、`durationMs`；
+- 有会话时记录 `hasSessionCookie` / `hasAuth` 等布尔摘要，不记录 cookie/token 原文；
+- 异常时记录 `errorKind`、业务 code、HTTP status；不记录堆栈原文和完整用户资料；
+- gateway 每次上游调用分别记录 `bff upstream request started` 和 `bff upstream request completed`；
+- 上游请求字段包含 `endpointId`、`operationId`、`method`、`path`、`requestBody`（脱敏摘要）、`traceparent`；
+- 上游完成字段包含 `status`、`code`、`durationMs`、`responseBody`（脱敏摘要）；
+- 完整 payload 只能以 `debug` 级别输出，并由 `LOG_LEVEL=debug` 临时开启；生产默认 `info` 不落完整 body。
+
+日志等级：
+
+- `info`：入口完成、上游完成、正常响应、关键业务阶段完成；
+- `warn`：可降级、鉴权拒绝、契约兼容、4xx；
+- `error`：5xx、未捕获异常、required 上游失败、timeout；
+- `debug`：请求/响应摘要和临时排障，生产默认关闭。
+
 ## PM2 Production Logging
 
 生产环境若使用 PM2 启动 Next 服务，日志方案必须明确：
 
 - Next 服务日志输出到 stdout/stderr，由 PM2 采集；应用代码不直接写业务日志文件，避免多实例竞争、权限和轮转不一致。
 - server logger 生产环境输出单行 JSON，字段内包含 `timestamp`、`level`、`service`、`env`、`requestId`、`pid`、`pmId`、`instanceId`、`release`、`message`。
-- PM2 配置应区分 `out_file` 和 `error_file`，设置 `merge_logs`、实例名和环境变量；cluster 多实例时日志内必须包含实例标识。
+- PM2 必须把 stdout/stderr 合并到同一个 JSONL 文件（`out_file` 与 `error_file` 同路径、`merge_logs: true`、`log_type: 'json'`），方便阿里云 SLS 按单文件采集；不要在应用代码里另写业务日志文件。cluster 多实例时日志内必须包含实例标识。
 - 使用 `pm2-logrotate`、云日志 agent 或平台等价能力做大小、保留天数、压缩和清理；不能依赖无限增长的默认日志文件。
-- 如果日志平台要求 JSON line，避免 PM2 额外时间前缀破坏 JSON；时间由 logger 的 `timestamp` 字段提供。
+- 如果日志平台要求 JSON line，避免 PM2 额外时间前缀破坏 JSON；时间由 logger 的 `timestamp` 字段提供。PM2 合并文件后仍应保留 `pid`/`instanceId`，多实例可用同一 SLS logtail 配置采集。
 - PM2 reload/重启、uncaught exception、unhandled rejection、进程退出和健康检查失败应输出 `process_event` 日志。
 - `pm2 flush`、手工删除日志、临时 debug level 只能作为运维操作，不应成为日常问题定位方案。
 

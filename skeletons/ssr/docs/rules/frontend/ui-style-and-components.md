@@ -58,8 +58,9 @@
 - 只有一个页面使用的业务组件留在 `features/<module>/components/`，不得为了“以后可能复用”提前搬进 `src/shared/ui`。
 - 禁止 `OrderTable`、`LoginCard`、`DashboardPanel` 这类页面命名进入 `src/shared/ui`；禁止共享组件 import `@/features/**`、路由模块、`t()`、业务枚举或 API 类型。
 - 业务代码只能从 `@/shared/ui` 导入 UI；`antd` 直引只允许出现在 `src/shared/ui/**`、`src/shared/theme/antd-theme.ts` 和 `src/app/providers.tsx`。
-- 图标优先使用 `@ant-design/icons`；通用图标从 `@/shared/ui` 的图标 facade 导入，不在 feature 里直接引 `@ant-design/icons`。
-- antd 没有合适图标时，允许 feature 直接引用专用图标包；不得在业务组件里手写 SVG path，也不得同一组件混用多套图标风格。`lucide-react` 只在确有缺失图标时引入，并说明原因。
+- 业务/页面图标以 `lucide-react` 为主，统一从 `@/shared/ui` 的图标 facade 导入；feature 不直接引 `lucide-react`。
+- `@ant-design/icons` 由 antd 组件内部使用，不作为业务直接依赖；不要为了“统一”替换 Select 清除、Modal 关闭、DatePicker 箭头等 antd 内部图标。
+- lucide 没有合适图标时，允许 feature 直接引用专用图标包；不得在业务组件里手写 SVG path，也不得同一组件混用多套图标风格。
 - 每个 `src/shared/ui` 导出必须在本文件的“骨架已内置”表登记；`ui-catalog` 测试会校验文档路径存在。不要把 barrel 当成一次性组件的堆放处。
 - 公共组件命名使用 PascalCase,文件名使用 kebab-case;类型接口继续遵守 `I` 前缀规则。
 - 公共组件必须保留可访问性入口,例如 `aria-label`、`role`、键盘触发和禁用态;不得为了视觉统一牺牲交互语义。

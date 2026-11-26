@@ -27,6 +27,7 @@ function log(level: LogLevel, message: string, context?: ILogContext): void {
     env: config.appEnv,
     requestId: context?.requestId,
     upstreamTraceId: context?.upstreamTraceId,
+    traceparent: context?.traceparent,
     routeId: context?.routeId,
     span: context?.span,
     pid: process.pid,

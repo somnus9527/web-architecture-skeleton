@@ -1,7 +1,7 @@
 import type { IOrderQueueItem, IOrderQueueQuery, IStatusOption } from '@/features/workspace/types/workspace.types';
 import { ORDER_STATUS_TONE } from '@/features/workspace/utils/workspace.config';
 import { t } from '@/locale';
-import { Button, EmptyState, Input, SearchOutlined, Select, StatusPill } from '@/shared/ui';
+import { Button, EmptyState, Input, Search, Select, StatusPill } from '@/shared/ui';
 
 /**
  * 订单队列组件参数。
@@ -74,7 +74,7 @@ export function OrderQueueSection({
         {/* 筛选控件作为列表状态入口，变更后由 hook 重新查询数据。 */}
         <div className="order-toolbar">
           <Input
-            prefix={<SearchOutlined aria-hidden="true" />}
+            prefix={<Search aria-hidden="true" />}
             value={query.keyword}
             placeholder={t('dashboard.search.placeholder')}
             onChange={(event) => onKeywordChange(event.target.value)}

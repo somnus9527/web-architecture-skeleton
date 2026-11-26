@@ -26,6 +26,15 @@ describe('UI stack boundary', () => {
     expect(violations).toEqual([]);
   });
 
+  it('keeps lucide imports inside the shared icon facade', () => {
+    const violations = listSourceFiles(join(ROOT, 'src'))
+      .filter((file) => /from\s+['"]lucide-react['"]/u.test(file.content))
+      .filter((file) => file.srcPath !== 'shared/ui/icons.ts')
+      .map((file) => `${file.srcPath} 直接引用了 lucide-react，请改从 @/shared/ui 导入图标`);
+
+    expect(violations).toEqual([]);
+  });
+
   it('does not ship MUI, Emotion or Tailwind dependencies', () => {
     const packageJson = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8')) as {
       dependencies?: Record<string, string>;

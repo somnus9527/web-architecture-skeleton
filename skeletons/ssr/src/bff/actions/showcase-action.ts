@@ -35,6 +35,14 @@ export async function refreshShowcaseAction(formData: FormData): Promise<IShowca
   const requestHeaders = await headers();
   const context = createRequestContext(requestHeaders, locale);
   const config = getServerConfig();
+  const startedAt = Date.now();
+
+  serverLogger.info('server action started', {
+    requestId: context.requestId,
+    routeId: 'action:refresh-showcase',
+    span: 'server_action',
+    fields: { action: 'refreshShowcase', category: String(formData.get('category') ?? '').slice(0, 64) },
+  });
 
   try {
     // 1) 鉴权：同源会话 cookie → 后端鉴权头。
@@ -43,15 +51,33 @@ export async function refreshShowcaseAction(formData: FormData): Promise<IShowca
     // 2) 入参校验。
     const parsed = refreshInputSchema.safeParse({ category: formData.get('category') });
     if (!parsed.success) {
+      serverLogger.warn('server action rejected', {
+        requestId: context.requestId,
+        routeId: 'action:refresh-showcase',
+        span: 'server_action',
+        fields: { action: 'refreshShowcase', errorCode: 'invalid_input', durationMs: Date.now() - startedAt },
+      });
       return { ok: false, errorCode: 'invalid_input' };
     }
 
     // 3) 调 mutation service（骨架仅演示链路，无真实写操作）。
     // 4) 按影响 revalidate。
     revalidatePath('/showcase-console');
+    serverLogger.info('server action completed', {
+      requestId: context.requestId,
+      routeId: 'action:refresh-showcase',
+      span: 'server_action',
+      fields: { action: 'refreshShowcase', ok: true, durationMs: Date.now() - startedAt },
+    });
     return { ok: true };
   } catch (error) {
     if (error instanceof BffAuthError) {
+      serverLogger.warn('server action rejected', {
+        requestId: context.requestId,
+        routeId: 'action:refresh-showcase',
+        span: 'server_action',
+        fields: { action: 'refreshShowcase', errorCode: error.code, durationMs: Date.now() - startedAt },
+      });
       return { ok: false, errorCode: error.code };
     }
 

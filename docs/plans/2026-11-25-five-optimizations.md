@@ -592,6 +592,8 @@ node tools/check-init-smoke.mjs
 - **P0 安全收口**：`SafeHtml`/`JsonLd` 作为 `shared-assets/src/shared/security/` 强制共享资产（唯一 sink、DOMPurify 固定配置、JSON-LD 转义、测试）；新增 `safeRedirect` 并替换 SPA 登录回跳；`check-security` 增加 SEC-008 公开 env 变量名扫描；BFF 响应默认 no-store 增加单测。
 - **共享复用与 UI 设计**：新增 `docs/plans/2026-11-26-shared-reuse-and-ui-foundation.md`，覆盖 registry/检测/生成器/agent 流程，以及 SPA/SSR 统一、撤 Tailwind、原生 CSS + CSS 变量、UI catalog 与迁移阶段；UI 实施等前置决策。
 - **UI 基础迁移**：SPA/SSR 已切换到 Ant Design 6 + 原生 CSS + `tokens.css`，共享 UI 统一到 `@/shared/ui`（`Input`/`Select` 为 facade，`Button`/`PageHeader` 等为 composite）；已移除 MUI/Emotion/Tailwind 依赖与配置，新增 `ui-stack` 边界测试，两端 build 通过。
+- **SEO/多语言提交门禁**：新增 `check-seo-routing`、`check-seo-content`、`check-seo-runtime`；pre-commit 接入路由/语义检查，pre-push 映射 `seo-boundary`/`public-locale-routing`，CI 增加构建后真实 HTML/sitemap/robots/404 冒烟；补充 Google 语义化 HTML 规则（一个 h1/main、标题层级、描述性锚文本、图片 alt/尺寸、结构化数据一致性、canonical 200）。
+- **P1 检查与日志**：pre-commit 增加 UI 边界、日志边界、i18n 硬编码、无障碍、架构分片；SPA 生产构建用 Terser `drop_console`，性能走 Performance API、营销走 dataLayer；SSR PM2 stdout/stderr 合并为单个 JSONL，BFF 补入口/上游请求/上游响应/出口日志，payload 脱敏且完整内容只进 debug。OpenAPI/Prism 契约按裁定不做强制提交校验。
 
 尚未落地（按优先级）：
 
@@ -838,6 +840,8 @@ CDN 缓存治理已经按“源站头 + 前端防御 + 刷新钩子 + 公网检�
 | SEC-008 公开 env 泄密          | `VITE_*`/`NEXT_PUBLIC_*` 会进 bundle，`VITE_API_SECRET` 这类错误一发生就是明文泄露               | 0.5 天   | 扫描公开前缀变量名/值中的 `SECRET/KEY/TOKEN/PASSWORD/PRIVATE` 与高熵字符串；构建期失败                                   |
 
 ### P1：紧接着做
+
+> **2026-11-26 裁定**：OpenAPI/Prism 契约漂移**不纳入强制提交校验**。当前 AI Vibe coding 默认前后端一起跑，契约由 mock/openapi + 联调即时收敛；保留 `mock-contract` 架构测试作为 CI 参考，但不增加 pre-commit 强制项。
 
 | 项                 | 为什么值得做                                                                                     | 成本   | 做法                                                                                                                                                                              |
 | ------------------ | ------------------------------------------------------------------------------------------------ | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

@@ -27,6 +27,7 @@
 | [frontend-release-refresh.md](./frontend-release-refresh.md) | Frontend Release Refresh |
 | [frontend-security.md](./frontend-security.md) | Frontend Security(前端安全红线) |
 | [i18n.md](./i18n.md) | Internationalization |
+| [logging.md](./logging.md) | Frontend Logging |
 | [mock-and-integration.md](./mock-and-integration.md) | Mock And Integration |
 | [monorepo-workspace.md](./monorepo-workspace.md) | Monorepo Workspace Rules |
 | [native-css-and-tokens.md](./native-css-and-tokens.md) | Native CSS And Design Tokens |

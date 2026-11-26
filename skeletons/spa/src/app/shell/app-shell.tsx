@@ -2,7 +2,7 @@ import { Outlet } from 'react-router';
 
 import { useSignOut } from '@/features/auth/hooks/use-sign-out';
 import { t } from '@/locale';
-import { Button, LogoutOutlined } from '@/shared/ui';
+import { Button, LogOut } from '@/shared/ui';
 import { useSessionStore } from '@/shared/store/session-store';
 
 /**
@@ -24,7 +24,7 @@ export function AppShell() {
           <strong>{user?.displayName ?? '-'}</strong>
           <Button
             tone="ghost"
-            icon={<LogoutOutlined aria-hidden="true" />}
+            icon={<LogOut aria-hidden="true" />}
             disabled={signOut.isSigningOut}
             onClick={signOut.signOut}
           >

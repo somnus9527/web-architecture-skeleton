@@ -1,5 +1,5 @@
 import { MetricSection } from '@/features/workspace/components/metric-section';
-import { AsyncState, Button, ReloadOutlined } from '@/shared/ui';
+import { AsyncState, Button, RefreshCcw } from '@/shared/ui';
 import { OrderQueueSection } from '@/features/workspace/components/order-queue-section';
 import { WorkflowSection } from '@/features/workspace/components/workflow-section';
 import { useWorkspaceDashboard } from '@/features/workspace/hooks/use-workspace-dashboard';
@@ -27,12 +27,7 @@ export function Component() {
             <p className="dashboard__subtitle">{t('app.subtitle')}</p>
           </div>
           {/* 刷新按钮只重拉当前工作台数据，不改变筛选条件。 */}
-          <Button
-            tone="ghost"
-            icon={<ReloadOutlined aria-hidden="true" />}
-            disabled={isLoading}
-            onClick={workspace.reload}
-          >
+          <Button tone="ghost" icon={<RefreshCcw aria-hidden="true" />} disabled={isLoading} onClick={workspace.reload}>
             {isLoading ? t('common.loading') : t('common.retry')}
           </Button>
         </header>

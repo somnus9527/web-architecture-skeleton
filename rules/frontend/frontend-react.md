@@ -13,7 +13,7 @@
 ## UI Stack Baseline
 
 - New React projects use **Ant Design 6.x** for interaction components and **native CSS + CSS variables** for layout, page styles and design tokens. Tailwind CSS is not part of the baseline.
-- Dependencies: `antd`, `@ant-design/icons`; Next.js App Router projects add `@ant-design/nextjs-registry`.
+- Dependencies: `antd`, `lucide-react`; Next.js App Router projects add `@ant-design/nextjs-registry`. `@ant-design/icons` is not a direct business dependency; antd owns its internal icons.
 - Do not install `@mui/material`, `@emotion/*`, `@tailwindcss/*`, or `tailwindcss`. Existing projects may migrate page by page, but must not add new MUI/Tailwind usage.
 - Ant Design v6 uses CSS variables internally and may still use its CSS-in-JS runtime; application CSS must not depend on antd internal class names for brand tokens.
 - App CSS variables live in `src/shared/theme/tokens.css`; their source values live in `src/shared/theme/design-tokens.ts`; the antd theme is `src/shared/theme/antd-theme.ts`.
@@ -21,12 +21,12 @@
 - Wrap the app once with `ConfigProvider` + `App` from the provider entry. Next.js App Router additionally wraps with `AntdRegistry` for first-screen style extraction.
 - Use a single light theme first. Dark/multi-brand themes come later through the same token/provider entry, not a second random provider.
 - Design tokens must cover semantic colors, spacing, radius, typography and shadows. Feature code must not hard-code hex colors, font sizes or radii; use CSS variables.
-- Icons: prefer `@ant-design/icons`; consume shared/common icons from `@/shared/ui` (the icon facade). If antd has no suitable icon, a feature may import a dedicated icon package directly, but must not hand-draw SVG paths or mix multiple icon systems in one component.
-- Do not keep `lucide-react` as the default icon library after the antd migration; add it only for a concrete missing icon and document why.
+- Icons: **lucide-react is the primary library for page/business icons**; consume them from `@/shared/ui` (the icon facade). Do not import `lucide-react` directly in features. `@ant-design/icons` is owned by antd components internally and must not be a direct business dependency. If lucide lacks an icon, a feature may import a dedicated icon package directly, but must not hand-draw SVG paths or mix multiple icon styles in one component.
+- Antd internal icons (Select clear, Modal close, DatePicker arrows, etc.) are left to antd; do not replace them just for visual uniformity.
 
 ## Shared UI Boundary
 
-- Business code imports UI only from `@/shared/ui`; it must not import `antd`, `@ant-design/icons`, `next/link`-based button internals, or feature UI directly.
+- Business code imports UI only from `@/shared/ui`; it must not import `antd`, `@ant-design/icons`, `lucide-react`, `next/link`-based button internals, or feature UI directly.
 - `src/shared/ui` has two kinds of exports:
   - **facade**: a direct or near-direct re-export of an antd primitive (`Input`, `Select`, `Table`, `Modal`); it may be added immediately because it creates no custom API.
   - **composite**: a custom wrapper or pattern (`Button` pending semantics, `PageHeader`, `StatCard`, `EmptyState`, `AsyncState`, `StatusPill`) that adds project-specific behavior.

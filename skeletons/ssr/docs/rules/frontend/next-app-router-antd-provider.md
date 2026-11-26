@@ -5,7 +5,7 @@
 ## Dependencies
 
 ```bash
-pnpm add antd @ant-design/icons @ant-design/nextjs-registry
+pnpm add antd lucide-react @ant-design/nextjs-registry
 # 不要安装 @mui/*、@emotion/*、tailwindcss 或 @tailwindcss/*
 ```
 
@@ -49,7 +49,7 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
 
 ## Review Checklist
 
-- 依赖只有 `antd`、`@ant-design/icons`、`@ant-design/nextjs-registry`；无 MUI/Emotion/Tailwind。
+- 依赖只有 `antd`、`lucide-react`、`@ant-design/nextjs-registry`；无 MUI/Emotion/Tailwind。
 - `AntdRegistry` 和 `ConfigProvider` 只在统一 provider 入口挂载一次。
 - `App` provider 包裹 `children`，使 feedback/context 可用。
 - Provider 不读取 server env、cookies、headers、BFF gateway 或 Node API。

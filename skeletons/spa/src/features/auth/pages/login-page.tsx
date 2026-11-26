@@ -1,6 +1,6 @@
 import { useLoginForm } from '@/features/auth/hooks/use-login-form';
 import { t } from '@/locale';
-import { Button, Input, LockOutlined } from '@/shared/ui';
+import { Button, Input, LockKeyhole } from '@/shared/ui';
 
 /**
  * 登录页面，承载账号密码表单与登录失败反馈。
@@ -14,7 +14,7 @@ export function Component() {
     <main className="page-center">
       <section className="auth-card">
         <p className="auth-card__icon">
-          <LockOutlined aria-hidden="true" />
+          <LockKeyhole aria-hidden="true" />
         </p>
         <h1 className="auth-card__title">{t('auth.login.title')}</h1>
         <p className="auth-card__subtitle">{t('auth.login.subtitle')}</p>

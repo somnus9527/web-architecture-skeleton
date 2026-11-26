@@ -15,14 +15,35 @@ const ARCH_TESTS = {
     'src/test/architecture/feature-isolation.test.ts',
     'src/test/architecture/hook-duplication.test.ts',
     'src/test/architecture/file-split-boundary.test.ts',
+    'src/test/architecture/logging-boundary.test.ts',
   ],
   shared: [
     'src/test/architecture/shared-independence.test.ts',
     'src/test/architecture/shared-ui-contract.test.ts',
     'src/test/architecture/shared-capabilities.test.ts',
     'src/test/architecture/file-split-boundary.test.ts',
+    'src/test/architecture/logging-boundary.test.ts',
   ],
-  app: ['src/test/architecture/layer-boundary.test.ts', 'src/test/architecture/file-split-boundary.test.ts'],
+  app: [
+    'src/test/architecture/layer-boundary.test.ts',
+    'src/test/architecture/file-split-boundary.test.ts',
+    'src/test/architecture/logging-boundary.test.ts',
+    'src/test/architecture/client-boundary.test.ts',
+    'src/test/architecture/server-boundary.test.ts',
+    'src/test/architecture/route-prefix-boundary.test.ts',
+  ],
+  seo: ['src/test/architecture/seo-boundary.test.ts', 'src/test/architecture/public-locale-routing.test.ts'],
+  ui: [
+    'src/test/architecture/ui-stack.test.ts',
+    'src/test/architecture/ui-catalog.test.ts',
+    'src/test/architecture/design-tokens.test.ts',
+  ],
+  bff: [
+    'src/test/architecture/bff-layers.test.ts',
+    'src/test/architecture/server-boundary.test.ts',
+    'src/test/architecture/client-boundary.test.ts',
+  ],
+  mock: ['src/test/architecture/mock-contract.test.ts'],
   anySource: ['src/test/architecture/file-split-boundary.test.ts'],
 };
 
@@ -118,6 +139,31 @@ if (sourceFiles.length > 0) {
   }
   if (files.some((file) => file.startsWith('src/app/') || file.startsWith('src/router/'))) {
     ARCH_TESTS.app.forEach((test) => tests.add(test));
+  }
+  if (
+    files.some(
+      (file) =>
+        file.startsWith('src/app/') ||
+        file === 'src/proxy.ts' ||
+        file.startsWith('src/i18n/') ||
+        /^src\/shared\/(?:seo|i18n|navigation)\//u.test(file) ||
+        file === 'next.config.ts',
+    )
+  ) {
+    ARCH_TESTS.seo.forEach((test) => tests.add(test));
+  }
+  if (
+    files.some(
+      (file) => file.startsWith('src/shared/ui/') || file.startsWith('src/shared/theme/') || file === 'package.json',
+    )
+  ) {
+    ARCH_TESTS.ui.forEach((test) => tests.add(test));
+  }
+  if (files.some((file) => file.startsWith('src/bff/'))) {
+    ARCH_TESTS.bff.forEach((test) => tests.add(test));
+  }
+  if (files.some((file) => /^(?:mock|mocks)\/(?:openapi|examples)\//u.test(file))) {
+    ARCH_TESTS.mock.forEach((test) => tests.add(test));
   }
   if (files.some((file) => file.startsWith('src/'))) {
     ARCH_TESTS.anySource.forEach((test) => tests.add(test));

@@ -6,7 +6,7 @@
 
 ## Ant Design SSR Positioning
 
-- 新 SSR 项目使用 `antd` 6.x、`@ant-design/icons` 6.x 和 `@ant-design/nextjs-registry`。
+- 新 SSR 项目使用 `antd` 6.x、`lucide-react` 和 `@ant-design/nextjs-registry`；antd 内部图标由 antd 自己维护，不作为业务直接依赖。
 - antd 组件按 SSR-compatible Client Component 交互体系处理，不作为承载服务端数据访问、metadata 或缓存决策的 Server Component primitive。
 - 业务代码只从 `@/shared/ui` 导入 UI；antd 直接 import 只允许出现在 `src/shared/ui/**`、`src/shared/theme/antd-theme.ts` 和 `src/app/providers.tsx`。
 - 既有项目迁移时，先冻结新增 MUI/Tailwind，再按页面替换；不要在同一页面混用两套组件库。
@@ -37,7 +37,7 @@
 ## Bundle Rules
 
 - antd 按需直接导入；icons 按需直接导入；禁止从项目级 UI barrel 一次性 re-export 大量 icons/theme helper 到性能敏感路径。
-- 不对 `antd` 做全量 `import * as antd`；不要把整个 `@ant-design/icons` 包挂到页面。
+- 不对 `antd` 做全量 `import * as antd`；不要把整个 `lucide-react` 包挂到页面；业务图标从 `@/shared/ui` 的图标 facade 按需导入。
 - 大型 UI/icon 包变更后 handoff 附 chunk 证据或未验证风险。
 
 ## Verification
