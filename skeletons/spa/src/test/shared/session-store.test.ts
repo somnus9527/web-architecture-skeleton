@@ -1,48 +1,39 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { SESSION_STORAGE_KEY, getSessionToken, useSessionStore } from '@/shared/store/session-store';
+import { useSessionStore } from '@/shared/store/session-store';
 
-/**
- * 写入一次测试会话。
- */
-function startTestSession(): void {
-  useSessionStore.getState().startSession({
-    token: 'token-1',
-    user: { id: 'U-1001', displayName: 'Demo Operator' },
-  });
-}
+const TEST_USER = { id: 'U-1001', displayName: 'Demo Operator' };
 
 describe('session store', () => {
   beforeEach(() => {
-    localStorage.clear();
     useSessionStore.getState().clearSession();
   });
 
-  it('should expose the token to non-react consumers after login', () => {
-    startTestSession();
+  it('should start from an unknown state', () => {
+    useSessionStore.setState({ status: 'unknown', user: null });
 
-    expect(getSessionToken()).toBe('token-1');
+    expect(useSessionStore.getState().status).toBe('unknown');
   });
 
-  it('should persist the versioned session envelope with the minimal user identity', () => {
-    startTestSession();
+  it('should become authenticated with the minimal user identity after login', () => {
+    useSessionStore.getState().startSession(TEST_USER);
 
-    const persisted = localStorage.getItem(SESSION_STORAGE_KEY);
-
-    expect(JSON.parse(persisted ?? '{}')).toEqual({
-      state: {
-        token: 'token-1',
-        user: { id: 'U-1001', displayName: 'Demo Operator' },
-      },
-      version: 1,
-    });
+    expect(useSessionStore.getState().status).toBe('authenticated');
+    expect(useSessionStore.getState().user).toEqual(TEST_USER);
   });
 
-  it('should clear both memory and persisted state on sign out', () => {
-    startTestSession();
+  it('should clear memory state on sign out', () => {
+    useSessionStore.getState().startSession(TEST_USER);
     useSessionStore.getState().clearSession();
 
-    expect(getSessionToken()).toBeNull();
-    expect(localStorage.getItem(SESSION_STORAGE_KEY)).toContain('"token":null');
+    expect(useSessionStore.getState().status).toBe('anonymous');
+    expect(useSessionStore.getState().user).toBeNull();
+  });
+
+  it('should not persist session data to browser storage', () => {
+    useSessionStore.getState().startSession(TEST_USER);
+
+    expect(localStorage.length).toBe(0);
+    expect(sessionStorage.length).toBe(0);
   });
 });

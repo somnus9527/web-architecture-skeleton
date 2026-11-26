@@ -1,15 +1,13 @@
 import { create } from 'zustand';
-import { createJSONStorage, persist } from 'zustand/middleware';
 
 /**
- * 会话持久化键；初始化骨架时由 initialize-spa-project 替换为项目前缀。
+ * 会话状态。
+ *
+ * - `unknown`：应用刚启动，尚未向服务端确认会话；
+ * - `authenticated`：服务端已通过 HttpOnly cookie 确认登录；
+ * - `anonymous`：未登录或会话已失效。
  */
-export const SESSION_STORAGE_KEY = 'spa-app:session.v1';
-
-/**
- * 持久化结构版本；版本不一致时按发版迁移处理，直接丢弃旧会话。
- */
-export const SESSION_PERSIST_VERSION = 1;
+export type SessionStatus = 'unknown' | 'authenticated' | 'anonymous';
 
 /**
  * 会话中允许保留的最小用户标识；权限全集与敏感资料不得进入会话。
@@ -26,68 +24,50 @@ export interface ISessionUser {
 }
 
 /**
- * 需要跨刷新保留的会话字段。
- */
-interface IPersistedSession {
-  /**
-   * 会话 token；未登录时为 null。
-   */
-  token: string | null;
-  /**
-   * 最小用户标识；未登录时为 null。
-   */
-  user: ISessionUser | null;
-}
-
-/**
  * 会话 store 完整状态。
  */
-interface ISessionState extends IPersistedSession {
+interface ISessionState {
   /**
-   * 写入登录结果。
+   * 当前会话状态；只由服务端会话接口驱动。
    */
-  startSession: (session: { token: string; user: ISessionUser }) => void;
+  status: SessionStatus;
   /**
-   * 清除内存会话态；持久化键由 persist 同步清理。
+   * 当前登录用户的最小展示信息；未登录时为 null。
+   */
+  user: ISessionUser | null;
+  /**
+   * 写入服务端已确认的登录用户。
+   */
+  startSession: (user: ISessionUser) => void;
+  /**
+   * 标记当前为匿名态；不写任何浏览器存储。
+   */
+  markAnonymous: () => void;
+  /**
+   * 清除内存会话态。
    */
   clearSession: () => void;
 }
 
 /**
- * 全局会话状态；默认持久化到 localStorage，登出、401/403 和发版迁移都会清空。
- */
-export const useSessionStore = create<ISessionState>()(
-  persist<ISessionState, [], [], IPersistedSession>(
-    (set) => ({
-      token: null,
-      user: null,
-      startSession: ({ token, user }) => {
-        set({ token, user });
-      },
-      clearSession: () => {
-        set({ token: null, user: null });
-      },
-    }),
-    {
-      name: SESSION_STORAGE_KEY,
-      version: SESSION_PERSIST_VERSION,
-      storage: createJSONStorage<IPersistedSession>(() => localStorage),
-      /* 只持久化 token 与最小用户标识，不落权限全集、响应缓存或错误态。 */
-      partialize: (state) => ({ token: state.token, user: state.user }),
-      /* 结构版本变化即视为发版迁移，旧会话不允许继续使用。 */
-      migrate: () => ({ token: null, user: null }),
-    },
-  ),
-);
-
-/**
- * 读取当前会话 token，供非 React 模块（API client）注入请求头。
+ * 全局会话状态。
  *
- * @returns 当前 token，未登录时为 null。
+ * 会话凭证只存在于服务端下发的 HttpOnly cookie 中；本 store 不持久化，也不保存 token。
+ * 刷新后由 `require-session` 调用 `/auth/session` 重新水合。
  */
-export function getSessionToken(): string | null {
-  return useSessionStore.getState().token;
-}
+export const useSessionStore = create<ISessionState>()((set) => ({
+  status: 'unknown',
+  user: null,
+  startSession: (user) => {
+    set({ status: 'authenticated', user });
+  },
+  markAnonymous: () => {
+    set({ status: 'anonymous', user: null });
+  },
+  clearSession: () => {
+    set({ status: 'anonymous', user: null });
+  },
+}));
 
 /**
  * 清除会话，供非 React 模块在鉴权失败时调用。

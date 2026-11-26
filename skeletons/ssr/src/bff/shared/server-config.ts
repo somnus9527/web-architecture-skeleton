@@ -63,6 +63,22 @@ const serverConfigSchema = z
     if (value.APP_ENV === 'prod') {
       validateProductionUrls(value, context);
       validateServerActionKey(value.NEXT_SERVER_ACTIONS_ENCRYPTION_KEY, context);
+
+      if (!value.SESSION_COOKIE_SECURE) {
+        context.addIssue({
+          code: 'custom',
+          path: ['SESSION_COOKIE_SECURE'],
+          message: 'SESSION_COOKIE_SECURE must be true in prod.',
+        });
+      }
+
+      if (!value.CSRF_ENABLED) {
+        context.addIssue({
+          code: 'custom',
+          path: ['CSRF_ENABLED'],
+          message: 'CSRF_ENABLED must be true in prod.',
+        });
+      }
     }
   });
 

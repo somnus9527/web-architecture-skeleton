@@ -28,11 +28,13 @@ OpenAPI/Prism 和 Vitest。
 - release ID 与版本文件可以解决旧标签页持有旧资源的问题
 - 不引入 Node 静态服务或 PM2 运行时
 
-## 例外
+## 会话鉴权
 
-- 骨架演示使用 Bearer token + `localStorage` 持久化会话，这是 `frontend-security.md` 中 Bearer
-  例外的演示实现。真实项目若后端支持 HttpOnly cookie，应切换到 cookie 方案；继续使用 Bearer 必须在
-  项目 ADR 记录 XSS 风险、短过期与清理策略。
+- SPA 与 SSR 统一只接受 `HttpOnly` + `Secure` + `SameSite=Lax` 的会话 cookie；不提供 Bearer、
+  `localStorage`、`sessionStorage` 或 JS 可读 cookie 的回退方案。
+- 网关与页面不同域时，由 Nginx 把 `/api/` 同源反代到网关；浏览器不直连网关域名，cookie 保持同源。
+- 登录响应与 `/auth/session` 只返回最小用户标识，不返回 token；刷新后由 `/auth/session` 水合。
+- 写操作仍必须由后端或 BFF 做 Origin/CSRF 校验；`SameSite` 不能作为唯一防线。
 
 ## 约束
 
@@ -41,3 +43,4 @@ OpenAPI/Prism 和 Vitest。
 - `version.json` 和 `index.html` 不得缓存
 - hash assets 应长期缓存
 - 业务页面不得绕过统一 API client
+- 前端不得读取、持久化或注入会话 token

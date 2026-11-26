@@ -12,7 +12,11 @@ export function GET(): Response {
     { releaseId: getDeploymentVersion() },
     {
       headers: {
-        'Cache-Control': 'no-store, max-age=0',
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+        Pragma: 'no-cache',
+        Expires: '0',
+        'CDN-Cache-Control': 'no-store',
+        'Surrogate-Control': 'no-store',
       },
     },
   );

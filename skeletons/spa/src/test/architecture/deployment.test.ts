@@ -16,13 +16,15 @@ describe('SPA deployment contract', () => {
     expect(packageJson.scripts).not.toHaveProperty('start:prod');
   });
 
-  it('keeps the deployment script limited to Nginx reload commands', async () => {
+  it('supports release/rollback with a configurable app root and Nginx reload', async () => {
     const deployScript = await readProjectFile('scripts/deploy.sh');
 
-    expect(deployScript).toContain('nginx -t && nginx -s reload');
+    expect(deployScript).toContain('release|rollback');
+    expect(deployScript).toContain('--app-root');
+    expect(deployScript).toContain('--no-reload');
+    expect(deployScript).toContain('nginx -t');
+    expect(deployScript).toContain('nginx -s reload');
     expect(deployScript).not.toContain('NGINX_BIN');
-    expect(deployScript).not.toContain('case ');
-    expect(deployScript).not.toContain('pm2');
   });
 
   it('emits release metadata and preserves SPA history fallback', async () => {
@@ -33,7 +35,8 @@ describe('SPA deployment contract', () => {
     expect(viteConfig).not.toContain('outDir');
     expect(nginxConfig).toContain('try_files $uri $uri/ /<project-id>/index.html');
     expect(nginxConfig).toContain('proxy_pass http://127.0.0.1:<api-port>');
-    expect(nginxConfig).toContain('Cache-Control "no-store, max-age=0"');
+    expect(nginxConfig).toContain('Cache-Control "no-store, no-cache, must-revalidate');
+    expect(nginxConfig).toContain('CDN-Cache-Control "no-store"');
     expect(nginxConfig).toContain('Cache-Control "public, max-age=31536000, immutable"');
   });
 });

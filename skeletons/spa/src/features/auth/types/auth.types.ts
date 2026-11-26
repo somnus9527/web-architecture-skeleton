@@ -15,17 +15,27 @@ export interface ILoginRequest {
 }
 
 /**
- * 登录成功后的会话数据。
+ * 登录成功后的会话数据；token 由服务端写入 HttpOnly cookie，不进入响应体。
  */
 export interface ILoginResult {
-  /**
-   * 后端签发的会话 token。
-   */
-  token: string;
   /**
    * 会话中的最小用户标识。
    */
   user: ISessionUser;
+}
+
+/**
+ * 当前会话查询结果。
+ */
+export interface ISessionResult {
+  /**
+   * 服务端是否确认当前 cookie 对应有效会话。
+   */
+  isAuthenticated: boolean;
+  /**
+   * 已登录时的最小用户标识。
+   */
+  user: ISessionUser | null;
 }
 
 /**

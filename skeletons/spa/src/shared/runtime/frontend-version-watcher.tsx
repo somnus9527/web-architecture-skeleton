@@ -27,8 +27,15 @@ function isFrontendVersionResponse(value: unknown): value is IFrontendVersionRes
 
 function getVersionEndpoint(): string {
   const basePath = appEnv.basePath === '/' ? '' : appEnv.basePath;
+  const endpoint = new URL(`${basePath}/version.json`, window.location.origin);
 
-  return `${basePath}/version.json`;
+  /**
+   * CDN/代理可能忽略 no-store；每次请求带唯一查询参数作为额外防御。
+   * 真正的保证仍然是 CDN 不缓存该路径，见 frontend-release-refresh.md。
+   */
+  endpoint.searchParams.set('_', String(Date.now()));
+
+  return `${endpoint.pathname}${endpoint.search}`;
 }
 
 /**
@@ -74,6 +81,8 @@ export function FrontendVersionWatcher({ currentReleaseId }: IFrontendVersionWat
           credentials: 'same-origin',
           headers: {
             Accept: 'application/json',
+            'Cache-Control': 'no-cache',
+            Pragma: 'no-cache',
           },
           signal: requestController.signal,
         });
@@ -81,6 +90,16 @@ export function FrontendVersionWatcher({ currentReleaseId }: IFrontendVersionWat
         if (!response.ok) {
           logger.warn('frontend_version_check_failed', { status: response.status });
           return undefined;
+        }
+
+        const cacheControl = response.headers?.get('cache-control') ?? '';
+        const age = Number(response.headers?.get('age') ?? '0');
+        const cdnCacheStatus = response.headers?.get('x-cache') ?? response.headers?.get('cf-cache-status') ?? '';
+        if (Number.isFinite(age) && age > 0) {
+          logger.warn('frontend_version_cache_age', { age, cacheControl, cdnCacheStatus });
+        }
+        if (/hit/iu.test(cdnCacheStatus) || !/no-store|no-cache/iu.test(cacheControl)) {
+          logger.warn('frontend_version_cache_risk', { age, cacheControl, cdnCacheStatus });
         }
 
         const payload: unknown = await response.json();

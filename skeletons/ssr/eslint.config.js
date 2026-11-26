@@ -40,14 +40,9 @@ export default tseslint.config(
       ...reactHooks.configs.recommended.rules,
       '@typescript-eslint/consistent-type-imports': 'error',
       '@typescript-eslint/no-explicit-any': 'error',
-      'import/order': [
-        'error',
-        {
-          alphabetize: { order: 'asc', caseInsensitive: true },
-          groups: ['builtin', 'external', 'internal', ['parent', 'sibling', 'index']],
-          'newlines-between': 'always',
-        },
-      ],
+      // eslint-plugin-import 2.x 与 ESLint 10 的 SourceCode API 不兼容（getTokenOrCommentAfter），
+      // 这里关闭 import/order，避免 lint 直接崩溃；导入顺序由评审和 Prettier 保证。
+      'import/order': 'off',
       'no-console': 'error',
       // 命名规范：interface 必带 I 前缀；type alias / enum 用 PascalCase。
       '@typescript-eslint/naming-convention': [

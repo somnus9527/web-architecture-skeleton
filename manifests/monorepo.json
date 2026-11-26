@@ -18,7 +18,8 @@
     "hooks": false,
     "components": false,
     "architectureTests": false,
-    "hookTests": false
+    "hookTests": false,
+    "security": false
   },
   "mustRead": [
     "frontend/monorepo-workspace.md"

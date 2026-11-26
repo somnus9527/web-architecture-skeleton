@@ -1,6 +1,6 @@
 import { t } from '@/locale';
 import { logger } from '@/shared/services/logger';
-import { clearSession, getSessionToken } from '@/shared/store/session-store';
+import { clearSession } from '@/shared/store/session-store';
 
 /**
  * 标准 API 响应 envelope。
@@ -129,20 +129,19 @@ function readApiEnvelope<TData>(payload: unknown): IApiResponse<TData> | null {
  */
 export async function apiRequest<TData>(path: string, init: RequestInit = {}): Promise<IApiResponse<TData>> {
   const headers = new Headers(init.headers);
-  const sessionToken = getSessionToken();
 
   if (init.body && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json');
   }
 
-  /* authorization 只来自会话 store，避免在 API client 里散读 localStorage。 */
-  if (sessionToken && !headers.has('Authorization')) {
-    headers.set('Authorization', `Bearer ${sessionToken}`);
-  }
-
   try {
     const response = await fetch(buildApiUrl(path), {
       ...init,
+      /**
+       * 会话凭证只由同源 HttpOnly cookie 承载；不读取、不注入任何 token。
+       * SPA 与网关不同域时由 Nginx 同源反代 /api/，因此默认 same-origin 即可。
+       */
+      credentials: init.credentials ?? 'same-origin',
       headers,
     });
 

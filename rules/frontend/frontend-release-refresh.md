@@ -79,10 +79,15 @@ flowchart TD
 ## Cache And Proxy
 
 - Nginx、网关和 CDN 不得缓存 SSR `/<project-id>-api/version` 或 SPA `/version.json`。
-- 查询参数只能作为额外防御，不能替代正确的响应缓存头与代理配置。
+- 版本端点必须同时下发：`Cache-Control: no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0`、`Pragma: no-cache`、`Expires: 0`、`CDN-Cache-Control: no-store`、`Surrogate-Control: no-store`。
+- SPA 静态 `version.json` 是可变的“当前版本指针”，CDN 缓存它会让发版检测永久滞后；CDN 控制台必须对精确路径设置 TTL=0/不缓存，而不是依赖文件扩展名或全局规则。
+- SSR 版本端点必须 `dynamic = 'force-dynamic'`，Nginx 对版本 location 使用 `proxy_no_cache 1`、`proxy_cache_bypass 1`，并显式覆盖 `Cache-Control`。
+- 查询参数只能作为额外防御，不能替代正确的响应缓存头与代理配置；每次请求带唯一参数（如 `?_=<timestamp>`）只能降低“同一 URL 被缓存”的概率。
+- 发版后必须触发 CDN 刷新（URL 刷新精确到版本路径）；刷新有生效延迟，发布流水线不能假设立即生效。
+- 发版后必须从公网入口验证响应头，而不只验证应用进程直连端口；至少检查 `Cache-Control`、`Age`、`X-Cache`/`CF-Cache-Status`、`Via`。
+- 如果 CDN 无法对版本路径关闭缓存或刷新，前端无法单独保证及时刷新；必须改 CDN/网关配置，或把版本端点迁到明确不缓存的域名/路径。
 - Next `/_next/static/**` 和 SPA hash assets 应保持内容寻址与长期缓存，不得被全局
   `Cache-Control: no-store` 覆盖。
-- 发版后必须从公网入口验证响应头，而不只验证应用进程直连端口。
 
 ## Failure Boundaries
 
@@ -91,6 +96,7 @@ flowchart TD
 - 刷新后仍是旧版本：同一目标版本停止自动刷新，等待下一次不同版本或人工处理。
 - 页面隐藏：停止定时请求；收到其他标签页已确认版本的广播时允许同步刷新。
 - 浏览器不支持 BroadcastChannel：退化为每个可见标签页独立低频检查。
+- 版本端点被 CDN 缓存：现象是发版后旧标签页长时间不刷新、`Age > 0` 或 `X-Cache: HIT`；先刷新 CDN，再检查缓存规则，不能只改前端 `fetch`。
 - 自动刷新不能替代发布健康检查、回滚、静态资源缓存配置或 Server Action encryption key。
 
 ## Verification
@@ -104,5 +110,7 @@ flowchart TD
   `/<project-id>-api/version` 返回值一致。
 - 发布后公网验证：健康检查成功、版本端点为新版本且 `no-store`、入口页面可加载、
   关键 JS/CSS 无 404。
+- 缓存验证：公网版本端点 `Cache-Control` 含 `no-store`/`no-cache`、`Age` 为 0 或缺省、
+  `X-Cache`/`CF-Cache-Status` 不是 `HIT`；建议用 `scripts/check-version-cache.mjs` 固化。
 - 浏览器验证：旧版本标签页在检测周期内刷新；多个标签页同步刷新；后台标签页不持续轮询；
   网络失败或发布中版本不稳定时不产生刷新循环。

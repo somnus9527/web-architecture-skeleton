@@ -15,6 +15,8 @@
 - Nginx static root、location 和 API upstream
 - `index.html`、`version.json`、hash assets 的缓存规则
 - history fallback 与 API 代理检查命令
+- 网关与页面不同域时，`/api/` 必须由 Nginx 同源反代，转发 `Host`、`X-Forwarded-For`、`X-Forwarded-Proto` 并透传 `Set-Cookie`
+- 会话 cookie 必须 `HttpOnly`、`Secure`、`SameSite=Lax`；前端不读取 token，也不得回退到 localStorage/Bearer
 - 当前 release ID
 - 上一完整 `dist/` 制品及回滚方法
 

@@ -80,6 +80,18 @@ function isPageHidden(): boolean {
 }
 
 /**
+ * 构造带唯一查询参数的版本端点。查询参数只作为缓存防御，CDN 仍必须对该路径关闭缓存。
+ *
+ * @returns 同源版本端点。
+ */
+function getVersionEndpoint(): string {
+  const endpoint = new URL(VERSION_ENDPOINT, window.location.origin);
+  endpoint.searchParams.set('_', String(Date.now()));
+
+  return `${endpoint.pathname}${endpoint.search}`;
+}
+
+/**
  * 监听已生效的前端版本变化，并在二次确认后执行一次整页刷新。
  *
  * 可见标签页每 60 秒检查一次；隐藏时暂停。focus、visibility、online 与 pageshow
@@ -138,11 +150,13 @@ export function FrontendVersionWatcher({ currentReleaseId }: IFrontendVersionWat
 
       activeRequest = (async () => {
         try {
-          const response = await fetch(VERSION_ENDPOINT, {
+          const response = await fetch(getVersionEndpoint(), {
             cache: 'no-store',
             credentials: 'same-origin',
             headers: {
               Accept: 'application/json',
+              'Cache-Control': 'no-cache',
+              Pragma: 'no-cache',
             },
             signal: requestController?.signal,
           });
@@ -153,6 +167,22 @@ export function FrontendVersionWatcher({ currentReleaseId }: IFrontendVersionWat
               fields: { status: response.status },
             });
             return undefined;
+          }
+
+          const cacheControl = response.headers?.get('cache-control') ?? '';
+          const age = Number(response.headers?.get('age') ?? '0');
+          const cdnCacheStatus = response.headers?.get('x-cache') ?? response.headers?.get('cf-cache-status') ?? '';
+          if (Number.isFinite(age) && age > 0) {
+            clientLogger.warn('frontend_version_cache_age', {
+              span: 'frontend_version_watcher',
+              fields: { age, cacheControl, cdnCacheStatus },
+            });
+          }
+          if (/hit/iu.test(cdnCacheStatus) || !/no-store|no-cache/iu.test(cacheControl)) {
+            clientLogger.warn('frontend_version_cache_risk', {
+              span: 'frontend_version_watcher',
+              fields: { age, cacheControl, cdnCacheStatus },
+            });
           }
 
           const payload: unknown = await response.json();

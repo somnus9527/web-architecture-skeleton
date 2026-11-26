@@ -444,11 +444,12 @@ OpenAPI/Prism 和 Vitest。
 生产制品由 Vite 直接输出到 \`dist/\`，由 Nginx 托管静态文件并提供 history fallback。
 发布平台负责部署完整 \`dist/\`，\`deploy.sh\` 只负责校验 Nginx 配置并执行 reload。
 
-## 例外
+## 会话鉴权
 
-- 骨架演示使用 Bearer token + \`localStorage\` 持久化会话（\`frontend-security.md\` 的 Bearer 例外）。
-  正式项目若后端支持 HttpOnly cookie，应切换；继续使用 Bearer 必须在本 ADR 记录 XSS 风险、短过期
-  与清理策略。
+- SPA 与 SSR 统一只接受 HttpOnly + Secure + SameSite=Lax 的会话 cookie；不提供 Bearer、
+  localStorage、sessionStorage 或 JS 可读 cookie 的回退方案。
+- 网关与页面不同域时，由 Nginx 把 /api/ 同源反代到网关；浏览器不直连网关域名。
+- 登录响应与 /auth/session 只返回最小用户标识，不返回 token；刷新后由 /auth/session 水合。
 - API upstream、正式域名和 Nginx server name 由发布环境另行绑定。
 
 ## 约束
@@ -456,6 +457,7 @@ OpenAPI/Prism 和 Vitest。
 - \`version.json\` 和 \`index.html\` 不得缓存
 - hash assets 应长期缓存
 - 业务页面不得绕过统一 API client
+- 前端不得读取、持久化或注入会话 token
 `;
 }
 

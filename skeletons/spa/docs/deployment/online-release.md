@@ -2,16 +2,37 @@
 
 本文定义 Vite 静态构建、Nginx 托管和 API 代理的通用发布基线。正式应用必须替换项目占位值。
 
+## 脚本化发布（CI/CD）
+
+```bash
+# 构建机：产出不可变 tar.gz
+bash scripts/build.sh --env prod --artifact ./spa-<release>.tar.gz --release-id <release-id>
+
+# 部署机：解包、切软链、健康检查、reload
+APP_ROOT=/var/www/<project-id> bash scripts/deploy.sh release \
+  --artifact ./spa-<release>.tar.gz --release-id <release-id> \
+  --health-url https://<public-host>/<project-id>/version.json
+
+# 回滚
+APP_ROOT=/var/www/<project-id> bash scripts/deploy.sh rollback
+```
+
+发布根目录由 `--app-root`/`APP_ROOT` 指定；不需要 `rsync`。服务器不允许软链时见
+[`no-symlink-release.md`](./no-symlink-release.md)。
+
 ## 发布模型
+
+> 服务器不允许软链时，按 [`no-symlink-release.md`](./no-symlink-release.md) 的固定目录/入口原子替换或版本目录模型发布。
+> 服务器允许软链时，按 [`symlink-release.md`](./symlink-release.md) 由 `deploy.sh` 完成发布与回滚。
+> 线上回滚命令速查见 [`rollback-quick-reference.md`](./rollback-quick-reference.md)。
+> `version.json` / 版本端点被 CDN 缓存导致不刷新？见 [`version-endpoint-cache.md`](./version-endpoint-cache.md)。
 
 ```text
 CI/CD 获取源码
   -> pnpm install --frozen-lockfile
-  -> pnpm build:prod
-  -> 将完整 dist/ 部署到 Nginx 静态目录
-  -> bash scripts/deploy.sh
-  -> nginx -t
-  -> nginx -s reload
+  -> bash scripts/build.sh --env prod --artifact <tar.gz> --release-id <id>
+  -> bash scripts/deploy.sh release --app-root <dir> --artifact <tar.gz> --release-id <id>
+  -> 解包、切 current、健康检查、nginx -t && reload
 ```
 
 `dist/` 是 Vite 直接生成的静态产物：
@@ -23,7 +44,7 @@ dist/
   version.json
 ```
 
-不增加二次打包脚本，不把 `deploy.sh` 复制进 `dist/`，也不启动 Node 静态服务或 PM2。
+`build.sh` 只做门禁、构建、校验和打包；`deploy.sh` 负责部署与回滚，不把运行脚本复制进 `dist/`，也不启动 Node 静态服务或 PM2。
 
 ## 构建契约
 
@@ -39,8 +60,11 @@ Vite 将 release ID 与规范化后的 base path 写入 `dist/version.json`，�
 
 ```bash
 pnpm install --frozen-lockfile
-pnpm build:prod
+bash scripts/build.sh --env prod --artifact ./spa-<release>.tar.gz --release-id <release-id>
 ```
+
+`build.sh` 会串联 `check:gates`、`check:security`、`typecheck`、`lint`、`test`，并把 release id 同时写入
+`VITE_DEPLOYMENT_VERSION`、`version.json` 和 `build-meta.json`。需要跳过检查时用 `--skip-checks`。
 
 本地没有 `.env.prod` 时，可以用平台等价注入验证：
 
@@ -54,17 +78,16 @@ pnpm build:prod
 
 ## 发布与重载
 
-发布平台负责把同一次构建产生的完整 `dist/` 部署到 Nginx 静态目录。静态文件就位后执行：
+发布机执行：
 
 ```bash
-bash scripts/deploy.sh
+APP_ROOT=/var/www/<project-id> bash scripts/deploy.sh release \
+  --artifact ./spa-<release>.tar.gz --release-id <release-id> \
+  --health-url https://<public-host>/<project-id>/version.json
 ```
 
-脚本不接收动作参数，也不复制或删除静态文件，只执行：
-
-```bash
-nginx -t && nginx -s reload
-```
+`deploy.sh` 完成解包、校验、切 `current`、健康检查和 Nginx reload；`--no-reload` 可把 reload 交给运维。
+回滚使用 `bash scripts/deploy.sh rollback --app-root <dir>`，不需要重新构建。
 
 ## Nginx 契约
 

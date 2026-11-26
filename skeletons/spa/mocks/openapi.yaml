@@ -15,7 +15,7 @@ paths:
       operationId: getWorkspaceDashboard
       summary: 获取工作台首屏数据
       security:
-        - bearerAuth: []
+        - cookieAuth: []
       requestBody:
         required: true
         content:
@@ -74,7 +74,7 @@ paths:
       operationId: advanceWorkspaceOrder
       summary: 推进工作台订单状态
       security:
-        - bearerAuth: []
+        - cookieAuth: []
       requestBody:
         required: true
         content:
@@ -115,7 +115,7 @@ paths:
   /auth/login:
     post:
       operationId: login
-      summary: 使用业务账号登录并获取会话 token
+      summary: 使用业务账号登录并由服务端写入 HttpOnly 会话 cookie
       security: []
       requestBody:
         required: true
@@ -139,7 +139,6 @@ paths:
                 success:
                   value:
                     data:
-                      token: mock-session-token
                       user:
                         id: U-1001
                         displayName: Demo Operator
@@ -157,12 +156,54 @@ paths:
                     data: null
                     code: auth.invalid_credentials
                     codeMsg: 账号或密码错误。
+  /auth/session:
+    get:
+      operationId: getSession
+      summary: 查询当前 HttpOnly cookie 对应的服务端会话
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: 当前会话状态
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionResponse'
+              examples:
+                authenticated:
+                  value:
+                    data:
+                      isAuthenticated: true
+                      user:
+                        id: U-1001
+                        displayName: Demo Operator
+                    code: '200'
+                    codeMsg: null
+                anonymous:
+                  value:
+                    data:
+                      isAuthenticated: false
+                      user: null
+                    code: '200'
+                    codeMsg: null
+        '401':
+          description: 会话缺失或已失效
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                sessionExpired:
+                  value:
+                    data: null
+                    code: auth.session_expired
+                    codeMsg: 登录状态已失效，请重新登录。
   /auth/logout:
     post:
       operationId: logout
       summary: 注销当前会话并由服务端撤销
       security:
-        - bearerAuth: []
+        - cookieAuth: []
       responses:
         '200':
           description: 会话已撤销
@@ -191,10 +232,10 @@ paths:
                     codeMsg: 登录状态已失效，请重新登录。
 components:
   securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: __Host-spa-app-session
   schemas:
     ApiResponseBase:
       type: object
@@ -375,13 +416,31 @@ components:
     LoginResult:
       type: object
       required:
-        - token
         - user
       properties:
-        token:
-          type: string
         user:
           $ref: '#/components/schemas/AuthUser'
+    SessionResult:
+      type: object
+      required:
+        - isAuthenticated
+        - user
+      properties:
+        isAuthenticated:
+          type: boolean
+        user:
+          oneOf:
+            - $ref: '#/components/schemas/AuthUser'
+            - type: 'null'
+    SessionResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponseBase'
+        - type: object
+          required:
+            - data
+          properties:
+            data:
+              $ref: '#/components/schemas/SessionResult'
     LoginResponse:
       allOf:
         - $ref: '#/components/schemas/ApiResponseBase'

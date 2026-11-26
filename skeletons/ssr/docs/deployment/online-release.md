@@ -1,18 +1,40 @@
 # SSR 线上发布
 
 本文是通用发布基线。正式应用必须将 `<project-id>`、域名、日志目录和平台账号替换为真实值。
+
+## 脚本化发布（CI/CD）
+
+```bash
+# 构建机：产出不可变 tar.gz
+bash scripts/build.sh --env prod --artifact ./ssr-<release>.tar.gz --release-id <release-id>
+
+# 部署机：解包、切软链、PM2 reload、健康检查
+APP_ROOT=/opt/<project-id> bash scripts/deploy.sh release \
+  --artifact ./ssr-<release>.tar.gz --release-id <release-id> \
+  --health-url http://127.0.0.1:<port>/<project-id>-api/health
+
+# 回滚
+APP_ROOT=/opt/<project-id> bash scripts/deploy.sh rollback
+```
+
+发布根目录由 `--app-root`/`APP_ROOT` 指定；不需要 `rsync`。服务器不允许软链时见
+[`no-symlink-release.md`](./no-symlink-release.md)。解压后的 `dist/deploy.sh` 仍保留旧的单目录 PM2 模式，兼容历史流水线。
 SSR 骨架固定 BFF-only：发布只需要 Next standalone 进程，数据库 migration、worker 和 scheduler 由配套
 Java 后端仓库负责。
 
 ## 发布模型
 
+> 服务器不允许软链时，按 [`no-symlink-release.md`](./no-symlink-release.md) 的固定目录/入口原子替换或版本目录模型发布。
+> 服务器允许软链时，按 [`symlink-release.md`](./symlink-release.md) 由 `deploy.sh` 完成发布与回滚。
+> 线上回滚命令速查见 [`rollback-quick-reference.md`](./rollback-quick-reference.md)。
+> `version.json` / 版本端点被 CDN 缓存导致不刷新？见 [`version-endpoint-cache.md`](./version-endpoint-cache.md)。
+
 ```text
 服务器或 CI 获取源码
   -> pnpm install --frozen-lockfile
-  -> pnpm build:dist:<env>
-  -> 整体发布 dist/
-  -> bash deploy.sh
-  -> Nginx / CDN / WAF 转发
+  -> bash scripts/build.sh --env prod --artifact <tar.gz> --release-id <id>
+  -> bash scripts/deploy.sh release --app-root <dir> --artifact <tar.gz> --release-id <id>
+  -> PM2 reload、健康检查、Nginx / CDN / WAF 转发
 ```
 
 默认发布包包含：

@@ -71,7 +71,7 @@ class MockBroadcastChannel extends EventTarget {
  * @returns Fetch API Response。
  */
 function createVersionResponse(releaseId: string): Response {
-  return Response.json({ releaseId });
+  return Response.json({ releaseId }, { headers: { 'Cache-Control': 'no-store', 'CDN-Cache-Control': 'no-store' } });
 }
 
 /**

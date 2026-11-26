@@ -65,6 +65,9 @@ function listFiles(directory, pattern) {
 
 const packageJson = readJson('package.json') ?? {};
 const scripts = packageJson.scripts ?? {};
+const sourceConfig = readJson('.agents/architecture-source.json');
+const variant = sourceConfig?.variant ?? sourceConfig?.architecture;
+const isWebVariant = variant === 'spa' || variant === 'ssr';
 const requiredScripts = [
   'typecheck',
   'lint',
@@ -74,6 +77,7 @@ const requiredScripts = [
   'check:hygiene',
   'check:gates',
   'env:init',
+  ...(isWebVariant ? ['check:security', 'check:changed', 'check:architecture'] : []),
 ];
 
 for (const script of requiredScripts) {
@@ -85,13 +89,40 @@ check('packageManager 已固定', typeof packageJson.packageManager === 'string'
 for (const script of ['check-repo-hygiene.mjs', 'verify-gates.mjs', 'init-local-env.mjs']) {
   check(`scripts/${script} 存在`, existsSync(join(ROOT, 'scripts', script)));
 }
+if (isWebVariant) {
+  for (const script of [
+    'check-security.mjs',
+    'check-staged.mjs',
+    'check-commit-evidence.mjs',
+    'check-changed.mjs',
+    'check-version-cache.mjs',
+    'build.sh',
+    'deploy.sh',
+  ]) {
+    check(`scripts/${script} 存在`, existsSync(join(ROOT, 'scripts', script)));
+  }
+  check('package.json 含 build:release', typeof scripts['build:release'] === 'string');
+  check('package.json 含 deploy', typeof scripts.deploy === 'string');
+}
 
 check('.repo-hygiene.json 存在', existsSync(join(ROOT, '.repo-hygiene.json')));
 
 const preCommit = existsSync(join(ROOT, '.husky/pre-commit'))
   ? readFileSync(join(ROOT, '.husky/pre-commit'), 'utf8')
   : '';
-check('pre-commit 调用卫生检查', /check-repo-hygiene/u.test(preCommit));
+check('pre-commit 调用卫生检查', /check-repo-hygiene|check-staged/u.test(preCommit));
+if (isWebVariant) {
+  check('pre-commit 调用分片安全检查', /check-staged/u.test(preCommit));
+
+  const commitMsg = existsSync(join(ROOT, '.husky/commit-msg'))
+    ? readFileSync(join(ROOT, '.husky/commit-msg'), 'utf8')
+    : '';
+  check('commit-msg 调用提交证据检查', /check-commit-evidence/u.test(commitMsg));
+
+  const prePush = existsSync(join(ROOT, '.husky/pre-push')) ? readFileSync(join(ROOT, '.husky/pre-push'), 'utf8') : '';
+  check('pre-push 调用增量检查', /check-changed/u.test(prePush));
+  check('quality:check 串联安全扫描', /check:security/u.test(scripts['quality:check'] ?? ''));
+}
 
 const gateConfig = readJson('.repo-gates.json') ?? {};
 const ciCommands = gateConfig.ciCommands ?? ['check:hygiene', 'check:gates', 'test', 'build'];
@@ -119,8 +150,7 @@ check('存在架构测试', architectureTests.length > 0);
 const rules = listFiles('docs/rules', /\.md$/u);
 check('存在 docs/rules', rules.length > 0);
 
-const sourceConfig = readJson('.agents/architecture-source.json');
-check('architecture-source.json 已绑定变体', Boolean(sourceConfig?.variant ?? sourceConfig?.architecture));
+check('architecture-source.json 已绑定变体', Boolean(variant));
 
 const failed = results.filter((result) => !result.passed);
 for (const result of results) {

@@ -11,6 +11,8 @@ describe('frontend version route', () => {
     const response = GET();
 
     await expect(response.json()).resolves.toEqual({ releaseId: 'release-next' });
-    expect(response.headers.get('Cache-Control')).toBe('no-store, max-age=0');
+    expect(response.headers.get('Cache-Control')).toContain('no-store');
+    expect(response.headers.get('CDN-Cache-Control')).toBe('no-store');
+    expect(response.headers.get('Surrogate-Control')).toBe('no-store');
   });
 });

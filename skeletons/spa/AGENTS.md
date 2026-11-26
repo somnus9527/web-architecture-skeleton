@@ -8,6 +8,7 @@
 - 不得套用 Next.js、RSC、Server Action 或 BFF 规则。
 - 路由使用 history 模式，`VITE_APP_BASE_PATH`、Router basename 和 Nginx location 必须一致。
 - HTTP 调用统一经过 feature service 和 `src/shared/tools/api-client.ts`。
+- 会话凭证只由同源 HttpOnly cookie 承载；前端不得读取或持久化 token；跨域网关必须经 Nginx `/api/` 反代。
 - interface 使用 `I` 前缀；type alias 使用语义化 PascalCase；状态联合类型使用业务名。
 - 所有用户可见文案进入 `src/locale/**`；错误处理必须记录稳定事件名。
 - 构建、发布和验证统一使用 pnpm，不得引入 `package-lock.json`。

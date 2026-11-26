@@ -226,12 +226,23 @@ function materialize(variant) {
 
   const sharedDocs = join(ROOT, 'shared-assets', 'docs');
   if (existsSync(sharedDocs)) {
-    cpSync(sharedDocs, join(ROOT, 'skeletons', variant, 'docs'), { recursive: true });
+    for (const entry of readdirSync(sharedDocs, { withFileTypes: true })) {
+      // 部署手册只适用于 Web 变体；RN/monorepo 不生成无意义的 docs/deployment 副本。
+      if (entry.name === 'deployment' && variant !== 'spa' && variant !== 'ssr') {
+        continue;
+      }
+      cpSync(join(sharedDocs, entry.name), join(ROOT, 'skeletons', variant, 'docs', entry.name), { recursive: true });
+    }
   }
 
   if (sharedAssets.components !== false) {
     const sharedComponents = join(ROOT, 'shared-assets', 'src', 'shared', 'components');
     cpSync(sharedComponents, join(ROOT, 'skeletons', variant, 'src', 'shared', 'components'), { recursive: true });
+  }
+
+  const sharedSecurity = join(ROOT, 'shared-assets', 'src', 'shared', 'security');
+  if (existsSync(sharedSecurity) && sharedAssets.security !== false) {
+    cpSync(sharedSecurity, join(ROOT, 'skeletons', variant, 'src', 'shared', 'security'), { recursive: true });
   }
 
   if (sharedAssets.architectureTests !== false) {

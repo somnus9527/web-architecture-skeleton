@@ -47,12 +47,10 @@ Decide store ownership in this order:
 
 - Persist only state with a clear reload-survival requirement.
 - Locale, currency, theme, collapsed navigation, and other user preferences are good persist candidates.
-- Persisting tokens is not the default. Follow the credential storage clause in
-  [`frontend-security.md`](./frontend-security.md): prefer HttpOnly cookie or in-memory session. Only when the
-  approved Bearer exception applies may a minimal token be persisted; record that exception in the project ADR,
-  rely on server-side revocation for logout, clear it on 401/403, account switch and release migration, avoid
-  persisting sensitive user details, and keep the persisted key versioned. Do not treat `localStorage` as a
-  default carrier.
+- Never persist session credentials in browser storage. Follow the credential storage clause in
+  [`frontend-security.md`](./frontend-security.md): Web SPA/SSR use HttpOnly cookie only; the client store keeps
+  only the minimal user identity in memory. Bearer/`localStorage` is not an approved fallback. Clear memory state
+  on 401/403, logout, account switch and release migration.
 - Do not persist server caches, large API responses, form drafts with sensitive data, or short-lived loading/error states unless the business explicitly requires recovery.
 - Use versioned persist config or migration logic when persisted state shape can change.
 

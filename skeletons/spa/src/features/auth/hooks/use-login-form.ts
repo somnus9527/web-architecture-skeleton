@@ -5,6 +5,7 @@ import { login } from '@/features/auth/services/auth-service';
 import { t } from '@/locale';
 import { ROUTE_PATHS } from '@/router/route-paths';
 import { logger } from '@/shared/services/logger';
+import { safeRedirect } from '@/shared/security/safe-redirect';
 import { useSessionStore } from '@/shared/store/session-store';
 
 import type { FormEvent } from 'react';
@@ -44,20 +45,6 @@ export interface IUseLoginFormResult {
 }
 
 /**
- * 只接受站内相对路径作为登录后的跳转目标，拒绝协议相对地址和外部地址。
- *
- * @param value - 路由 query 中的 redirect 值。
- * @returns 规范化后的站内跳转路径。
- */
-function readRedirectTarget(value: string | null): string {
-  if (!value || !value.startsWith('/') || value.startsWith('//')) {
-    return ROUTE_PATHS.workspace;
-  }
-
-  return value;
-}
-
-/**
  * 维护登录表单输入、提交状态和登录成功后的会话写入。
  *
  * @returns 登录页面需要的状态与事件。
@@ -80,8 +67,8 @@ export function useLoginForm(): IUseLoginFormResult {
     try {
       const result = await login({ username: username.trim(), password });
 
-      startSession({ token: result.token, user: result.user });
-      navigate(readRedirectTarget(searchParams.get('redirect')), { replace: true });
+      startSession(result.user);
+      navigate(safeRedirect(searchParams.get('redirect'), ROUTE_PATHS.workspace), { replace: true });
     } catch (error) {
       logger.error('auth_login_failed', { error });
       setErrorMessage(t('auth.login.failed'));

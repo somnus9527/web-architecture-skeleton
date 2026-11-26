@@ -15,24 +15,28 @@ SSR/BFF 专属增量(cache 投毒、出站边界、渲染注入转义、生产�
 
 ### 1. XSS —— 头号威胁
 
-- **禁止**用 `dangerouslySetInnerHTML` / `innerHTML` / `outerHTML` / `document.write` / `v-html` 直接写入任何含用户数据的字符串。框架默认插值(JSX `{}`、`{{ }}`)会转义,不要绕过它。
+- **禁止**用 `dangerouslySetInnerHTML` / `innerHTML` / `outerHTML` / `insertAdjacentHTML` / `document.write` / `srcdoc` / `v-html` 直接写入任何含用户数据的字符串。
+- 唯一允许的 HTML 出口是 `src/shared/security/safe-html.tsx`（固定 DOMPurify 配置）与 `src/shared/security/json-ld.tsx`（服务端可控数据 + 转义）；其他文件出现 sink 一律失败。框架默认插值(JSX `{}`、`{{ }}`)会转义,不要绕过它。
 - 确需渲染富文本时,**必须**过白名单 sanitize(`DOMPurify` 等成熟库),禁止自己写正则黑名单。
 - 结构化数据(JSON-LD)等确需内联 HTML 的场景,内容**必须**是服务端可控常量/字典,**禁止**混入任何用户输入。
 - `href` / `src` / `formAction` 里的动态值**必须**校验协议,拒绝 `javascript:` / `data:` / `vbscript:` 等伪协议;拼 querystring 一律 `encodeURIComponent`。
 - 禁止 `eval` / `new Function` / `setTimeout(字符串)` 执行动态字符串。
+- `target="_blank"` 必须带 `rel="noopener noreferrer"`;`window.open` 必须带 `noopener`;`postMessage` 必须显式 `targetOrigin`,接收侧校验 `event.origin` 与 `event.source`,禁止 `'*'`。
 
 ### 2. 凭证存储与传输
 
-- 会话凭证(token / session / refresh token)**必须**放 `HttpOnly` + `Secure` + `SameSite` Cookie,**禁止**放 `localStorage` / `sessionStorage` / 非 HttpOnly cookie / JS 可读的全局变量——一旦 XSS 即等于凭证泄露。
+- 会话凭证(token / session / refresh token)**必须**放 `HttpOnly` + `Secure` + `SameSite=Lax|Strict` Cookie,**禁止**放 `localStorage` / `sessionStorage` / IndexedDB / 非 HttpOnly cookie / JS 可读的全局变量——一旦 XSS 即等于凭证泄露。
+- Web SPA 与 SSR **不提供 Bearer 回退**。网关与页面不同域时,由 Nginx 把 `/api/` 同源反代到网关,浏览器不直连网关域名,cookie 保持同源;不得用 `SameSite=None` 或 CORS credentials 替代。
+- 禁止把含 token 的对象整体持久化（如 `userInfo`、`session`、`LoginResponse`）；即使当前 token 为 null，字段进入持久化结构也不可接受。`persist` 的 `pick`/`partialize`、自定义 storage wrapper、`JSON.stringify(session)`、`Cookies.set` 都按同一红线处理。
+- 登录响应、`/auth/session` 与业务 JSON **禁止**返回 token;刷新后由服务端会话接口水合登录态。
 - 凭证、权限全集、内部 id **禁止**进入 Client Component props、JSON 响应体、URL、日志、错误信息。
 - 全站 **HTTPS**;承载会话的 cookie 必须 `Secure`,生产必开 HSTS。
-- 若架构上必须用 Bearer token(跨域 API 无法用 cookie),则接受 XSS 风险上升的前提,把 XSS 防护做到极致 + 短过期 + 刷新机制,并在交付说明里记录该权衡。
 
 ### 3. CSRF
 
 - 用 Cookie 自动承载会话时**必须**防 CSRF:第一道是 `SameSite=Lax/Strict`;所有**改状态的写操作**(POST/PUT/PATCH/DELETE)再叠加 CSRF Token(双提交 cookie 或同步 token)或 Origin/Referer 校验。
 - 生产环境 **CSRF 开关必须为开**,且必须有真实校验实现(不是只读一个 flag);校验落在服务端可校验的边界：SSR 由 BFF route/action facade 或 shared helper 承担，SPA 由配套后端或网关承担，纯前端仓库不得用客户端 flag 冒充校验。
-- 纯 Bearer token(不自动携带)方案天然免疫 CSRF,但见红线 2 的 XSS 权衡。
+- 不允许用「Bearer 不自动携带」作为绕过 CSRF 的理由；Web 端只接受 cookie 会话，写操作必须做 Origin/CSRF 校验。
 
 ### 4. CSP 与安全响应头
 
@@ -67,7 +71,9 @@ SSR/BFF 专属增量(cache 投毒、出站边界、渲染注入转义、生产�
 
 - **CORS 精确收敛**: `Access-Control-Allow-Origin` 精确到域名白名单,**禁止** `*` 配合 `credentials`。
 - **SRI**: 引用 CDN 第三方脚本加 `integrity` 哈希,防 CDN 被投毒。
-- **开放重定向**: 登录回跳、`redirect` / `next` 参数校验目标域名白名单,防钓鱼跳转。
+- **开放重定向**: 登录回跳、`redirect` / `next` 参数必须走 `src/shared/security/safe-redirect.ts` 的 `safeRedirect`；只允许单斜杠站内相对路径，拒绝 `//`、反斜杠、控制字符、伪协议和编码绕过。
+- **公开 env**: `VITE_*` / `NEXT_PUBLIC_*` 名称中出现 `SECRET` / `TOKEN` / `PASSWORD` / `PRIVATE` / `CREDENTIAL` / `API_KEY` 等语义即失败，构建期扫描。
+- **用户态缓存**: 用户相关响应默认 `Cache-Control: no-store`；公开可缓存端点必须显式 opt-in，cache key/tag 含租户、用户、语言、权限维度。
 - **错误信息脱敏**: 返回给前端与前端上报的错误不带堆栈、SQL、内部路径、完整邮箱/手机号;生产关闭详细报错。
 - **点击劫持二次确认**: 敏感操作(删除、支付、授权)加二次确认,配合 `frame-ancestors`。
 - **限流与防自动化**: 登录、验证码、发送类接口做频控,前端配合行为验证/验证码。

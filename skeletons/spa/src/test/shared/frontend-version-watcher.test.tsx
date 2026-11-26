@@ -9,6 +9,7 @@ describe('FrontendVersionWatcher', () => {
       'fetch',
       vi.fn().mockResolvedValue({
         ok: true,
+        headers: new Headers({ 'Cache-Control': 'no-store' }),
         json: async () => ({ releaseId: 'release-next' }),
       }),
     );
@@ -28,7 +29,7 @@ describe('FrontendVersionWatcher', () => {
     });
 
     expect(fetch).toHaveBeenCalledWith(
-      expect.stringMatching(/\/version\.json$/u),
+      expect.stringMatching(/\/version\.json\?_=\d+$/u),
       expect.objectContaining({
         cache: 'no-store',
         credentials: 'same-origin',

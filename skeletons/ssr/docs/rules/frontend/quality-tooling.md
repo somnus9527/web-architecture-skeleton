@@ -26,16 +26,21 @@
 
 ## 仓库门禁
 
-骨架内置三条可执行门禁，派生项目不得删除：
+骨架内置以下可执行门禁，派生项目不得删除：
 
-| 命令                              | 作用                                                                       | 失败条件   |
-| --------------------------------- | -------------------------------------------------------------------------- | ---------- |
-| `pnpm check:gates`                | 门禁自检：脚本、CI、husky、ESLint、架构测试、规则目录是否齐全              | 缺任一项   |
-| `pnpm check:hygiene`              | 仓库卫生：env 文件、变量白名单、私钥、二进制、体积、包管理器混用、疑似密钥 | 命中任一项 |
-| `pnpm env:init <dev\|test\|prod>` | 从 `.env.<env>.example` 生成本地 env                                       | 模板缺失   |
+| 命令                              | 作用                                                                            | 失败条件   |
+| --------------------------------- | ------------------------------------------------------------------------------- | ---------- |
+| `pnpm check:gates`                | 门禁自检：脚本、CI、husky、ESLint、架构测试、规则目录是否齐全                   | 缺任一项   |
+| `pnpm check:hygiene`              | 仓库卫生：env 文件、变量白名单、私钥、二进制、体积、包管理器混用、疑似密钥      | 命中任一项 |
+| `pnpm check:security`             | 安全：凭证存储（含 `userInfo.token` 等深层字段）、XSS sink、外链/消息、公开 env | 命中任一项 |
+| `pnpm check:architecture`         | 架构测试：feature 隔离、shared 依赖、文件行数、hook 重复、UI 契约               | 命中任一项 |
+| `pnpm check:changed`              | pre-push 增量检查：只跑本次变更影响到的 lint/架构测试/安全扫描                  | 命中任一项 |
+| `pnpm env:init <dev\|test\|prod>` | 从 `.env.<env>.example` 生成本地 env                                            | 模板缺失   |
 
-`quality:check` 已串联 `check:gates` 与 `check:hygiene`。本地提交前由 pre-commit 运行
-`check-repo-hygiene.mjs --staged`，CI 运行 `--tracked`；两者都必须能失败，否则门禁形同虚设。
+`quality:check` 已串联 `check:gates`、`check:hygiene`、`check:security` 与 `check:architecture`。
+本地提交前由 pre-commit 运行 `check-staged.mjs --staged`（卫生 + 安全 + 后续 UI 分片）；commit-msg
+先跑 commitlint，再按 staged 文件要求 `Security-Review` / `UI-Catalog` / `Dependency` 证据；pre-push
+只跑 `check:changed.mjs` 的增量影响检查，不跑全量架构测试。CI 运行 `--tracked` 全量检查，是最终权威。
 
 卫生阈值与白名单集中在项目根的 `.repo-hygiene.json`，按实际素材规模调整；`.env.example` 是公开配置契约，
 新增变量先改契约再改本地文件。
