@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * 安全扫描：凭证存储、XSS sink、危险跳转、消息与外链、公开 env 密钥。
+ * 安全扫描：凭证存储、XSS sink、重定向出口、出站 URL、用户态缓存、消息与外链、公开 env 密钥。
  *
  * 凭证存储不是只匹配 `localStorage.setItem('token', ...)`：
  * - 读取同文件的 interface/type 属性，识别 `userInfo.token` 这类嵌套字段；
@@ -38,6 +38,21 @@ const REL_NOOPENER_PATTERN = /rel\s*=\s*['"][^'"]*(?:noopener|noreferrer)/iu;
 const POST_MESSAGE_WILDCARD_PATTERN = /postMessage\s*\([^)]*,\s*['"]\*['"]\s*\)/u;
 const WINDOW_OPEN_PATTERN = /window\.open\s*\(/u;
 const NOOPENER_PATTERN = /noopener/iu;
+/** SEC-012：客户端重定向的唯一出口是共享安全层。 */
+const REDIRECT_SINK_PATTERN = /\blocation\.(?:assign|replace)\s*\(|\blocation\.href\s*=|\bdocument\.location\s*=/u;
+const REDIRECT_SINK_ALLOWED = /(?:^|\/)src\/shared\/security\/safe-redirect\.ts$/u;
+/** SEC-014：BFF 出站只能经 http-client，且 http-client 必须走 URL 校验。 */
+const FETCH_CALL_PATTERN = /\bfetch\s*\(/u;
+const BFF_DIRECTORY_PATTERN = /(?:^|\/)src\/bff\//u;
+const HTTP_CLIENT_ALLOWED = /(?:^|\/)src\/bff\/shared\/http-client\.ts$/u;
+const HTTP_CLIENT_PATH = 'src/bff/shared/http-client.ts';
+const OUTBOUND_GUARD_PATTERN = /resolveOutboundUrl\s*\(/u;
+/** SEC-015：用户态 JSON 响应必须显式 no-store；跨请求数据缓存禁止进入 bff/app。 */
+const RAW_JSON_RESPONSE_PATTERN = /(?:NextResponse|Response)\.json\s*\(/u;
+const BFF_RESPONSE_HELPER = /(?:^|\/)src\/bff\/shared\/http-response\.ts$/u;
+const NO_STORE_PATTERN = /no-store/u;
+const UNSTABLE_CACHE_PATTERN = /\bunstable_cache\s*\(/u;
+const SERVER_DATA_DIRECTORY_PATTERN = /(?:^|\/)src\/(?:bff|app)\//u;
 
 /**
  * 读取命令行模式。
@@ -327,6 +342,27 @@ function scanFile(file, globalTypes, allowlist) {
     violations.push(`${file}:${lineOf(code, code.search(WINDOW_OPEN_PATTERN))} SEC-006 window.open 必须带 noopener`);
   }
 
+  if (REDIRECT_SINK_PATTERN.test(code) && !REDIRECT_SINK_ALLOWED.test(file)) {
+    violations.push(
+      `${file}:${lineOf(code, code.search(REDIRECT_SINK_PATTERN))} SEC-012 重定向必须走 shared/security/safe-redirect 的 redirectToInternalPath`,
+    );
+  }
+  if (RAW_JSON_RESPONSE_PATTERN.test(code) && !BFF_RESPONSE_HELPER.test(file) && !NO_STORE_PATTERN.test(code)) {
+    violations.push(
+      `${file}:${lineOf(code, code.search(RAW_JSON_RESPONSE_PATTERN))} SEC-015 用户态 JSON 响应必须显式 Cache-Control: no-store，或改走 createBff*Response`,
+    );
+  }
+  if (UNSTABLE_CACHE_PATTERN.test(code) && SERVER_DATA_DIRECTORY_PATTERN.test(file)) {
+    violations.push(
+      `${file}:${lineOf(code, code.search(UNSTABLE_CACHE_PATTERN))} SEC-015 禁止在 bff/app 使用 unstable_cache（cache key 会丢租户/用户维度）；公开只读缓存走 createBffSuccessResponse 的 cacheControl`,
+    );
+  }
+  if (FETCH_CALL_PATTERN.test(code) && BFF_DIRECTORY_PATTERN.test(file) && !HTTP_CLIENT_ALLOWED.test(file)) {
+    violations.push(
+      `${file}:${lineOf(code, code.search(FETCH_CALL_PATTERN))} SEC-014 BFF 出站只能经 bff/shared/http-client.ts，且必须走 resolveOutboundUrl 校验`,
+    );
+  }
+
   return violations;
 }
 
@@ -342,6 +378,9 @@ for (const file of targets) {
 }
 
 const violations = targets.flatMap((file) => scanFile(file, globalTypes, allowlist));
+if (existsSync(HTTP_CLIENT_PATH) && !OUTBOUND_GUARD_PATTERN.test(readFileSync(HTTP_CLIENT_PATH, 'utf8'))) {
+  violations.push(`${HTTP_CLIENT_PATH} SEC-014 BFF 出站必须经 resolveOutboundUrl() 校验协议、同源与私网`);
+}
 const envViolations = listEnvFiles(mode, files)
   .filter((file) => existsSync(file))
   .flatMap((file) => scanPublicEnvSecrets(file));
