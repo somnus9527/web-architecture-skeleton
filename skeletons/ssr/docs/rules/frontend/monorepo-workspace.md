@@ -36,7 +36,7 @@ packages/<package-name>/src/
 
 - 新建 monorepo 默认使用 pnpm workspace。
 - `pnpm-workspace.yaml` 至少包含 `apps/*` 与 `packages/*`。
-- 使用 pnpm `catalog` 统一核心依赖版本；React、React DOM、Next.js、Vite、TypeScript、MUI、i18n、testing、lint、format、OpenAPI/mock 相关依赖不应在各 app 中随意漂移。
+- 使用 pnpm `catalog` 统一核心依赖版本；React、React DOM、Next.js、Vite、TypeScript、antd、i18n、testing、lint、format、OpenAPI/mock 相关依赖不应在各 app 中随意漂移。
 - 单 app 且没有共享包需求时，可以保持单包项目；一旦需要 Web SPA + SSR、Web + App、多后台、多品牌、多租户壳层、共享 DTO/UI/tools，优先采用 monorepo。
 - 根目录只放 workspace、工具链、统一脚本和跨包配置；业务代码必须落在 `apps/*` 或 `packages/*`。
 - 根 `package.json` 默认 `private: true`，暴露 `dev`、`build`、`check`、`lint`、`typecheck`、`format` 等聚合脚本；应用级命令保留在对应 `apps/<app-name>`。
@@ -82,7 +82,7 @@ packages/<package-name>/src/
 - Web UI、SSR-safe UI、React Native UI 不能混在同一个无边界入口；需要时使用子入口或独立包，例如 `packages/ui/web`、`packages/ui/native`。
 - 业务 UI 可以依赖 `packages/types` 的稳定 view model，但不得直接调用 API client、BFF gateway、Prism、数据库或读取 app env。
 - 组件 copy 默认通过 app 的 i18n 注入，`packages/ui` 不硬编码业务展示文案；通用 aria label 或默认文案需要可覆盖。
-- MUI-first Web 组件必须声明 ThemeProvider 依赖和 SSR 兼容性；不在共享 UI 中创建隐式全局 provider。
+- antd-first Web 组件必须声明 `ConfigProvider`/`AntdRegistry` 依赖和 SSR 兼容性；不在共享 UI 中创建隐式全局 provider。
 
 ### Additional Shared Packages
 
@@ -103,7 +103,7 @@ packages/<package-name>/src/
 - `packages/*/src/shared` 不依赖 client-only、server-only、React DOM、Next server APIs、Node APIs、环境变量或浏览器全局对象。
 - 共享包不得反向依赖 `apps/*`；不得通过相对路径跨包导入源码。
 - 跨包 import 使用包名和 `exports` 子路径，不使用 `../packages/...`。
-- peer dependency 用于 React、React DOM、MUI 等宿主应用应统一持有的运行时依赖；共享包自身只声明必要 direct dependency。
+- peer dependency 用于 React、React DOM、antd 等宿主应用应统一持有的运行时依赖；共享包自身只声明必要 direct dependency。
 - 跨包 API 先通过 package `exports` 暴露稳定入口，避免从 `src/internal` 深导入。
 
 ## Contracts, Mock, And DTO Ownership

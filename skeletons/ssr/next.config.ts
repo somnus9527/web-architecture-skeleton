@@ -19,7 +19,7 @@ if (isProductionMode && !deploymentVersion) {
  * - 生产构建移除非 error/warn 的 console，避免泄漏与噪声。
  * - 不开 `experimental.globalNotFound`：该开关会在构建期把 `/_not-found` 路由的**根 layout 摘掉**，换成
  *   `src/app/global-not-found.tsx` 那份自包含文档，反而丢掉根 layout 提供的 `<html lang>` 与应用样式
- *   （MUI 主题、字体）。路由层 404 与组件内 `notFound()` 统一由 `src/app/not-found.tsx` 承运。只有改成
+ *   （antd 主题、字体）。路由层 404 与组件内 `notFound()` 统一由 `src/app/not-found.tsx` 承运。只有改成
  *   多 root layout（`[locale]` 自带 `<html>`、删除 `src/app/layout.tsx`）时才需要重新评估这个开关。
  * - `images.remotePatterns` 仅为占位示例，接入真实媒体域名时按需扩展白名单。
  */

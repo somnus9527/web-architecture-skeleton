@@ -11,7 +11,7 @@
 - 固定 BFF-only 模式，不提供 `next-backend` 本地后端能力
 - OpenAPI + Prism mock
 - 公开区 `app/[locale]` 语言段，非公开区 cookie + refresh
-- MUI SSR、Emotion、Tailwind CSS v4
+- Ant Design 6 SSR（AntdRegistry）、原生 CSS + CSS 变量
 - standalone 构建、PM2 发布包和 Nginx 反向代理说明
 - production 发布版本检测与稳定确认后的自动整页刷新
 - Vitest、架构边界测试、ESLint、Prettier、Husky 和 commitlint

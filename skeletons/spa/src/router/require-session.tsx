@@ -50,11 +50,7 @@ export function RequireSession() {
   }, [markAnonymous, startSession, status]);
 
   if (status === 'unknown') {
-    return (
-      <main className="grid min-h-screen place-items-center bg-[#f6f7f9] px-4 py-8 text-sm text-slate-600">
-        {t('common.loading')}
-      </main>
-    );
+    return <main className="page-center page-center--muted">{t('common.loading')}</main>;
   }
 
   if (status === 'anonymous') {

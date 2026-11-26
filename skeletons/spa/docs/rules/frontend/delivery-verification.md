@@ -19,7 +19,7 @@
 验收要点(逐项 OK 或标注差异):
 
 - 依赖已安装;typecheck 或 build 通过。
-- **MUI / Dialog/Drawer / Snackbar** 行为(ThemeProvider 包裹、浮层而非页内伪 modal、Snackbar 默认 top-center / 3000ms 自动隐藏 / Slide 动画(均为默认,可覆盖)、新项目 MUI-first、旧复杂界面保留已批准视觉或标注 parity-safe)按 [`./frontend-react.md`](./frontend-react.md)(SSR 的 UI 运行时细则由 SSR 变体补段承载)验收,本文不重复。
+- **Ant Design / Modal/Drawer/message** 行为(`ConfigProvider` + `App` 包裹、浮层而非页内伪 modal、反馈通过 `App.useApp()`、新项目 antd-first、旧复杂界面保留已批准视觉或标注 parity-safe)按 [`./frontend-react.md`](./frontend-react.md)(SSR 的 UI 运行时细则由 SSR 变体补段承载)验收,本文不重复。
 - 表单校验错误显示在对应表单控件下方;路由可达;核心交互可用:filter/search、create/edit、detail、status action、confirmation、error、empty、loading。
 - 所有请求走 app-local `src/shared/tools/api-client.ts`、明确提升的 `packages/tools` 请求工厂,或已批准的请求封装;domain fetch hook 至少暴露 `data`/`loading`/`error`。
 - **mock / Prism / OpenAPI / `{ data, code, codeMsg }` 包**(Prism 读 `mocks/openapi.yaml`、example 用 `$ref` 拆分、每个运行时 service 方法映射 OpenAPI path+operationId、mock 返回字段与 OpenAPI/API 文档一致、缺包裹时 API client 报 contract error、`Planned`/未实现端点显式标注、schema 足以捕获 DTO 漂移)按 [`./mock-and-integration.md`](./mock-and-integration.md) 与 [`./api-contracts.md`](./api-contracts.md) 验收,本文不重复。

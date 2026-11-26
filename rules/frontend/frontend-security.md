@@ -46,7 +46,7 @@ SSR/BFF 专属增量(cache 投毒、出站边界、渲染注入转义、生产�
   - `X-Frame-Options: DENY`(或用 CSP `frame-ancestors`)—— 防点击劫持。
   - `Strict-Transport-Security` —— 生产强制 HTTPS。
   - `Referrer-Policy: strict-origin-when-cross-origin`
-- SSR 应优先做**基于 nonce 的严格 CSP**(每请求生成 nonce 打到 inline script,随后移除 `script-src 'unsafe-inline'`),这是 SSR 相对纯静态 SPA 的优势,应当利用;nonce 必须在应用层/中间件生成,不能只靠 edge 兜底。需 nonce 化的是**框架自身的内联脚本**(如 Next 的 hydration/bootstrap);`style-src 'unsafe-inline'`(Emotion/MUI 样式注入)与 `<script type="application/ld+json">`(数据块,不受 `script-src` 约束)均与 `script-src` 的收敛无关,不要误把 JSON-LD 当作移除 `unsafe-inline` 的前置。
+- SSR 应优先做**基于 nonce 的严格 CSP**(每请求生成 nonce 打到 inline script,随后移除 `script-src 'unsafe-inline'`),这是 SSR 相对纯静态 SPA 的优势,应当利用;nonce 必须在应用层/中间件生成,不能只靠 edge 兜底。需 nonce 化的是**框架自身的内联脚本**(如 Next 的 hydration/bootstrap);`style-src 'unsafe-inline'`(antd CSS-in-JS 样式注入)与 `<script type="application/ld+json">`(数据块,不受 `script-src` 约束)均与 `script-src` 的收敛无关,不要误把 JSON-LD 当作移除 `unsafe-inline` 的前置。
 
 ### 5. 敏感信息不落前端
 

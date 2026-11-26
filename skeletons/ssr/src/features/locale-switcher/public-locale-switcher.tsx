@@ -1,7 +1,5 @@
 'use client';
 
-import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
@@ -54,20 +52,14 @@ export function PublicLocaleSwitcher() {
   }
 
   return (
-    <Stack
-      component="nav"
-      direction="row"
-      spacing={1.5}
-      aria-label={t('label')}
-      aria-busy={isPending}
-      sx={{ alignItems: 'center' }}
-    >
+    <nav className="locale-links" aria-label={t('label')} aria-busy={isPending}>
       {SUPPORTED_LOCALES.map((locale) => {
         const isCurrent = locale === currentLocale;
 
         return (
           <Link
             key={locale}
+            className="locale-link"
             href={`${swapPathLocale(pathname, locale)}${search}`}
             hrefLang={locale}
             aria-current={isCurrent ? 'true' : undefined}
@@ -77,12 +69,10 @@ export function PublicLocaleSwitcher() {
               }
             }}
           >
-            <Typography component="span" variant="body2" color={isCurrent ? 'text.primary' : 'primary'}>
-              {locale === 'en-US' ? t('english') : t('chinese')}
-            </Typography>
+            {locale === 'en-US' ? t('english') : t('chinese')}
           </Link>
         );
       })}
-    </Stack>
+    </nav>
   );
 }

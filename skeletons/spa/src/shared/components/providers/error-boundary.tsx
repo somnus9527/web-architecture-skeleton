@@ -1,6 +1,7 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 
 import { t } from '@/locale';
+import { Button } from '@/shared/ui';
 import { logger } from '@/shared/services/logger';
 
 /**
@@ -72,19 +73,15 @@ export class ErrorBoundary extends Component<IErrorBoundaryProps, IErrorBoundary
   render(): ReactNode {
     if (this.state.error) {
       return (
-        <main className="grid min-h-screen place-items-center bg-slate-100 px-6">
+        <main className="page-center">
           {/* 顶层错误兜底，避免用户看到空白页或技术栈错误。 */}
-          <section className="w-full max-w-md rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-            <p className="text-sm font-semibold text-red-700">{t('common.error.title')}</p>
-            <p className="mt-3 text-sm leading-6 text-slate-600">{t('common.error.description')}</p>
+          <section className="error-card">
+            <p className="error-card__title">{t('common.error.title')}</p>
+            <p className="error-card__description">{t('common.error.description')}</p>
             {/* 重试入口用于重置错误边界状态。 */}
-            <button
-              className="mt-5 rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white"
-              type="button"
-              onClick={this.reset}
-            >
-              {t('common.retry')}
-            </button>
+            <div className="error-card__action">
+              <Button onClick={this.reset}>{t('common.retry')}</Button>
+            </div>
           </section>
         </main>
       );

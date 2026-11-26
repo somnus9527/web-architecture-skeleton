@@ -155,7 +155,7 @@ State-change interfaces must document:
 Form workflows must document:
 
 - Request DTO fields.
-- MUI form component mapping.
+- Ant Design form component mapping (`Form.Item` + shared `Input`/`Select`).
 - Frontend validation.
 - Backend validation.
 - OpenAPI `requestBody`.

@@ -12,7 +12,7 @@
 
 ## 决策
 
-新 SPA 应用默认采用 Vite、React、TypeScript、React Router、MUI、Tailwind CSS、i18next、
+新 SPA 应用默认采用 Vite、React、TypeScript、React Router、Ant Design 6、原生 CSS + CSS 变量、i18next、
 OpenAPI/Prism 和 Vitest。
 
 应用使用 history 路由。构建期 base path、React Router basename 和 Nginx location 必须使用
@@ -23,7 +23,7 @@ OpenAPI/Prism 和 Vitest。
 
 ## 原因
 
-- 与现有 Console 工程的 React / MUI 组件生态一致
+- 与现有 Console 工程的 React 组件生态一致，并统一到 Ant Design 6
 - 保留 SPA 的纯静态部署特性，并复用现有 Nginx 入口
 - release ID 与版本文件可以解决旧标签页持有旧资源的问题
 - 不引入 Node 静态服务或 PM2 运行时

@@ -1,4 +1,3 @@
-import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { fileURLToPath, URL } from 'node:url';
 import { defineConfig, loadEnv, type Plugin } from 'vite';
@@ -46,7 +45,7 @@ function frontendVersionPlugin(releaseId: string, basePath: string): Plugin {
 }
 
 /**
- * Vite SPA 构建配置，集中注册 React、Tailwind 和源码 alias。
+ * Vite SPA 构建配置，集中注册 React、发布版本插件和源码 alias。
  */
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
@@ -57,7 +56,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     base,
-    plugins: [react(), tailwindcss(), frontendVersionPlugin(releaseId, base)],
+    plugins: [react(), frontendVersionPlugin(releaseId, base)],
     resolve: {
       alias: {
         '@': fileURLToPath(new URL('./src', import.meta.url)),

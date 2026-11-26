@@ -1,13 +1,9 @@
 'use client';
 
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import Chip from '@mui/material/Chip';
-import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
 import { useTranslations } from 'next-intl';
 
 import type { IShowcaseItemViewModel } from '@/bff/adapter/showcase-adapter';
+import { EmptyState, StatusPill } from '@/shared/ui';
 
 /**
  * showcase 列表 Client 叶子。仅消费已序列化的 view model props，
@@ -20,27 +16,21 @@ export function ShowcasePanel({ items, isEmpty }: { items: IShowcaseItemViewMode
   const t = useTranslations('showcase');
 
   if (isEmpty) {
-    return <Typography color="text.secondary">{t('empty')}</Typography>;
+    return <EmptyState title={t('empty')} />;
   }
 
   return (
-    <Stack spacing={2}>
+    <div className="showcase-list">
       {items.map((item) => (
-        <Card key={item.id} variant="outlined">
-          <CardContent>
-            <Stack direction="row" spacing={1} sx={{ mb: 1, alignItems: 'center' }}>
-              <Typography variant="h6" component="h2">
-                {item.title}
-              </Typography>
-              <Chip label={item.category} size="small" />
-            </Stack>
-            <Typography color="text.secondary">{item.summary}</Typography>
-            <Typography variant="caption" color="text.disabled">
-              {item.updatedLabel}
-            </Typography>
-          </CardContent>
-        </Card>
+        <article className="showcase-card" key={item.id}>
+          <div className="showcase-card__header">
+            <h2 className="showcase-card__title">{item.title}</h2>
+            <StatusPill tone="info">{item.category}</StatusPill>
+          </div>
+          <p className="showcase-card__summary">{item.summary}</p>
+          <span className="showcase-card__time">{item.updatedLabel}</span>
+        </article>
       ))}
-    </Stack>
+    </div>
   );
 }

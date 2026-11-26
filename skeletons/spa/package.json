@@ -48,18 +48,14 @@
     ]
   },
   "dependencies": {
-    "@emotion/react": "^11.14.0",
-    "@emotion/styled": "^11.14.1",
-    "@mui/material": "^9.1.2",
-    "@tailwindcss/vite": "^4.3.0",
+    "@ant-design/icons": "^6.3.4",
+    "antd": "^6.7.2",
     "dompurify": "^3.5.0",
     "i18next": "^27.2.4",
-    "lucide-react": "^1.22.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "react-i18next": "^18.0.3",
     "react-router": "^7.10.1",
-    "tailwindcss": "^4.3.2",
     "zustand": "^5.1.0"
   },
   "devDependencies": {

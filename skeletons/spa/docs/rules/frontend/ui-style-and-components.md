@@ -4,7 +4,7 @@
 
 - 写任何新页面、新前端组件、筛选区、指标区、列表工具栏或控制台工作台。
 - 调整字体、字号、数字展示、时间筛选、进度条、筛选输入框或筛选 select。
-- 新增、修改或复用 `src/shared/components/ui` 下的公共 UI 组件、样式函数和 design token。
+- 新增、修改或复用 `src/shared/ui` 下的公共 UI 组件、样式函数和 design token。
 
 ## 骨架已内置
 
@@ -12,16 +12,18 @@
 
 | 组件         | 位置                                       | 职责                                 |
 | ------------ | ------------------------------------------ | ------------------------------------ |
-| `StatusPill` | `src/shared/components/ui/status-pill.tsx` | 短文本状态胶囊，接受 `tone` 与子节点 |
-| `Button`     | `src/shared/components/ui/button.tsx`      | 统一 pending 语义的按钮              |
-| `AsyncState` | `src/shared/components/ui/async-state.tsx` | 加载/错误/空/内容三态出口            |
-| `EmptyState` | `src/shared/components/ui/empty-state.tsx` | 空数据态布局                         |
-| `PageHeader` | `src/shared/components/ui/page-header.tsx` | 页面标题与操作区                     |
-| `StatCard`   | `src/shared/components/ui/stat-card.tsx`   | 指标卡                               |
-| `FieldRow`   | `src/shared/components/ui/field-row.tsx`   | 只读字段行                           |
+| `StatusPill` | `src/shared/ui/status-pill.tsx` | 短文本状态胶囊，接受 `tone` 与子节点 |
+| `Button`     | `src/shared/ui/button.tsx`      | 统一 pending 语义的按钮              |
+| `AsyncState` | `src/shared/ui/async-state.tsx` | 加载/错误/空/内容三态出口            |
+| `EmptyState` | `src/shared/ui/empty-state.tsx` | 空数据态布局                         |
+| `PageHeader` | `src/shared/ui/page-header.tsx` | 页面标题与操作区                     |
+| `StatCard`   | `src/shared/ui/stat-card.tsx`   | 指标卡                               |
+| `FieldRow`   | `src/shared/ui/field-row.tsx`   | 只读字段行                           |
+| `Input`      | `src/shared/ui/input.tsx`      | antd Input 薄出口                     |
+| `Select`     | `src/shared/ui/select.tsx`     | antd Select 薄出口                    |
 
 `src/shared/components/providers/**` 与 `router/**` 属于应用级共享组件，可以持有文案与路由逻辑；
-`components/ui/**` 下的原语则不许调用 `t()`、不许 import `@/features/**`。
+`src/shared/ui/**` 下的原语则不许调用 `t()`、不许 import `@/features/**`，也不许直接 import `antd` 以外的业务依赖。
 
 ## 派生项目自建
 
@@ -38,25 +40,32 @@
 
 - 全站字体入口固定为 CSS 变量,不得在页面或业务组件里随意写散落字体栈。
 - 中文字体使用 `--font-zh`;英文字体使用 `--font-en`;数字、金额、用量、百分比、指标值使用 `--font-number`。
-- 默认正文和 MUI theme 使用 `--font-sans`;`--font-sans` 由 `html[lang]` 切换,中文环境指向 `--font-zh`,英文环境指向 `--font-en`。
-- MUI typography 的字体来源必须经过 `src/shared/theme/design-tokens.ts` 的 `designTokens.fontFamily`,再由 `src/shared/theme/theme.ts` 注入,不得在局部重新创建第二套 theme 字体。
+- 默认正文和 antd theme 使用 `--font-sans`;`--font-sans` 由 `html[lang]` 切换,中文环境指向 `--font-zh`,英文环境指向 `--font-en`。
+- antd typography 的字体来源必须经过 `src/shared/theme/design-tokens.ts` 的 `designTokens.fontFamily`,再由 `src/shared/theme/antd-theme.ts` 注入,不得在局部重新创建第二套 theme 字体。
 - `Inter` 字重引入放在应用全局样式入口（SSR `src/app/layout.tsx` / `src/app/globals.css`；SPA
   `index.html` / `src/styles.css`）;`D-DIN-PRO` 的 `@font-face` 声明放在同一全局样式文件。新增字体必须
   说明用途、加载权重和回退链,并更新本规范。
-- 新页面默认不直接写 `font-family`;确需强调数字字体时,只使用 `font-family: var(--font-number)` 或 MUI `sx={{ fontFamily: 'var(--font-number)' }}`。
+- 新页面默认不直接写 `font-family`;确需强调数字字体时,只使用 `font-family: var(--font-number)` 或 CSS `font-family: var(--font-number)`。
 
 ## 公共 UI 复用规则
 
-- `src/shared/components/ui` 是项目公共视觉资产入口,用于沉淀 theme、design token、可复用组件和跨页面样式函数。
-- 新增同类公共 UI 时优先放入 `src/shared/components/ui`,保持业务无关;文案、locale、业务数据、颜色语义和埋点由调用方注入。
+- `src/shared/ui` 是项目公共视觉资产入口,用于沉淀 theme、design token、可复用组件和跨页面样式函数。
+- 新增同类公共 UI 时优先放入 `src/shared/ui`,保持业务无关;文案、locale、业务数据、颜色语义和埋点由调用方注入。
 - 业务页面开发时必须先找可复用对象:公共组件、公共样式函数、公共 style object、公共数据结构、公共格式化工具。只有确认现有对象不能表达当前场景时,才允许新增页面级实现。
-- 有公共对象时优先使用对象本身,不要复制对象里的属性再局部改一份。例如筛选输入、下拉、分页、日期、进度条、反馈提示、表格分页优先复用 `src/shared/components/ui` 和现有 feature shared 文件,页面只传参数或叠加极小 className。
+- 有公共对象时优先使用对象本身,不要复制对象里的属性再局部改一份。例如筛选输入、下拉、分页、日期、进度条、反馈提示、表格分页优先复用 `src/shared/ui` 和现有 feature shared 文件,页面只传参数或叠加极小 className。
 - 页面级特例只能做小范围补充,不得复制一份近似组件或近似样式形成第二套视觉语言。
+- `src/shared/ui` 只允许两类内容：**facade**（antd 原语的薄出口，如 `Input`/`Select`）和 **composite**（带项目语义的封装，如 `Button`/`PageHeader`）。facade 可以随用随加；composite 必须有至少两个真实使用方，或承担安全/可访问性/表单语义等横切约束。
+- 只有一个页面使用的业务组件留在 `features/<module>/components/`，不得为了“以后可能复用”提前搬进 `src/shared/ui`。
+- 禁止 `OrderTable`、`LoginCard`、`DashboardPanel` 这类页面命名进入 `src/shared/ui`；禁止共享组件 import `@/features/**`、路由模块、`t()`、业务枚举或 API 类型。
+- 业务代码只能从 `@/shared/ui` 导入 UI；`antd` 直引只允许出现在 `src/shared/ui/**`、`src/shared/theme/antd-theme.ts` 和 `src/app/providers.tsx`。
+- 图标优先使用 `@ant-design/icons`；通用图标从 `@/shared/ui` 的图标 facade 导入，不在 feature 里直接引 `@ant-design/icons`。
+- antd 没有合适图标时，允许 feature 直接引用专用图标包；不得在业务组件里手写 SVG path，也不得同一组件混用多套图标风格。`lucide-react` 只在确有缺失图标时引入，并说明原因。
+- 每个 `src/shared/ui` 导出必须在本文件的“骨架已内置”表登记；`ui-catalog` 测试会校验文档路径存在。不要把 barrel 当成一次性组件的堆放处。
 - 公共组件命名使用 PascalCase,文件名使用 kebab-case;类型接口继续遵守 `I` 前缀规则。
 - 公共组件必须保留可访问性入口,例如 `aria-label`、`role`、键盘触发和禁用态;不得为了视觉统一牺牲交互语义。
 - 如果必须新建公共对象,命名应表达视觉/交互语义而不是业务页面名;业务文案、权限、接口字段和埋点仍由调用方提供。
 - 控制台类共享弹窗只封装通用外壳和动作区,例如遮罩、面板、标题区、关闭按钮、右上渐变和按钮 tone;弹窗里的表单字段、删除说明、业务摘要、校验提示和接口交互由页面或 feature 组件自行注入。
-- 不得为了复用弹窗而把不同业务内容强行抽成同一个“万能弹窗”。当企业端和个人端只共享视觉外壳时,优先使用 `src/shared/components/ui/console-modal.tsx`（由派生项目按本节自建）;当内容结构也高度一致时,才允许在 feature 内再封装业务弹窗。
+- 不得为了复用弹窗而把不同业务内容强行抽成同一个“万能弹窗”。当企业端和个人端只共享视觉外壳时,优先使用 `src/shared/ui/console-modal.tsx`（由派生项目按本节自建）;当内容结构也高度一致时,才允许在 feature 内再封装业务弹窗。
 
 ## 已固定的公共组件样式
 
@@ -67,12 +76,12 @@
 
 ### 控制台按钮规则
 
-- 控制台页面按钮必须优先使用 `ConsoleButton` / `ConsoleButtonLink`;弹窗底部动作区必须优先使用 `ConsoleModalActions` + `ConsoleModalButton`。不得在页面里复制一套近似 MUI Button 样式。
+- 控制台页面按钮必须优先使用 `ConsoleButton` / `ConsoleButtonLink`;弹窗底部动作区必须优先使用 `ConsoleModalActions` + `ConsoleModalButton`。不得在页面里复制一套近似 antd Button 样式。
 - `/console/**` 与 `/enterprise-console/**` 的页面工具栏、筛选区主操作中,搜索、导出/下载、刷新按钮统一使用图标按钮 `ConsoleButton shape="icon" size="filterIcon"`。尺寸固定 `42px × 42px`,圆角固定全圆 `999px`,不加投影,hover/focus/disabled/pending 全部继承 `ConsoleButton` 公共交互;搜索/导出使用对应图标,刷新统一使用 `↻`。这类按钮不显示文字,不加 Tooltip,不加 `title` 悬停提示,只保留 `aria-label` 作为无障碍名称。该规则不适用于表格行内操作、弹窗底部按钮、附件下载、小型内容操作、自动刷新、表单成功后的 `router.refresh()` 等非页面级主操作。
 - 控制台按钮 tone 按语义使用:`tone="black"` 只用于页面级入口/发起动作,例如跳转页面、打开弹窗、进入流程、新增入口、充值入口、创建工单入口;会调接口的确定、提交、保存、发送等主操作使用蓝紫渐变(`ConsoleModalButton tone="primary"` 或 `ConsoleButton tone="gradient"`),渐变按钮不得显示边框线;取消/关闭按钮使用白底 + `#AEB5C5` 边框线,不使用灰色实心背景;删除、离职、关闭工单等危险操作使用红色描边语义,不使用红色实心背景。
 - 控制台弹窗底部动作按钮文案按交互语义统一:表单提交类主按钮用「提交 / Submit」,二次确认类主按钮用「确定 / Confirm」,取消按钮用「取消 / Cancel」。删除、停用、关闭工单、离职等危险动作保留明确动作文案(如「删除 / Delete」),不得弱化成泛化的「确定」。
 - 弹窗底部动作按钮高度统一 `34px`,圆角统一 `14px`,字号统一 `13px / 700 / 20px`;页面级 `.dialogActions`、`.modalActions` 或移动端样式不得把确定、提交、取消、删除等按钮撑高、放大或改成其他圆角。
-- 弹窗底部动作按钮必须设置稳定最小宽度,默认不小于 `104px`;同字数、同语义按钮在个人控制台、企业控制台和页面级 MUI `DialogActions` 中不得因页面局部样式不同出现一长一短。优先通过 `ConsoleModalButton` 的公共样式继承;确需使用页面级 `DialogActions` 时,必须在动作区按钮选择器上补齐同一 `min-width`。
+- 弹窗底部动作按钮必须设置稳定最小宽度,默认不小于 `104px`;同字数、同语义按钮在个人控制台、企业控制台和页面级 antd `Modal` footer 中不得因页面局部样式不同出现一长一短。优先通过 `ConsoleModalButton` 的公共样式继承;确需使用页面级 `DialogActions` 时,必须在动作区按钮选择器上补齐同一 `min-width`。
 - 控制台普通按钮默认字号控制在 `12-14px / 600-700`;普通操作按钮不超过 `14px`,主要按钮可用 `14px / 700`。超大屏只扩布局,不得把按钮字号随屏幕放大。
 - 控制台按钮一律不加投影,包括黑色、蓝紫渐变、红色危险、hover、disabled、pending 状态;按钮只能通过颜色、描边、背景和排版表达层级。卡片、弹窗容器、下拉层等结构容器可按组件规则保留阴影,但不得把容器阴影规则复用到按钮。
 - 会触发接口调用、Server Action、表单提交或状态变更的按钮必须有 pending 状态:禁用按钮防重复提交,设置 `aria-busy=true`,文案切换为以 `...` 结尾的进行中文案(如「提交中... / Submitting...」「保存中... / Saving...」「删除中... / Deleting...」「处理中... / Processing...」)。pending 状态不是普通禁用态,不得变灰或降低 opacity,必须保留原语义颜色:`black` 保持黑底白字,`primary/gradient` 保持蓝紫渐变,`danger` 保持红色描边语义。只有表单未填、权限不足、校验未通过等真实不可操作状态才使用灰色 disabled 样式。
@@ -80,14 +89,14 @@
 - 控制台红色只用于删除、失败、离职、退出登录、危险操作、错误校验等负向/高风险语义;主红固定为 `#DC2627`,浅红背景、描边、focus/hover 外光必须使用同色 RGB `rgba(220, 38, 39, alpha)` 派生,不得混用 `#dc2626`、`#ef4444`、`#b91c1c`、`#fecaca`、`#fff5f5` 等第二套红色。
 - 控制台蓝色文字、链接、选中态文字、信息状态文字、蓝色描边按钮文字统一使用 `#3B6FEF`;涉及蓝紫色渐变的按钮、导航高亮、图表渐变或装饰渐变,蓝色端点固定为 `#62A0FA`,紫色端点固定为 `#7C3EEE`,不得混用 `#2563eb`、`#2453d6`、`#4f6bff`、`#3b6ffe`、`#60a5fa`、`#7c3aed` 等第二套蓝紫色。
 - 控制台成功态绿色固定三件套:文字/图标/状态点使用 `var(--console-success-text)`(`#079669`),边框使用 `var(--console-success-border)`(`#A8F3D0`),背景使用 `var(--console-success-bg)`(`#ECFEF6`)。成功按钮、状态标签、表格状态、已启用/已激活/已结算 badge、正向金额、小圆点不得再散落其他绿色;不得混用 `#10b981`、`#047857`、`#059669`、`#84e8bb`、`#effff7`、`#ecfdf5`、`#f1fbf4`、`rgba(16, 185, 129, *)`、`rgba(34, 197, 94, *)` 等第二套绿色。若图表或品牌插画确需额外绿色,只能作为数据可视化/插画色,不得用于控制台成功状态语义,并在局部注释说明不是 success token。
-- 控制台禁用态只适用于真实不可交互状态,包括原生 `:disabled`、`[aria-disabled='true']`、MUI `.Mui-disabled` 等;禁用态边框线统一 `#AEB5C5`,背景统一 `#F8F9FA`,输入框等承载信息的禁用文字统一 `#999`,禁用图标可用 `#AEB5C5`,且不加投影。不得把普通菜单、普通辅助文案、面包屑或未选中态误当成禁用灰统一替换;也不得用降低 opacity 的方式让不同底色混出第二套灰。
+- 控制台禁用态只适用于真实不可交互状态,包括原生 `:disabled`、`[aria-disabled='true']`、antd `.ant-btn-disabled` / `.ant-input-disabled` 等;禁用态边框线统一 `#AEB5C5`,背景统一 `#F8F9FA`,输入框等承载信息的禁用文字统一 `#999`,禁用图标可用 `#AEB5C5`,且不加投影。不得把普通菜单、普通辅助文案、面包屑或未选中态误当成禁用灰统一替换;也不得用降低 opacity 的方式让不同底色混出第二套灰。
 - 控制台状态胶囊用于表格状态、记录状态、工单状态、结算状态等短文本状态,默认使用 `inline-flex`、999px 圆角、浅底 + 描边 + 语义色文字,高度通过 `padding` 稳定在紧凑表格密度内。同一组状态胶囊必须保持同宽同高,不得因为文案、图标或状态语义不同出现一大一小。桌面表格默认 `min-width: 65px`、`padding: 5px 10px`、`font-size: 11px`、`font-weight: 600`、`line-height: 16.5px`;超宽表格可放到 `min-width: 72px`、`padding: 5px 13px`、`font-size: 12px`、`line-height: 18px`;工单等更窄列如需固定宽度,优先使用 `width: 72px`、`height: 30px`、`padding: 5px 10px`、`font-size: 11px`、`line-height: 16.5px`,并保持语义颜色不变。
 - 控制台状态胶囊固定 5 类语义色:成功/完成/已启用/已结算用成功态绿色三件套(`var(--console-success-*)`);警告/待支付用 `border #F8D16C`、`background #FFF7DB`、`color #D97706`;待处理用浅橙小胶囊 `border #FFB276`、`background #FFF5EB`、`color #FF7A1A`;信息/处理中用蓝色 `#3B6FEF` 文字并配浅蓝底/描边;已回复/中间流转态可用浅紫底 + 紫色文字,紫色端点统一 `#7C3EEE`;关闭/失败/异常用红色 `border #FF9B9B`、`background #FFF0F0`、`color #DC2627`。同一语义在充值账单、工单、X 联盟、API Key 等控制台页面必须复用同一胶囊色系,不得因为页面不同另起一套灰色或第二套橙/红/绿。
 - 控制台状态胶囊默认在文案前展示一个 `6px` 圆点,圆点颜色继承当前胶囊文字色,成功、警告、待处理、信息/处理中、已回复/中间态、关闭/失败/异常等状态均可使用同一圆点结构。若业务确需在关闭/失败/异常等终态负向状态使用 `CircleX` 等明确状态图标,图标尺寸必须计入胶囊固定尺寸内,不得导致同一列表里的胶囊外框宽高变化。
 - 筛选输入框、筛选 select、筛选触发框必须复用 `getFilterControlSx`、`activeFilterControlBorderColor`、`activeFilterControlShadow`;页面只叠加输入态、菜单宽度或业务图标等必要差异。
 - 筛选控件统一视觉包括:42px 高度、14px 字号、600 字重、16px 圆角、白色背景、`rgba(203, 213, 225, 0.95)` 默认描边、`rgba(59, 111, 239, 0.82)` focus 描边、`0 0 0 4px rgba(59, 111, 239, 0.1)` focus 外光、placeholder `#94a3b8`。调整这些基线前必须先更新公共样式函数。
 - 下拉菜单统一视觉包括:16px 圆角、白色背景、`0 18px 44px rgba(15, 23, 42, 0.16), 0 0 0 1px rgba(226, 232, 240, 0.72)` 阴影、选项 38px 最小高度、12px 圆角、13px 字号、600 字重、选中/hover 为 `rgba(59, 111, 239, 0.08)` 背景 + `#3B6FEF` 文字。
-- 控制台列表与表格统一视觉包括:表头背景 `#F9FBFC`;`tbody` 或普通数据行默认不设置背景色/保持透明;仅 hover 态使用 `#F9FBFF`。MUI Table、原生 `<table>` 与 div-grid 伪表格都必须遵守此规则;active/selected 态可以保留独立强调色,但不得替代 hover 基线。
+- 控制台列表与表格统一视觉包括:表头背景 `#F9FBFC`;`tbody` 或普通数据行默认不设置背景色/保持透明;仅 hover 态使用 `#F9FBFF`。antd Table、原生 `<table>` 与 div-grid 伪表格都必须遵守此规则;active/selected 态可以保留独立强调色,但不得替代 hover 基线。
 - 控制台列表因搜索、筛选、分页、刷新或 tab 切换重新请求数据时,必须使用 `ConsoleListPendingSurface` 包住数据区并保留旧数据;pending 期间禁用触发控件,URL query 继续作为列表状态事实源。query 跳转统一用 `useConsoleListNavigation`;弹窗提交、删除、编辑等操作继续使用弹窗或按钮自身 pending,不得接入列表 overlay。不同数据结构的 tab 切换不得用旧数据套新表头。
 - 控制台列表的创建、编辑、删除、启停、预算调整等操作成功后,若会刷新当前列表,交互顺序必须是:先显示成功反馈,关闭弹窗或收起操作态,再触发列表刷新 pending。客户端 fetch 列表先把列表状态置为 `loading` 再重新请求;服务端渲染列表按变体规则刷新。提交过程中只使用按钮或弹窗自身 pending,失败分支只显示错误反馈,不得触发列表 overlay。
 - 表单弹窗里的输入框、下拉触发器、textarea 等同类控件必须沿用以上 focus 状态。不得出现浏览器原生下拉蓝框、系统默认 select 菜单或另一套 focus 色。
@@ -127,7 +136,7 @@
 
 - 字体是否只通过 `--font-sans`、`--font-zh`、`--font-en`、`--font-number` 或 `designTokens.fontFamily` 进入页面。
 - 数字、金额、指标值是否使用 `--font-number`,且没有硬编码另一套数字字体。
-- 时间筛选、进度条、筛选输入框和筛选 select 是否复用了 `src/shared/components/ui` 的现有组件或样式函数。
+- 时间筛选、进度条、筛选输入框和筛选 select 是否复用了 `src/shared/ui` 的现有组件或样式函数。
 - 输入框、下拉、textarea、筛选触发器的默认态、hover、focus、菜单样式是否一致,没有页面级复制出另一套视觉。
 - 控制台按钮语义是否正确:黑色只做入口/发起动作,提交/保存/发送走蓝紫渐变且无边框线,取消为白底 `#AEB5C5` 描边,危险操作为红色;弹窗动作按钮是否保持 `34px` 高、`14px` 圆角、`13px` 字号;所有控制台按钮是否无投影。
 - 页面工具栏、筛选区的搜索、导出/下载、刷新按钮是否统一使用 `ConsoleButton shape="icon" size="filterIcon"`,保持 `42px × 42px`、全圆角、无 Tooltip/`title`、无文字,且只通过 `aria-label` 暴露名称。

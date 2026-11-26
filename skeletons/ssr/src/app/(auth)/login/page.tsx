@@ -1,6 +1,3 @@
-import Container from '@mui/material/Container';
-import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
 import Link from 'next/link';
 import { getLocale, getTranslations } from 'next-intl/server';
 
@@ -20,17 +17,19 @@ export default async function LoginPage() {
   const locale = toLocaleCode(await getLocale());
 
   return (
-    <Container maxWidth="sm" component="main">
-      <Stack spacing={2} sx={{ py: 8 }}>
-        <Typography variant="h4" component="h1">
-          {t('title')}
-        </Typography>
-        <Typography color="text.secondary">{t('description')}</Typography>
+    <main className="public-page">
+      <div className="public-page__header">
+        <div>
+          <h1 className="public-page__title">{t('title')}</h1>
+          <p className="public-page__subtitle">{t('description')}</p>
+        </div>
         <LocaleSwitcher />
-        <Link href={localizedPath(locale, '/')} hrefLang={locale}>
+      </div>
+      <div className="public-page__body">
+        <Link className="text-link" href={localizedPath(locale, '/')} hrefLang={locale}>
           {t('backHome')}
         </Link>
-      </Stack>
-    </Container>
+      </div>
+    </main>
   );
 }

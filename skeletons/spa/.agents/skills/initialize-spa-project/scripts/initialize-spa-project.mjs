@@ -435,7 +435,7 @@ function buildProjectAdr(values) {
 
 ## 决策
 
-当前 SPA 应用采用 Vite、React、TypeScript、React Router、MUI、Tailwind CSS、i18next、
+当前 SPA 应用采用 Vite、React、TypeScript、React Router、Ant Design 6、原生 CSS + CSS 变量、i18next、
 OpenAPI/Prism 和 Vitest。
 
 应用使用 history 路由。构建期 base path、React Router basename 和 Nginx location 必须使用

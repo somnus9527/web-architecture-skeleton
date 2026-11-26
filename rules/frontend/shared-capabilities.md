@@ -38,5 +38,5 @@
 ## 目录与命名
 
 - Hook 放 `src/shared/hooks/use-<kebab>.ts`，导出 `use<Camel>`。
-- 共享组件放 `src/shared/components/ui/`，文件名 kebab-case，组件名 PascalCase。
+- 共享组件放 `src/shared/ui/`，文件名 kebab-case，组件名 PascalCase。
 - 新增原语时同步更新本文与 `src/shared/hooks/README.md`，两处必须一致。

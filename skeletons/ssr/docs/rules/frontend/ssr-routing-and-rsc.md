@@ -23,7 +23,7 @@
   （`/wp-login.php`、`/fr.js` 会直接落到公开页并渲染成 200 整页首页）。不能依赖 `dynamicParams = false`
   ——`/[locale]` 是动态路由，Next 不为它产出 fallback 表，该 segment config 放在 layout 或 page 上都不生效。
 - 路由层拒绝产生的 404：由 Next 渲染**根 layout + `src/app/not-found.tsx`**，因此根 layout 给的
-  `<html lang>`（`getLocale()`，走同一条语言解析链）、MUI 主题与应用样式、Next 按 404 状态码自动注入的
+  `<html lang>`（`getLocale()`，走同一条语言解析链）、antd 主题与应用样式、Next 按 404 状态码自动注入的
   `noindex` 全都在。**不得开启 `experimental.globalNotFound`**：该开关会在构建期把 `/_not-found` 路由的根
   layout 从文件列表里过滤掉，改用一份必须自带 `<html>`/`<body>` 的自包含 `global-not-found.tsx`，正好丢掉
   上面这些。组件级 `notFound()`（含上面的守卫）由 Next 内置错误边界承接，文档没有 `lang`、没有应用样式，
@@ -53,10 +53,10 @@
 - 使用 `useSearchParams()` 的 Client Component 必须被最近的 `Suspense` 包住，避免静态路由整体 CSR bailout；动态路由中使用 `usePathname()` 的 Client Component 同样必须被 `Suspense` 包住(已用 `generateStaticParams` 且目标 Next 版本确认不触发 bailout 时可例外)。
 - 内部导航使用 `next/link`，不要用普通 `<a href>` 做站内跳转；程序式导航只在事件处理、表单结果、modal 关闭或受控流程中使用 `useRouter()`。
 
-## MUI And Style Runtime
+## Ant Design And Style Runtime
 
-- MUI、Emotion/cache provider、ThemeProvider、CSS layer、Tailwind 共存、暗色模式防闪烁、图标依赖和 UI bundle 规则统一见 [`./ssr-ui-runtime.md`](./ssr-ui-runtime.md)。
-- 本文件只保留 RSC 归属原则：MUI-heavy UI 下沉到叶子 Client Component，`page.tsx` / `layout.tsx` 仍负责服务端数据、metadata、鉴权和缓存策略。
+- antd、`AntdRegistry`、`ConfigProvider`、原生 CSS/CSS 变量、暗色模式防闪烁、图标依赖和 UI bundle 规则统一见 [`./ssr-ui-runtime.md`](./ssr-ui-runtime.md)。
+- 本文件只保留 RSC 归属原则：antd-heavy UI 下沉到叶子 Client Component，`page.tsx` / `layout.tsx` 仍负责服务端数据、metadata、鉴权和缓存策略。
 
 ## Route Handlers
 

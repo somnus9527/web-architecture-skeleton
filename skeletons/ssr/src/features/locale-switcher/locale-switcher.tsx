@@ -1,7 +1,5 @@
 'use client';
 
-import MenuItem from '@mui/material/MenuItem';
-import TextField from '@mui/material/TextField';
 import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import { useTransition } from 'react';
@@ -9,6 +7,7 @@ import { useTransition } from 'react';
 import { setLocaleAction } from '@/bff/actions/locale-actions';
 import { SUPPORTED_LOCALES } from '@/i18n/locale-config';
 import { clientLogger } from '@/shared/logger/client-logger';
+import { Select } from '@/shared/ui';
 
 /**
  * 语言切换控件。写 cookie 后 `router.refresh()` 局部刷新（不改路由、不整页 reload）。
@@ -54,20 +53,17 @@ export function LocaleSwitcher() {
   }
 
   return (
-    <TextField
-      select
+    <Select
+      className="locale-switcher"
       size="small"
-      label={t('label')}
+      aria-label={t('label')}
       value={currentLocale}
       disabled={isPending}
-      onChange={(event) => handleChange(event.target.value)}
-      slotProps={{ htmlInput: { 'aria-label': t('label') } }}
-    >
-      {SUPPORTED_LOCALES.map((locale) => (
-        <MenuItem key={locale} value={locale}>
-          {locale === 'en-US' ? t('english') : t('chinese')}
-        </MenuItem>
-      ))}
-    </TextField>
+      onChange={handleChange}
+      options={SUPPORTED_LOCALES.map((locale) => ({
+        value: locale,
+        label: locale === 'en-US' ? t('english') : t('chinese'),
+      }))}
+    />
   );
 }

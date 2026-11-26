@@ -1,10 +1,8 @@
 'use client';
 
-import Button from '@mui/material/Button';
-import Container from '@mui/material/Container';
-import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
 import { useTranslations } from 'next-intl';
+
+import { Button } from '@/shared/ui';
 
 /**
  * 路由段错误边界。仅提供恢复入口，不暴露堆栈（引导用 request id 排查）。
@@ -15,16 +13,10 @@ export default function RouteError({ reset }: { error: Error & { digest?: string
   const t = useTranslations('errors.pages.routeUnavailable');
 
   return (
-    <Container maxWidth="sm">
-      <Stack spacing={2} sx={{ py: 8, alignItems: 'flex-start' }}>
-        <Typography variant="h5" component="h1">
-          {t('title')}
-        </Typography>
-        <Typography color="text.secondary">{t('description')}</Typography>
-        <Button variant="contained" onClick={reset}>
-          {t('retry')}
-        </Button>
-      </Stack>
-    </Container>
+    <main className="error-page">
+      <h1 className="error-page__title">{t('title')}</h1>
+      <p className="error-page__description">{t('description')}</p>
+      <Button onClick={reset}>{t('retry')}</Button>
+    </main>
   );
 }

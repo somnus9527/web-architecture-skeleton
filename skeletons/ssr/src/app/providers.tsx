@@ -1,12 +1,11 @@
 'use client';
 
-import CssBaseline from '@mui/material/CssBaseline';
-import { ThemeProvider } from '@mui/material/styles';
-import { AppRouterCacheProvider } from '@mui/material-nextjs/v16-appRouter';
+import { AntdRegistry } from '@ant-design/nextjs-registry';
+import { App as AntdApp, ConfigProvider } from 'antd';
 import type { ReactNode } from 'react';
 
 import { FrontendVersionWatcher } from '@/shared/runtime/frontend-version-watcher';
-import { theme } from '@/shared/theme/theme';
+import { antdTheme } from '@/shared/theme/antd-theme';
 
 /**
  * 应用级 Provider 入参。
@@ -23,21 +22,22 @@ interface IAppProvidersProps {
 }
 
 /**
- * 应用级 Provider 装配点（MUI SSR）。装配顺序：
- * Emotion 缓存(AppRouterCacheProvider, 开启 CSS layer) → ThemeProvider(挂一次) → CssBaseline。
+ * 应用级 Provider 装配点（antd SSR）。装配顺序：
+ * AntdRegistry(首屏样式抽取) → ConfigProvider(主题) → App(message/notification 上下文)。
  * provider 入口是 Client Component，但不读取任何 secret / cookie。
  *
  * @param props - 全站内容与 production 构建的 release id。
- * @returns MUI Provider 与可选的全局发版版本观察器。
+ * @returns antd Provider 与可选的全局发版版本观察器。
  */
 export function AppProviders({ children, currentReleaseId }: IAppProvidersProps) {
   return (
-    <AppRouterCacheProvider options={{ enableCssLayer: true }}>
-      <ThemeProvider theme={theme} defaultMode="system">
-        <CssBaseline enableColorScheme />
-        {currentReleaseId ? <FrontendVersionWatcher currentReleaseId={currentReleaseId} /> : null}
-        {children}
-      </ThemeProvider>
-    </AppRouterCacheProvider>
+    <AntdRegistry>
+      <ConfigProvider theme={antdTheme}>
+        <AntdApp>
+          {currentReleaseId ? <FrontendVersionWatcher currentReleaseId={currentReleaseId} /> : null}
+          {children}
+        </AntdApp>
+      </ConfigProvider>
+    </AntdRegistry>
   );
 }

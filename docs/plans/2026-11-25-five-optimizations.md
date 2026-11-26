@@ -591,6 +591,7 @@ node tools/check-init-smoke.mjs
 - **版本端点缓存治理**：新增 `shared-assets/docs/deployment/version-endpoint-cache.md` 与 `scripts/check-version-cache.mjs`；SPA/SSR watcher 改为每次请求带 `?_=<timestamp>`、`cache: no-store` 和缓存诊断；SSR 版本路由/两端 Nginx 补 `CDN-Cache-Control`/`Surrogate-Control`；`deploy.sh` 支持 `CDN_PURGE_CMD` 在发布/回滚后刷新 CDN。
 - **P0 安全收口**：`SafeHtml`/`JsonLd` 作为 `shared-assets/src/shared/security/` 强制共享资产（唯一 sink、DOMPurify 固定配置、JSON-LD 转义、测试）；新增 `safeRedirect` 并替换 SPA 登录回跳；`check-security` 增加 SEC-008 公开 env 变量名扫描；BFF 响应默认 no-store 增加单测。
 - **共享复用与 UI 设计**：新增 `docs/plans/2026-11-26-shared-reuse-and-ui-foundation.md`，覆盖 registry/检测/生成器/agent 流程，以及 SPA/SSR 统一、撤 Tailwind、原生 CSS + CSS 变量、UI catalog 与迁移阶段；UI 实施等前置决策。
+- **UI 基础迁移**：SPA/SSR 已切换到 Ant Design 6 + 原生 CSS + `tokens.css`，共享 UI 统一到 `@/shared/ui`（`Input`/`Select` 为 facade，`Button`/`PageHeader` 等为 composite）；已移除 MUI/Emotion/Tailwind 依赖与配置，新增 `ui-stack` 边界测试，两端 build 通过。
 
 尚未落地（按优先级）：
 

@@ -21,7 +21,7 @@
 - [ ] 导航异常:Server Action / Route Handler catch 不吞 `redirect()`/`notFound()`/`unauthorized()`/`forbidden()` — 见 [`./ssr-routing-and-rsc.md`](./ssr-routing-and-rsc.md)。
 - [ ] 错误/状态页:`error.tsx`/`global-error.tsx` 是 Client Component,`global-error.tsx` 含 `<html>`/`<body>`;使用 `unauthorized()` / `forbidden()` 的项目必须提供 `unauthorized.tsx` / `forbidden.tsx` — 见 [`./ssr-routing-and-rsc.md`](./ssr-routing-and-rsc.md)。
 - [ ] parallel route 每个 `@slot` 有 `default.tsx`;intercepting modal 关闭用 `router.back()`;route matcher 层级有说明 — 见 [`./ssr-routing-and-rsc.md`](./ssr-routing-and-rsc.md)。
-- [ ] MUI runtime:匹配 Next 主版本的 `@mui/material-nextjs/*-appRouter` + `AppRouterCacheProvider`,MUI-heavy UI 在叶子 Client Component,CSS layer / Tailwind 共存,无暗色模式 hydration mismatch,大型 UI/icon 包用 `optimizePackageImports` — 见 [`./ssr-ui-runtime.md`](./ssr-ui-runtime.md)。
+- [ ] antd runtime:`@ant-design/nextjs-registry` + `AntdRegistry`,antd-heavy UI 在叶子 Client Component,原生 CSS/CSS 变量,无暗色模式 hydration mismatch,大型 UI/icon 包按需导入 — 见 [`./ssr-ui-runtime.md`](./ssr-ui-runtime.md)。
 - [ ] import 边界:跨目录用 alias,同目录才 `./`,不 `../../../` 绕过 `src/app`/`src/bff`/`src/features`/`src/shared`;`src/shared/**` 不依赖 `src/app/**`/`src/bff/**`/feature — 见 [`./ssr-frontend-architecture.md`](./ssr-frontend-architecture.md)。
 - [ ] 通用 Web 安全(runtime validation、cookie 安全属性、CSRF/签名、CORS allowlist、redirect allowlist、token 不外泄)按 OWASP/行业标准,项目专属点见 [`./ssr-security-baseline.md`](./ssr-security-baseline.md)。
 - [ ] 运行资产(`next/image` sizes/remotePatterns、`next/font` 单点初始化、`next/script` id、本地 CSS 走构建、无冗余 polyfill)按 Next 文档执行。
@@ -49,7 +49,7 @@
 
 - 涉及 UI、响应式、metadata、图片、首屏、复杂交互或 hydration 风险时，用 Playwright/e2e 或截图验证 desktop 和 mobile 两类视口。
 - 检查 console error、network failure、hydration warning、layout shift、加载/空态/错误态；内容详情页检查 title/description/canonical/OG/主要图片;Suspense fallback 不造成明显 layout shift,hydration 后不重复请求首屏关键数据。
-- MUI 页面检查首屏无样式闪烁、Emotion style 顺序、Tailwind layer 覆盖、暗色模式闪烁和 icon/chunk 体积；浏览器检查 security headers、CSP 报错、mixed content、source map 暴露、第三方脚本和跨站 cookie 行为。
+- antd 页面检查首屏无样式闪烁、CSS 变量作用域、暗色模式闪烁和 icon/chunk 体积；浏览器检查 security headers、CSP 报错、mixed content、source map 暴露、第三方脚本和跨站 cookie 行为。
 - metadata、错误页、空态、mock 文案、BFF locale header 和 cache tag/key 使用当前 locale。
 
 ## Handoff Requirements
@@ -61,7 +61,7 @@
 - Next 主版本、`middleware.ts`/`proxy.ts`、Node/Edge runtime、standalone/self-hosting 和多实例缓存策略。
 - Next 特殊文件使用情况：`template.tsx`、parallel `default.tsx`、route group、intercepting route、metadata files、sitemap/robots/manifest。
 - next/image、next/font、next/script、next/link、bundle analyzer、serverExternalPackages/transpilePackages 的采用或不适用原因。
-- MUI SSR 说明：`@mui/material-nextjs` 版本路径、`AppRouterCacheProvider`、ThemeProvider、Emotion/CSS 注入、CSS layer / Tailwind 共存、暗色模式防闪烁、client leaf 边界和兼容例外。
+- antd SSR 说明：`@ant-design/nextjs-registry` 版本、`AntdRegistry`、`ConfigProvider`、CSS 变量、暗色模式防闪烁、client leaf 边界和兼容例外。
 - security headers 来源、cookie/CSRF/CORS/input validation/redirect/upload/source map/private cache 策略和例外。
 - runtime config key 清单、敏感级别、server/client public 分界、required env、secret 注入、base URL、feature flag、PM2 env 和校验方式。
 - i18n 策略：next-intl 接入点、locale 来源、无 locale route、语言切换刷新范围、loading 状态、BFF locale 透传、cache locale 隔离、多语言 SEO 风险。

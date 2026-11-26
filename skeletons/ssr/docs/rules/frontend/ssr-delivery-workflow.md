@@ -31,7 +31,7 @@
 - 缓存策略：static、ISR、dynamic、no-store、tag/path revalidation。
 - 观测策略：统一 logger 落点、local/prod 行为、client/server transport、request id、普通日志、接口日志、上游调用摘要、降级/异常日志、Web Vitals、客户端错误、审计事件、敏感字段脱敏和 PM2 日志管理。
 - 运行资产策略：`next/image`、`next/font`、`next/script`、`next/link`、第三方脚本、CSS import、polyfill、bundle analyzer。
-- UI runtime 策略：按 `ssr-ui-runtime.md` 声明 MUI/Emotion 依赖集合、`@mui/material-nextjs/*-appRouter` 版本路径、`AppRouterCacheProvider`、ThemeProvider、Emotion/CSS 注入、Tailwind CSS layer 共存、暗色模式防闪烁和 MUI bundle 优化。
+- UI runtime 策略：按 `ssr-ui-runtime.md` 声明 antd/icons/registry 依赖集合、`@ant-design/nextjs-registry`、`AntdRegistry`、`ConfigProvider`、CSS 变量、暗色模式防闪烁和 antd bundle 优化。
 - 验证门禁：typecheck、lint、build、mock smoke、boundary tests、e2e、截图。
 
 ## Default Layout
@@ -81,11 +81,11 @@ mock/
 | Auth           | session source、authorization header 映射                                                                                  |
 | Security       | header 来源、cookie/CSRF/CORS/validation/redirect/upload/source map/private cache 策略                                     |
 | Runtime config | env key 清单、敏感级别、server/client 分界、注入方式、校验方式、PM2 env                                                    |
-| UI library     | MUI/Emotion 依赖、provider 入口、`@mui/material-nextjs` 版本路径、ThemeProvider、CSS layer、client leaf 边界和兼容例外     |
+| UI library     | antd/icons/registry 依赖、provider 入口、`AntdRegistry`、`ConfigProvider`、CSS 变量、client leaf 边界和兼容例外     |
 | Cache          | revalidate/tag/path/no-store 和失效点                                                                                      |
 | Observability  | logger 落点、request id、普通日志/接口日志、上游摘要、降级/异常日志、脱敏、生产 client console、PM2、Web Vitals/客户端错误 |
 | Deployment     | standalone、runtime、cache handler、多实例缓存一致性和 healthcheck                                                         |
-| Runtime assets | image/font/script/link/CSS/MUI Emotion/cache/CSS layer/polyfill/bundle 处理证据                                            |
+| Runtime assets | image/font/script/link/CSS/antd registry/CSS 变量/polyfill/bundle 处理证据                                            |
 | I18n           | next-intl、locale 来源、无 locale route、语言切换刷新范围、loading 状态、BFF header、cache key                             |
 | Boundary       | 静态扫描或单测覆盖的禁止依赖                                                                                               |
 | UX             | loading/error/empty/not-found/redirect/unauthorized                                                                        |

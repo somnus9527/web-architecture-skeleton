@@ -8,7 +8,7 @@
  * 复制与追加之后统一做 {{placeholder}} 替换，最后按实际文件生成索引。
  */
 
-import { cpSync, readdirSync, readFileSync, rmSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
+import { appendFileSync, cpSync, readdirSync, readFileSync, rmSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import process from 'node:process';
 
@@ -235,9 +235,21 @@ function materialize(variant) {
     }
   }
 
-  if (sharedAssets.components !== false) {
-    const sharedComponents = join(ROOT, 'shared-assets', 'src', 'shared', 'components');
-    cpSync(sharedComponents, join(ROOT, 'skeletons', variant, 'src', 'shared', 'components'), { recursive: true });
+  if (sharedAssets.ui !== false) {
+    const sharedUi = join(ROOT, 'shared-assets', 'src', 'shared', 'ui');
+    const uiTarget = join(ROOT, 'skeletons', variant, 'src', 'shared', 'ui');
+    cpSync(sharedUi, uiTarget, { recursive: true });
+
+    // SSR 专属的 next/link 链接按钮不进入 SPA；index.ts 追加导出避免维护第二份 barrel。
+    if (variant === 'ssr') {
+      cpSync(join(ROOT, 'shared-assets', 'src', 'shared', 'ui-ssr', 'link-button.tsx'), join(uiTarget, 'link-button.tsx'));
+      appendFileSync(join(uiTarget, 'index.ts'), "export { LinkButton, type ILinkButtonProps } from './link-button';\n");
+    }
+  }
+
+  if (sharedAssets.theme !== false && (variant === 'spa' || variant === 'ssr')) {
+    const sharedTheme = join(ROOT, 'shared-assets', 'src', 'shared', 'theme');
+    cpSync(sharedTheme, join(ROOT, 'skeletons', variant, 'src', 'shared', 'theme'), { recursive: true });
   }
 
   const sharedSecurity = join(ROOT, 'shared-assets', 'src', 'shared', 'security');

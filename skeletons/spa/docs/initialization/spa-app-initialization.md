@@ -29,7 +29,7 @@
 
 ## 4. 收敛应用能力
 
-- [ ] 决定是否保留 MUI、Tailwind、Zustand 和双语 i18n
+- [ ] 决定是否保留 Ant Design 6、Zustand 和双语 i18n（Tailwind/MUI 不再作为基线）
 - [ ] 替换主题、图标和展示文案
 - [ ] 接入真实 logger / error reporter
 - [ ] 确认认证、权限和 session 失效处理

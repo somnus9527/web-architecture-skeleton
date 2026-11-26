@@ -1,7 +1,7 @@
 import { t } from '@/locale';
 
 import type { IStatusOption, OrderStatus } from '@/features/workspace/types/workspace.types';
-import type { StatusTone } from '@/shared/components/ui/status-pill';
+import type { StatusTone } from '@/shared/ui';
 
 /**
  * 订单状态筛选选项，供页面筛选控件复用。

@@ -230,7 +230,7 @@ noindex 边界、BFF / gateway / adapter / service 全部不变。实际变化�
 **该开关在构建期把 `/_not-found` 路由的根 layout 从 `definedFilePaths` 里过滤掉**，再把自己的文件当 layout
 塞进去。也就是说，那份「404 文档没有 `lang` / 没有样式」的结论只适用于**组件抛出的 `notFound()`**（Next 内置
 错误边界），不适用于路由层 404 —— 不开开关时，路由层 404 渲染的是根 layout + `src/app/not-found.tsx`，
-`<html lang>`（根 layout 的 `getLocale()`，走同一条解析链）、MUI 主题与应用样式都在，`noindex` 由 app-render
+`<html lang>`（根 layout 的 `getLocale()`，走同一条解析链）、antd 主题与应用样式都在，`noindex` 由 app-render
 的 `NonIndex` 按 `statusCode > 400` 自动注入（不需要在 404 组件里手写）。
 
 修订：
@@ -264,7 +264,7 @@ owner 决定（本节即记录）：**结构维持现状**。两链并存（路�
 **不**放宽 proxy matcher 加固含点路径。第三轮的两链结论与「已知取舍」保持不变。
 
 本轮唯一的代码改动是视觉：#4 两份 `not-found.tsx` 统一为已删除的 `global-not-found.tsx` 版式（居中、48px
-`404`、标题、描述、反色圆角按钮），改用 MUI + 主题 token（跟随亮/暗色），不再需要自包含内联样式；为此新增
+`404`、标题、描述、反色圆角按钮），改用 Ant Design + 主题 token（跟随亮/暗色），不再需要自包含内联样式；为此新增
 `src/shared/ui/link-button.tsx`（client 叶子）—— `Button component={Link}` 从 Server Component 传函数引用会
 触发 RSC 序列化错误、让路由层 404 变 500，站内跳转仍必须走 `next/link`。
 

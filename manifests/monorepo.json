@@ -16,10 +16,11 @@
   ],
   "sharedAssets": {
     "hooks": false,
-    "components": false,
     "architectureTests": false,
     "hookTests": false,
-    "security": false
+    "security": false,
+    "ui": false,
+    "theme": false
   },
   "mustRead": [
     "frontend/monorepo-workspace.md"

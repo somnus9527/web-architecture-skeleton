@@ -13,7 +13,7 @@
 - Browser auth cookie name follows project ID, using `<project-snake>_auth` by default.
 - BFF-to-backend authentication follows the confirmed backend contract and remains server-side. 鉴权链路权威定义见
   [`./ssr-bff-boundaries.md`](./ssr-bff-boundaries.md)。
-- MUI SSR provider setup follows [`./next-app-router-mui-provider.md`](./next-app-router-mui-provider.md)。
+- Ant Design SSR provider setup follows [`./next-app-router-antd-provider.md`](./next-app-router-antd-provider.md)。
 
 ## Checklist
 

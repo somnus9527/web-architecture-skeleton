@@ -7,7 +7,7 @@
 ## Required Reading
 
 - 改 `src/app`、RSC、Client Component、Route Handler、Server Action、metadata、image/font/script 前，读 `ssr-routing-and-rsc.md`。
-- 改 MUI SSR、Emotion/cache provider、ThemeProvider、CSS layer、Tailwind 共存、暗色模式防闪烁或 MUI client leaf 边界前，读 `ssr-ui-runtime.md`。
+- 改 antd SSR、`AntdRegistry`、`ConfigProvider`、原生 CSS/CSS 变量、暗色模式防闪烁或 antd client leaf 边界前，读 `ssr-ui-runtime.md`。
 - 改 BFF、鉴权上下文、gateway、adapter、service、route facade 或 Server Action 编排前，读 `ssr-bff-boundaries.md`。
 - 改 OpenAPI、Prism mock、DTO、endpoint id、response wrapper、API 文档或 backend gap 前，读 `ssr-contracts-and-mock.md`。
 - 改缓存、revalidation、服务端数据流、性能、bundle 或 RSC 序列化前，读 `ssr-cache-and-performance.md`。
@@ -29,8 +29,8 @@
 - `src/bff` 是 SSR 应用访问远程后端或 Prism 的唯一服务端业务边界；HTTP 请求必须经 gateway，数据库/中间件不得穿透 BFF。
 - `src/features` 负责业务 UI 和客户端交互；不直接拼后端 URL，不导入 server-only BFF gateway，不消费后端 raw DTO。
 - `src/shared` 只放浏览器安全且跨业务复用的 UI、hooks、工具和常量；BFF-only helper 放 `src/bff/shared`。
-- SSR 新项目仍采用 MUI-first，但 MUI 在 SSR 项目中定位为 SSR-compatible Client Component 交互体系，不作为 Server Component primitive；服务端数据、metadata、缓存和鉴权仍归 `src/app` / `src/bff`。
-- 使用 MUI 的 Next.js App Router 项目必须接入与 Next 主版本匹配的 `@mui/material-nextjs/*-appRouter` cache provider，统一挂载 MUI `ThemeProvider`，并声明 Emotion/CSS 注入、防首屏样式闪烁和 Tailwind CSS layer 策略。
+- SSR 新项目采用 antd 6 + 原生 CSS/CSS 变量；antd 在 SSR 项目中定位为 SSR-compatible Client Component 交互体系，不作为 Server Component primitive；服务端数据、metadata、缓存和鉴权仍归 `src/app` / `src/bff`。
+- 使用 antd 的 Next.js App Router 项目必须接入 `@ant-design/nextjs-registry` 的 `AntdRegistry`，统一挂载 `ConfigProvider`/`App`，并声明 CSS 变量、防首屏样式闪烁和 client leaf 策略。
 - SSR app 根目录下的 `mock/openapi.yaml` 是 mock runtime 的事实来源；SSR 服务端数据也必须能经 Prism/OpenAPI 运行。
 - SSR/BFF 项目默认使用 `next-intl` 管理语言上下文；公开内容区使用 `app/[locale]`（ADR-000），非公开区使用 cookie + refresh，不新增语言前缀，详见 [`./ssr-i18n.md`](./ssr-i18n.md)。
 - Draft / Preview / CMS 预览态暂不纳入当前 SSR 通用基线；需要时单独设计。
@@ -59,7 +59,7 @@
 
 - 每个 SSR 数据能力必须能追溯到 endpoint id、OpenAPI operationId、DTO、BFF adapter、mock example、API 文档和错误码。
 - 每个登录态或权限态页面必须声明动态渲染、`no-store` 或等价缓存隔离策略；每个公开页面必须声明 metadata 来源、canonical/OG 策略和图片/font/script 处理方式。
-- 每个使用 MUI 的 SSR 项目必须声明 MUI provider 入口、`@mui/material-nextjs` 版本路径、CSS layer / Tailwind 共存策略、ThemeProvider 位置和 bundle 优化策略。
+- 每个使用 antd 的 SSR 项目必须声明 provider 入口、`@ant-design/nextjs-registry` 版本、`ConfigProvider` 位置、CSS 变量和 bundle 优化策略。
 - 示例、模板、脚手架片段统一放 `assets/ssr/` 下，不直接塞入 reference；主入口按 SPA/SSR route 分流后再统一整理可复用资产。
 - 每次交付必须运行窄验证；共享路由、BFF、契约或缓存变化必须增加边界测试或 mock smoke。
   > 各横切关注点(observability/security/config/i18n schema、quality tooling 状态、注释与 TS 命名自检)的逐项交付门以 [`./ssr-verification.md`](./ssr-verification.md) 为准。

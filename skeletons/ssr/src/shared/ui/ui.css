@@ -1,0 +1,194 @@
+.aui-async-state {
+  min-height: 80px;
+}
+
+.aui-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-8) var(--space-6);
+  text-align: center;
+}
+
+.aui-empty-state__icon {
+  color: var(--color-text-muted);
+}
+
+.aui-empty-state__title {
+  margin: 0;
+  color: var(--color-text);
+  font-size: var(--font-size-md);
+  font-weight: 600;
+}
+
+.aui-empty-state__description {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.aui-empty-state__action {
+  margin-top: var(--space-2);
+}
+
+.aui-field-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  padding: var(--space-2) 0;
+}
+
+.aui-field-row:last-child {
+  border-bottom: 0;
+}
+
+.aui-field-row__label {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.aui-field-row__value {
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  text-align: right;
+}
+
+.aui-field-row__hint {
+  display: block;
+  margin-top: var(--space-1);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.aui-page-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.aui-page-header__title {
+  margin: 0;
+  color: var(--color-text);
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+}
+
+.aui-page-header__description {
+  margin: var(--space-1) 0 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.aui-page-header__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.aui-stat-card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  padding: var(--space-4);
+}
+
+.aui-stat-card__label {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+}
+
+.aui-stat-card__value {
+  margin: var(--space-2) 0 0;
+  font-size: var(--font-size-2xl);
+  font-weight: 600;
+}
+
+.aui-stat-card__value--neutral {
+  color: var(--color-text);
+}
+
+.aui-stat-card__value--success {
+  color: var(--color-success);
+}
+
+.aui-stat-card__value--warning {
+  color: var(--color-warning);
+}
+
+.aui-stat-card__value--danger {
+  color: var(--color-danger);
+}
+
+.aui-stat-card__delta {
+  margin: var(--space-1) 0 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.aui-status-pill {
+  display: inline-flex;
+  border: 1px solid;
+  border-radius: var(--radius-full);
+  padding: 2px 10px;
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+}
+
+.aui-status-pill--success {
+  border-color: color-mix(in srgb, var(--color-success) 30%, transparent);
+  background: color-mix(in srgb, var(--color-success) 10%, transparent);
+  color: var(--color-success);
+}
+
+.aui-status-pill--warning {
+  border-color: color-mix(in srgb, var(--color-warning) 30%, transparent);
+  background: color-mix(in srgb, var(--color-warning) 10%, transparent);
+  color: var(--color-warning);
+}
+
+.aui-status-pill--danger {
+  border-color: color-mix(in srgb, var(--color-danger) 30%, transparent);
+  background: color-mix(in srgb, var(--color-danger) 10%, transparent);
+  color: var(--color-danger);
+}
+
+.aui-status-pill--info {
+  border-color: color-mix(in srgb, var(--color-info) 30%, transparent);
+  background: color-mix(in srgb, var(--color-info) 10%, transparent);
+  color: var(--color-info);
+}
+
+.aui-status-pill--neutral {
+  border-color: var(--color-border);
+  background: var(--color-surface-muted);
+  color: var(--color-text-muted);
+}
+
+.aui-link-button {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  background: var(--color-primary);
+  padding: 0 var(--space-4);
+  color: #fff;
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  text-decoration: none;
+  transition: background-color 160ms ease;
+}
+
+.aui-link-button:hover {
+  background: var(--color-primary-hover);
+  color: #fff;
+}

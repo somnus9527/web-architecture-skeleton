@@ -6,7 +6,7 @@
 
 - Vite 8、React 19、TypeScript strict
 - React Router history 模式和可配置部署 base path
-- MUI、Tailwind CSS v4、i18next
+- Ant Design 6、原生 CSS + CSS 变量、i18next
 - 统一 API client、错误边界和日志边界
 - OpenAPI + Prism 本地 mock
 - 构建期 release ID、`version.json` 和旧标签页自动刷新

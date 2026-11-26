@@ -3,7 +3,7 @@
 所有 UI 动画的硬约束。核心原则:**动画交给浏览器合成层跑,不要交给框架的渲染线程跑。** 适用于 React SPA 与 Next.js SSR。
 
 配合阅读 [`frontend-react.md`](./frontend-react.md) 与
-[`tailwind-v4-system.md`](./tailwind-v4-system.md)。
+[`native-css-and-tokens.md`](./native-css-and-tokens.md)。
 
 ## 硬性禁令(TL;DR)
 

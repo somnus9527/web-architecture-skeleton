@@ -5,26 +5,39 @@
 - Existing project wins: follow its framework, routes, request wrapper, state management, component library, mock convention, style tokens, auth, menu, and permission model.
 - This skeleton uses `pnpm` as its package manager; keep all install, script, CI, and release commands on pnpm.
 - Existing projects must be assessed before migration. If the existing UI library, mock/API system, env layout, i18n, or directories differ from the new standard, explain impact and wait for approval before broad rewrites.
-- Existing or rebuilt projects require a migration status matrix before broad rewrites. Cover UI library, visual parity
-  risk, routing, request wrapper, mock/OpenAPI/Prism, env modes, i18n, DTO placement, feature/shared layout, API
-  contracts, paired backend tasks/data changes, package manager, and quality tooling. Mark each item as `compliant`,
-  `migrated`, `compatible-exception`, or `non-compliant`.
-- Keep page components as orchestration layers. Split service methods, DTOs, feature constants, hooks, Dialogs/Drawers, tables, forms, and formatters by responsibility.
+- Existing or rebuilt projects require a migration status matrix before broad rewrites. Cover UI library, visual parity risk, routing, request wrapper, mock/OpenAPI/Prism, env modes, i18n, DTO placement, feature/shared layout, API contracts, paired backend tasks/data changes, package manager, and quality tooling. Mark each item as `compliant`, `migrated`, `compatible-exception`, or `non-compliant`.
+- Keep page components as orchestration layers. Split service methods, DTOs, feature constants, hooks, dialogs/drawers, tables, forms, and formatters by responsibility.
 - Single-file size is enforced by the architecture test `file-split-boundary`: page/screen 400, hook 200, service 200, component 300, test 600, hard limit 800 (with `@generated` exemption). Split before reaching the type threshold; crossing the hard limit fails `quality:check`.
 - `@/* -> src/*` alias 与禁止 `../` 父级相对导入的规则权威定义见 [`./frontend-architecture.md`](./frontend-architecture.md),本文不重复。
 
-## MUI Baseline
+## UI Stack Baseline
 
-- New React projects default to MUI with `@mui/material`, `@emotion/react`, and `@emotion/styled`.
-- Existing or rebuilt React projects still use MUI-first for newly developed capabilities and newly added interaction surfaces.
-- The compatibility exception applies only to pre-existing complex UI being refactored. If MUI migration risks changing established styling, layout, animation, responsive behavior, or brand fidelity, keep that existing UI implementation and record a `compatible-exception`.
-- Do not treat MUI as a mandatory retrofit for existing custom commerce pages, marketing pages, games, animated experiences, or other visually complex pre-existing pages. Preserve the current UI when parity is difficult, while migrating architecture/data/contracts underneath it.
-- Keep `lucide-react` only for business icons or supplemental icons when MUI icons are not the right fit.
-- Wrap the app once with MUI `ThemeProvider` from the app/provider entry.
-- Configure a light theme with semantic colors, typography, radius, spacing, and component default props.
-- Future dark mode must be controlled through the same theme and locale/provider entry.
-- For new projects, prefer MUI native components first; wrap MUI components for feature needs; use custom components only when MUI does not fit the business shape.
-- For rebuilt or existing projects, use MUI for new capabilities by default. For existing UI surfaces, introduce MUI components only when they can preserve the current visual result and interaction behavior.
+- New React projects use **Ant Design 6.x** for interaction components and **native CSS + CSS variables** for layout, page styles and design tokens. Tailwind CSS is not part of the baseline.
+- Dependencies: `antd`, `@ant-design/icons`; Next.js App Router projects add `@ant-design/nextjs-registry`.
+- Do not install `@mui/material`, `@emotion/*`, `@tailwindcss/*`, or `tailwindcss`. Existing projects may migrate page by page, but must not add new MUI/Tailwind usage.
+- Ant Design v6 uses CSS variables internally and may still use its CSS-in-JS runtime; application CSS must not depend on antd internal class names for brand tokens.
+- App CSS variables live in `src/shared/theme/tokens.css`; their source values live in `src/shared/theme/design-tokens.ts`; the antd theme is `src/shared/theme/antd-theme.ts`.
+- Do not feed CSS variable strings into antd seed tokens (`colorPrimary: 'var(--color-primary)'`); antd's color algorithm needs concrete values. Keep one TS token source and mirror it in CSS.
+- Wrap the app once with `ConfigProvider` + `App` from the provider entry. Next.js App Router additionally wraps with `AntdRegistry` for first-screen style extraction.
+- Use a single light theme first. Dark/multi-brand themes come later through the same token/provider entry, not a second random provider.
+- Design tokens must cover semantic colors, spacing, radius, typography and shadows. Feature code must not hard-code hex colors, font sizes or radii; use CSS variables.
+- Icons: prefer `@ant-design/icons`; consume shared/common icons from `@/shared/ui` (the icon facade). If antd has no suitable icon, a feature may import a dedicated icon package directly, but must not hand-draw SVG paths or mix multiple icon systems in one component.
+- Do not keep `lucide-react` as the default icon library after the antd migration; add it only for a concrete missing icon and document why.
+
+## Shared UI Boundary
+
+- Business code imports UI only from `@/shared/ui`; it must not import `antd`, `@ant-design/icons`, `next/link`-based button internals, or feature UI directly.
+- `src/shared/ui` has two kinds of exports:
+  - **facade**: a direct or near-direct re-export of an antd primitive (`Input`, `Select`, `Table`, `Modal`); it may be added immediately because it creates no custom API.
+  - **composite**: a custom wrapper or pattern (`Button` pending semantics, `PageHeader`, `StatCard`, `EmptyState`, `AsyncState`, `StatusPill`) that adds project-specific behavior.
+- A new **composite** may enter `src/shared/ui` only when at least one of these is true:
+  1. at least two real feature consumers exist; or
+  2. it enforces a cross-cutting invariant (security, accessibility, form semantics, design token); or
+  3. it replaces an existing duplicated pattern that has already caused drift.
+- Single-use business UI stays in `features/<module>/components/`; do not promote it to `src/shared/ui` “for later”.
+- No `OrderTable`, `LoginCard`, `DashboardPanel` or other page-named components in `src/shared/ui`. Shared components must not import `@/features/**`, router modules, `t()`, business enums or API types.
+- Every `src/shared/ui` export must be listed in `docs/rules/frontend/ui-style-and-components.md`; the `ui-catalog` test checks the documented paths exist. Do not use the barrel as a dump for one-off components.
+- `src/shared/ui` components must not expose `sx`-like escape hatches. Use semantic props and CSS classes; style overrides belong to the component's CSS.
 
 ## Interaction Requirements
 
@@ -33,21 +46,17 @@ Frontend output must be genuinely usable, not a static screenshot:
 - Include realistic list, filter/search, create or edit, detail, status operation, confirmation, validation, feedback, loading, empty, and error behavior when relevant.
 - Lists must support pagination or a clear bounded data set; long lists need pagination, virtualization, or `content-visibility`.
 - Forms must include useful validation: required fields, length, amount, email, phone, enum values, date ranges, and cross-field rules when the domain requires them.
-- In new projects, create, edit, detail, and confirmation surfaces should use MUI `Dialog` or `Drawer`; do not flatten modal-like interaction into the page body.
-- In new projects, dangerous actions must show an MUI `Dialog` confirmation before committing a mock or real state change.
-- Success, failure, API error, and business notices should use MUI `Snackbar` + `Alert` in new projects and new capabilities; existing/rebuilt projects may keep current feedback UI only for pre-existing surfaces when changing to MUI would regress styling.
-- `Snackbar` defaults: `anchorOrigin={{ vertical: "top", horizontal: "center" }}`, `autoHideDuration={3000}`, and a Slide transition (`TransitionComponent={Slide}`). These are defaults only — callers may override per case.
-- New-project forms should use MUI `TextField`, `Select`, `Autocomplete`, `FormControl`, and default helper/error placement.
-- New-project menus, Tooltip, Tabs, Pagination, Table, Chip, and Badge should use MUI equivalents.
+- Create, edit, detail, and confirmation surfaces use antd `Modal` / `Drawer`; do not flatten modal-like interaction into the page body.
+- Dangerous actions must show an antd `Modal.confirm` / `Popconfirm` before committing a state change.
+- Success, failure, API error, and business notices use antd `App.useApp()` (`message`, `notification`, `modal`), not static `message.*` / `Modal.*` methods that lose theme and locale context.
+- New-project forms use antd `Form`, `Input`, `InputNumber`, `Select`, `DatePicker`, `Checkbox` and default label/error placement, wrapped by `src/shared/ui` where the project needs a stable API.
+- New-project menus, Tooltip, Tabs, Pagination, Table, Tag and Badge use antd equivalents. Use native CSS for page layout and custom panels.
 - Status labels, enum mappings, money/date/file formatting, and risk tone mappings must be centralized.
 
 ## Data And Service Shape
 
 - Frontend pages must not directly hardcode business records.
-- New projects use Prism examples under `mock/examples/` as the mock source; runtime mock interfaces must go through
-  Prism. Prism-runtime + env switching details live in
-  [`./mock-and-integration.md`](./mock-and-integration.md); the `{ data, code, codeMsg }` wrapper rules are canonical
-  in [`./api-contracts.md`](./api-contracts.md), not repeated here.
+- New projects use Prism examples under `mock/examples/` as the mock source; runtime mock interfaces must go through Prism. Prism-runtime + env switching details live in [`./mock-and-integration.md`](./mock-and-integration.md); the `{ data, code, codeMsg }` wrapper rules are canonical in [`./api-contracts.md`](./api-contracts.md), not repeated here.
 - Fixtures may support unit tests, Storybook, static examples, or OpenAPI example generation, but they must not be the normal runtime fallback for mock mode.
 - Put API-facing methods inside the relevant feature service directory or the existing service directory.
 - Put API DTOs in `src/types/dto/`.
@@ -60,16 +69,15 @@ Frontend output must be genuinely usable, not a static screenshot:
 ## UI Direction
 
 - For UI, UE, and UX design work, prefer the companion `ui-ux-pro-max` skill when it is installed. Use it to search product type, style, typography, color, chart, UX, and stack guidance before finalizing screens.
-- If `ui-ux-pro-max` is not installed or not available in the current Codex session, continue with the defaults in this section, state in the handoff that UI UX Pro MAX was unavailable, and tell the user to install it through their standard skill installation process. Do not include installation steps unless the user asks for them.
+- If `ui-ux-pro-max` is not installed or not available in the current session, continue with the defaults in this section, state in the handoff that UI UX Pro MAX was unavailable, and tell the user to install it through their standard skill installation process. Do not include installation steps unless the user asks for them.
 - App branch (default for dashboards, CRM, workflow, management, finance, ops, internal tools): operational tools open on the working surface, not a landing-page hero. Show current context, navigation, KPIs, workflow state, actionable lists, owners, freshness, and exceptions in the first screen.
 - Landing/brand branch (only when the user asks for a website, landing/product/campaign page, or visual demo): lead with the brand or product name as the first-viewport signal, use one dominant full-bleed visual anchor, keep the hero edge-to-edge (constrain inner text, do not box the whole hero), and avoid hero cards, stat strips, logo clouds, or generic SaaS card grids by default.
 - Use quiet hierarchy, stable dimensions, readable spacing, and one primary accent.
-- For new projects, use MUI components for interaction surfaces and `lucide-react` for clear tool actions when an icon is needed; keep labels for primary business commands.
-- For existing/rebuilt projects, use MUI for new capabilities and preserve established pre-existing visual systems only when MUI would cause visual drift.
+- Use antd components for interaction surfaces and `lucide-react` for clear tool actions when an icon is needed; keep labels for primary business commands.
 - Avoid card mosaics. Use panels only for repeated entities, modals, framed tools, or clear interaction groups.
-- Keep cards at 8px radius or less unless an existing design system says otherwise.
+- Keep cards at 8px radius or less unless the design token says otherwise.
 
-See [`./tailwind-v4-system.md`](./tailwind-v4-system.md) for the MUI/Tailwind boundary and [`./responsive-and-breakpoints.md`](./responsive-and-breakpoints.md) for breakpoints and app-scale.
+See [`./native-css-and-tokens.md`](./native-css-and-tokens.md) for CSS variable/token rules, [`./ui-style-and-components.md`](./ui-style-and-components.md) for the shared UI catalog, and [`./responsive-and-breakpoints.md`](./responsive-and-breakpoints.md) for breakpoints and app-scale.
 
 ## TypeScript And Comments
 

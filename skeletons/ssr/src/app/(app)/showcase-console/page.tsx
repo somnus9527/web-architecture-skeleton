@@ -1,6 +1,3 @@
-import Container from '@mui/material/Container';
-import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
@@ -25,13 +22,13 @@ export default async function ShowcaseConsolePage() {
   const t = await getTranslations('console');
 
   return (
-    <Container maxWidth="sm" component="main">
-      <Stack spacing={2} sx={{ py: 8 }}>
-        <Typography variant="h4" component="h1">
-          {t('title')}
-        </Typography>
-        <Typography color="text.secondary">{t('description')}</Typography>
-      </Stack>
-    </Container>
+    <main className="public-page">
+      <div className="public-page__header">
+        <div>
+          <h1 className="public-page__title">{t('title')}</h1>
+          <p className="public-page__subtitle">{t('description')}</p>
+        </div>
+      </div>
+    </main>
   );
 }

@@ -4,7 +4,7 @@
 
 - Vite + React + TypeScript strict
 - React Router history 模式
-- MUI 作为主要组件库，Tailwind 用于页面布局和局部样式
+- Ant Design 6 作为交互组件库；页面布局和局部样式使用原生 CSS + CSS 变量；不引入 Tailwind/MUI
 - i18next 管理所有用户可见文案
 - feature service 是业务 HTTP 出口，底层统一经过 shared API client
 - Zustand 仅用于确实跨页面共享的客户端状态
@@ -33,7 +33,7 @@ router
 - Vite 标准构建直接输出到 `dist`
 - `version.json` 固化 release ID 与 base path
 - Nginx 直接提供静态文件、history fallback 和 API 代理
-- 发布平台负责部署 `dist`，`deploy.sh` 只负责 Nginx 配置检查和 reload
+- 发布平台负责把 `dist` 放到版本目录；`deploy.sh` 负责软链切换、Nginx reload 与回滚
 
 ## 禁止
 

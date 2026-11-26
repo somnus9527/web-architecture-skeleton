@@ -1,8 +1,8 @@
-import { LogOut } from 'lucide-react';
 import { Outlet } from 'react-router';
 
 import { useSignOut } from '@/features/auth/hooks/use-sign-out';
 import { t } from '@/locale';
+import { Button, LogoutOutlined } from '@/shared/ui';
 import { useSessionStore } from '@/shared/store/session-store';
 
 /**
@@ -15,22 +15,21 @@ export function AppShell() {
   const signOut = useSignOut();
 
   return (
-    <div className="min-h-screen bg-[#f6f7f9]">
-      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-white px-4 py-3 sm:px-6 lg:px-8">
-        <p className="text-sm font-semibold text-slate-950">{t('app.title')}</p>
-        <div className="flex items-center gap-3">
+    <div className="app-shell">
+      <header className="app-shell__header">
+        <p className="app-shell__title">{t('app.title')}</p>
+        <div className="app-shell__user">
           {/* 顶栏只展示最小用户标识，权限与敏感资料不在前端会话里保存。 */}
-          <span className="text-xs text-slate-500">{t('auth.session.signed_in_as')}</span>
-          <span className="text-xs font-medium text-slate-900">{user?.displayName ?? '-'}</span>
-          <button
-            className="inline-flex h-9 items-center gap-2 rounded-md border border-slate-300 bg-white px-3 text-xs font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
-            type="button"
+          <span>{t('auth.session.signed_in_as')}</span>
+          <strong>{user?.displayName ?? '-'}</strong>
+          <Button
+            tone="ghost"
+            icon={<LogoutOutlined aria-hidden="true" />}
             disabled={signOut.isSigningOut}
             onClick={signOut.signOut}
           >
-            <LogOut className="size-4" aria-hidden="true" />
             {signOut.isSigningOut ? t('auth.logout.pending') : t('auth.logout.action')}
-          </button>
+          </Button>
         </div>
       </header>
       <Outlet />

@@ -5,7 +5,7 @@
 - Identify the current framework, UI library, request wrapper, mock system, env files, i18n, route/menu/auth model, and directory layout before changing code.
 - If the current project does not match the new standard, explain the difference and ask before reshaping directories, dependencies, scripts, config, or request flow.
 - Mature existing UI libraries and request wrappers win unless the user approves migration.
-- UI-library migration for pre-existing surfaces in existing or rebuilt projects is allowed only when visual and interaction parity can be preserved. If MUI would regress complex existing styling, keep that current UI layer and migrate data/contracts/architecture underneath it. Newly developed capabilities in the same project still follow MUI-first unless the user explicitly approves another component system.
+- UI-library migration for pre-existing surfaces in existing or rebuilt projects is allowed only when visual and interaction parity can be preserved. If a UI migration would regress complex existing styling, keep that current UI layer and migrate data/contracts/architecture underneath it. Newly developed capabilities in the same project follow the project baseline (antd 6 + native CSS) unless the user explicitly approves another component system.
 - Produce a migration status matrix for existing or rebuilt projects before broad rewrites, and do not present `non-compliant` items as done.
 - After a user declines migration in one project, keep using that project's current convention for similar follow-up work unless the user explicitly reopens the decision.
 
@@ -31,7 +31,8 @@ src/
     config/             # common config
     hooks/              # common react hooks
     store/              # global store
-    components/         # ui components
+    components/         # app-level shared providers/router
+    ui/                 # shared UI facade, primitives and composites
     ...                 # other type tools
   types/
     dto/                # API DTO interfaces and type aliases

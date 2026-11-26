@@ -1,9 +1,16 @@
 # 共享复用体系与 UI 基础修复文档
 
 - 日期：2026-11-26
-- 状态：设计稿；共享复用与 UI 实施均暂缓，先落文档。
-- 前置决策：UI 将统一 SPA/SSR；撤掉 Tailwind，样式改为原生 CSS + CSS 变量；MUI 去留待确认。
+- 状态：共享复用体系设计待实施；UI 基础（antd 6 + 原生 CSS + `@/shared/ui`）已落地，页面视觉回归和暗色模式后续再做。
+- 前置决策（2026-11-26 已确认）：UI 统一 SPA/SSR；撤掉 Tailwind，样式改为原生 CSS + CSS 变量；组件库使用 Ant Design 6.x，MUI 彻底移除。
 - 关联文档：[五项优化方案](./2026-11-25-five-optimizations.md)、[前端安全规则](../../rules/frontend/frontend-security.md)、[共享能力规则](../../rules/frontend/shared-capabilities.md)、[UI 规则](../../rules/frontend/ui-style-and-components.md)。
+
+## 0. 实施状态
+
+- 共享复用：仅设计，未实施 registry/检测器/生成器；等后续单独排期。
+- UI 基础：已从 MUI/Tailwind 切到 antd 6 + 原生 CSS + CSS 变量；`src/shared/ui` 统一出口；MUI/Emotion/Tailwind 依赖和配置已移除；SPA/SSR build、typecheck、test 通过。
+- 共享 UI 晋升规则已写入 `rules/frontend/ui-style-and-components.md`：facade 可随用随加，composite 必须有至少两个真实使用方或横切约束。
+- 本文的 U0–U6 已执行；U7（旧包装清理/视觉回归）和暗色模式待后续。
 
 ## 1. 为什么两件事要一起设计
 
@@ -22,7 +29,7 @@
 ### 2.1 已有资产
 
 - `shared-assets/src/shared/hooks/`：`useRequest`、`useAsyncAction`、`useDebouncedValue`、`useDisclosure`。
-- `shared-assets/src/shared/components/ui/`：`Button`、`AsyncState`、`EmptyState`、`PageHeader`、`StatCard`、`FieldRow`、`StatusPill`。
+- `shared-assets/src/shared/ui/`：`Button`、`Input`、`Select`、`AsyncState`、`EmptyState`、`PageHeader`、`StatCard`、`FieldRow`、`StatusPill`。
 - 架构测试：`shared-capabilities`（文档承诺的 hook 必须存在）、`hook-duplication`（feature 内不得手写请求三态/直读 storage）、`shared-ui-contract`（UI 不反向依赖 feature）、`ui-catalog`（文档承诺的组件必须存在）。
 - 规则：`shared-capabilities.md` 有准入标准和反模式；`ui-style-and-components.md` 有组件表和复用规则。
 
@@ -35,10 +42,10 @@
   - service 里自己拼 `fetch`；
   - 复制 formatter、日期/金额格式化；
   - 复制整个函数体。
-- UI 只有 7 个原语、没有 `index.ts` 统一出口；SPA 业务页直接用原生 `<input>/<select>/<button>`，SSR 业务页直接 import MUI；
+- UI 原语没有统一出口；SPA 业务页直接用原生 `<input>/<select>/<button>`，SSR 业务页直接 import MUI；
 - 规则让派生项目自建 `ConsoleButton/ConsoleModal/...`，等于官方承认“骨架不提供，你们自己长”；
 - 没有 UI catalog 的“组件 → 文件 → 导出 → 使用方”双向校验；
-- 样式即将从 Tailwind 切到原生 CSS + 变量，现有 `className` 工具类会全部失效，必须先定 token 和组件边界。
+- 样式已从 Tailwind 切到原生 CSS + 变量，旧 `className` 工具类已移除，token 和组件边界已固定。
 
 ## Part A：共享复用体系
 
@@ -259,27 +266,36 @@ PR 模板增加：
 
 ## 10. 前置决策与依赖
 
-你已明确：
+2026-11-26 已确认：
 
-- UI 要统一 SPA/SSR；
+- UI 统一 SPA/SSR；
 - 撤掉 Tailwind；
 - 样式改为原生 CSS + CSS 变量；
-- MUI 去留待确认。
+- UI 组件库使用 **Ant Design 6.x**，MUI 彻底移除；
+- 所有业务 UI 经 `@/shared/ui`，但 `@/shared/ui` 不是垃圾场：只有 facade 或达到晋升条件的 composite 才能进入。
 
-因此本文按以下默认设计，避免把未来锁死：
+因此本文按以下设计：
 
 1. **共享原语不绑定 Tailwind**，不使用 utility className；
-2. **共享原语不暴露 MUI props**；MUI 最多作为内部实现细节，后续可替换/移除；
+2. **共享原语不暴露 MUI props**；antd 只作为 `src/shared/ui` 的内部实现；
 3. **样式统一走 CSS 变量 token + 普通 CSS class**；
-4. **SPA/SSR 共用同一套 TSX + CSS**，差异只在应用入口和路由适配；
-5. UI 实施等前置决策确认后再开始，本文只定边界和目录。
+4. **SPA/SSR 共用同一套 TSX + CSS**，差异只在应用入口、Provider 和路由适配；
+5. 业务代码只认 `@/shared/ui`；antd 直引只允许 `src/shared/ui/**`、`src/shared/theme/antd-theme.ts`、`src/app/providers.tsx`。
 
-### 10.1 MUI 去留建议
+### 10.1 Shared UI 晋升规则
 
-- 不建议继续让业务直接 import MUI；这条边界无论 MUI 去留都必须先立。
-- 如果短期保留 MUI：只在 `shared/ui` 内部使用，公共 API 不暴露 MUI 类型；复杂组件（Dialog/Select/Table）可以先用 MUI 实现，后续替换。
-- 如果目标是彻底原生 CSS：优先用原生 `<button>/<input>/<dialog>` + CSS，复杂交互（焦点陷阱、虚拟列表）再评估无依赖实现或保留 MUI 作为内部依赖。
-- 无论哪种，**业务代码只认 `@/shared/ui`**。
+`src/shared/ui` 只允许两类导出：
+
+- **facade**：antd 原语的薄出口，如 `Input`、`Select`；不新增自定义 API，可以随用随加。
+- **composite**：带项目语义的封装，如 `Button`（pending 语义）、`PageHeader`、`StatCard`、`EmptyState`、`AsyncState`、`StatusPill`。
+
+composite 进入 `src/shared/ui` 必须满足至少一条：
+
+1. 已有两个真实 feature 使用方；
+2. 承担安全、可访问性、表单语义、design token 等横切约束；
+3. 替代已经出现漂移的重复实现。
+
+单页面业务组件留在 `features/<module>/components/`；禁止 `OrderTable`、`LoginCard`、`DashboardPanel` 这类页面命名进入共享层。每个导出必须登记到 `ui-style-and-components.md`，由 `ui-catalog` 测试校验。
 
 ## 11. 目标目录
 
@@ -288,16 +304,18 @@ shared-assets/src/shared/
   theme/
     tokens.css              # :root / [data-theme] CSS 变量
     reset.css               # 轻量 reset，可选
-  components/ui/
-    index.ts                # 唯一出口
-    ui-catalog.json         # 组件目录（可放 shared-assets 根）
-    button/
-      button.tsx
-      button.css
-    text-input/
-      text-input.tsx
-      text-input.css
-    ...
+  ui/
+    index.ts                # 唯一出口（SSR 额外追加 LinkButton）
+    ui.css                  # 共享原语样式
+    button.tsx
+    input.tsx
+    select.tsx
+    async-state.tsx
+    empty-state.tsx
+    field-row.tsx
+    page-header.tsx
+    stat-card.tsx
+    status-pill.tsx
 ```
 
 建议每个组件一个目录，TSX + CSS 同目录；`index.ts` 统一导出。CSS 由应用入口统一 import 一次，避免 SPA/SSR 对 CSS 导入时机不一致：
@@ -305,11 +323,10 @@ shared-assets/src/shared/
 ```text
 src/styles.css
   @import './shared/theme/tokens.css';
-  @import './shared/theme/reset.css';
-  @import './shared/components/ui/ui.css';   # 或由 index.ts 汇总
+  @import './shared/ui/ui.css';
 ```
 
-如果使用 CSS Modules，需确认 Next RSC/Client Component 与 Vite 的导入边界；本文默认**普通 CSS + 稳定 class 名**，降低跨框架差异。
+如果使用 CSS Modules，需确认 Next RSC/Client Component 与 Vite 的导入边界；当前默认**普通 CSS + 稳定 class 名**，降低跨框架差异。
 
 ## 12. Token 设计
 
@@ -369,7 +386,7 @@ CSS 变量分两类：
 
 ### 13.3 统一 API 原则
 
-- 只接受语义化 props，不接受 Tailwind class、MUI `sx`、业务枚举；
+- 只接受语义化 props，不接受 Tailwind class、`sx` 式转义、业务枚举；
 - `tone` 用语义联合类型，颜色映射在组件内；
 - 文案、`aria-label`、业务数据由调用方注入；
 - 交互原语统一 `disabled`、`aria-busy`、`aria-invalid`、`aria-describedby`；
@@ -386,18 +403,18 @@ CSS 变量分两类：
 
 ## 14. 边界规则（可执行）
 
-| 规则                                                                                      | 检查                                          |
-| ----------------------------------------------------------------------------------------- | --------------------------------------------- |
-| `features/**`、`app/**` 禁止原生 `button/input/select/textarea/table/dialog`              | ESLint `no-restricted-syntax` + `check-ui`    |
-| `features/**` 禁止直接 import MUI 交互组件                                                | ESLint `no-restricted-imports`                |
-| 共享 UI 只能从 `@/shared/components/ui`（barrel）导入                                     | ESLint patterns + 架构测试                    |
-| 不允许第二套 UI 根（`src/shared/ui`、`src/shared/public-ui`、web 的 `src/components/ui`） | 目录扫描                                      |
-| feature 内不允许通用组件名（`button.tsx`、`input.tsx`、`modal.tsx`、`table.tsx`）         | 文件名扫描                                    |
-| 每个导出必须在 `ui-catalog.json` 登记，文档与文件双向一致                                 | `ui-catalog.test.ts` 扩展                     |
-| 业务样式禁止硬编码颜色/字号/圆角                                                          | `check-ui` 扫描 hex/px 常量，tokens 文件豁免  |
-| 图标按钮必须有可访问名称                                                                  | `jsx-a11y` + 组件测试                         |
-| 禁止新增 Tailwind utility class / Tailwind 依赖                                           | 撤 Tailwind 阶段用 `check-ui` 扫描 + 删除依赖 |
-| 禁止在共享原语里使用 `sx`/MUI 类型                                                        | 代码评审 + ESLint 限制                        |
+| 规则                                                                                      | 检查                                         |
+| ----------------------------------------------------------------------------------------- | -------------------------------------------- |
+| `features/**`、`app/**` 禁止原生 `button/input/select/textarea/table/dialog`              | ESLint `no-restricted-syntax` + `check-ui`   |
+| `features/**` 禁止直接 import antd/MUI 交互组件                                           | ESLint `no-restricted-imports`               |
+| 共享 UI 只能从 `@/shared/ui`（barrel）导入                                                | ESLint patterns + 架构测试                   |
+| 不允许第二套 UI 根（`src/shared/ui`、`src/shared/public-ui`、web 的 `src/components/ui`） | 目录扫描                                     |
+| feature 内不允许通用组件名（`button.tsx`、`input.tsx`、`modal.tsx`、`table.tsx`）         | 文件名扫描                                   |
+| 每个导出必须在 `ui-catalog.json` 登记，文档与文件双向一致                                 | `ui-catalog.test.ts` 扩展                    |
+| 业务样式禁止硬编码颜色/字号/圆角                                                          | `check-ui` 扫描 hex/px 常量，tokens 文件豁免 |
+| 图标按钮必须有可访问名称                                                                  | `jsx-a11y` + 组件测试                        |
+| 禁止新增 Tailwind utility class / Tailwind 依赖                                           | `ui-stack` 架构测试 + 依赖检查               |
+| 禁止在共享原语里使用 `sx` 式转义                                                          | 代码评审 + ESLint 限制                       |
 
 例外：
 
@@ -413,7 +430,7 @@ CSS 变量分两类：
 [
   {
     "name": "Button",
-    "path": "src/shared/components/ui/button/button.tsx",
+    "path": "src/shared/ui/button.tsx",
     "export": "Button",
     "status": "stable",
     "since": "2026-11-26",
@@ -435,12 +452,12 @@ CSS 变量分两类：
 | 阶段 | 内容                                                       | 验收                                          |
 | ---- | ---------------------------------------------------------- | --------------------------------------------- |
 | U0   | 冻结新增 UI；盘点 SPA/SSR 原生标签、MUI 直引、第二套 UI 根 | 有 baseline 清单，不再新增违规                |
-| U1   | 确认 MUI 去留、CSS 导入方式、主题/暗色策略                 | 决策记录 ADR                                  |
+| U1   | 确认 antd 6、CSS 导入方式、主题/暗色策略                   | 决策记录 ADR                                  |
 | U2   | `tokens.css` + reset + 公共 CSS 入口                       | token 可被 SPA/SSR 共用，页面无新增硬编码颜色 |
 | U3   | P0 原语 + 测试 + catalog + a11y                            | 每个原语有测试、catalog、文档                 |
 | U4   | 迁移 SPA/SSR 页面：登录、工作台、showcase、locale-switcher | 业务页无原生交互标签、无 MUI 直引             |
 | U5   | 移除 Tailwind 依赖和 utility class                         | `grep` 无 Tailwind 引用，构建通过             |
-| U6   | 评估移除 MUI；保留则只允许 shared/ui 内部使用              | 业务代码零 MUI import                         |
+| U6   | 移除 MUI 依赖与配置                                        | 业务代码零 MUI import                         |
 | U7   | 删除旧 UI 包装/第二套根                                    | `check-ui` 零违规                             |
 
 ## 17. 验收与负向测试
@@ -464,7 +481,7 @@ UI：
 ## 18. 风险
 
 - **UI 统一与 Tailwind 移除是两件大事**：先 token/原语，再迁页面，最后删依赖；不要一次性全仓替换。
-- **MUI 去留未定**：本文按“公共 API 不暴露 MUI”设计；如果保留 MUI，必须限制在 shared/ui 内部，避免业务再次绑定。
+- **MUI 已移除**：公共 API 不暴露 MUI；antd 只允许在 shared/ui/theme/provider 内出现。
 - **SSR CSS 顺序**：普通 CSS 全局导入最容易保证 SPA/SSR 一致；CSS Modules 需验证 RSC/Client 边界。
 - **视觉回归**：原语迁移必须逐页比对，不能只看构建通过。
 - **复用误报**：签名/AST 都会有误报，必须允许带过期时间的例外，且例外可审计。
@@ -472,10 +489,10 @@ UI：
 
 ## 19. 建议顺序
 
-1. 先确认 UI 前置决策（MUI 去留、CSS 导入方式、暗色策略）。
+1. UI 前置决策已确认：antd 6、CSS 变量、MUI 移除；暗色策略后置。
 2. 共享复用先做 A1/A2（registry + 签名检测 + 补 4 个 hook），成本低、能立即减少重复。
 3. UI 先做 U1–U3（token + P0 原语），不要直接迁页面。
 4. 再做 U4–U5（页面迁移 + 撤 Tailwind）。
-5. MUI 去留单独决策，不要和 Tailwind 移除混在一个批次。
+5. MUI 依赖已移除；后续只做页面视觉回归和暗色模式验证。
 
 一句话：**共用一套“注册表 + 生成器 + 门禁 + agent 流程”解决复用；共用一套“token + 原语 + catalog + 边界”解决 UI。两者都不靠文档自觉，靠可失败检查。**

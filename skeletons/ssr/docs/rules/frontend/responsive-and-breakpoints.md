@@ -1,6 +1,6 @@
 # Responsive And Breakpoints
 
-> Scope: device support matrix, named breakpoints, MUI/Tailwind alignment, adaptation order, app-scale, and acceptance viewports. Applies to all apps (SPA + SSR/BFF). The single source for breakpoint values is `src/shared/theme/design-tokens.ts`.
+> Scope: device support matrix, named breakpoints, antd/native CSS alignment, adaptation order, app-scale, and acceptance viewports. Applies to all apps (SPA + SSR/BFF). The single source for breakpoint values is `src/shared/theme/design-tokens.ts`.
 
 ## Device Support Matrix
 
@@ -18,9 +18,9 @@
 
 - If an app has not declared a matrix, do not assume one. Flag it for the owner before building responsive structure.
 
-## Named Breakpoints (Tailwind v4)
+## Named Breakpoints (Native CSS)
 
-New or controllable projects use named breakpoints and must not use Tailwind defaults `sm/md/lg/xl/2xl`:
+New or controllable projects use named breakpoints and must not use framework defaults `sm/md/lg/xl/2xl`:
 
 | Name      | Value   | Meaning     |
 | --------- | ------- | ----------- |
@@ -34,16 +34,16 @@ Rules:
 - Mobile styles are the unprefixed default (mobile-first).
 - Breakpoint units use `rem`, not `px`.
 - Do not add `pc` / `mobile` breakpoint names (avoid confusion with terminal mode).
-- Do not add Tailwind breakpoints for 4K/2K. Handle length scaling via `app-scale`.
+- Do not add ad-hoc breakpoints for 4K/2K. Handle length scaling via `app-scale`.
 
-## MUI Breakpoint Single Source
+## Breakpoint Single Source
 
-MUI defaults `sm/md/lg/xl` conflict with this system. Projects using MUI must override breakpoints once in `packages/ui` (or the project's single theme entry) and reuse across all apps.
+antd defaults `sm/md/lg/xl` conflict with this system. Projects using antd must override breakpoints once in the shared theme entry and reuse across all apps.
 
 - Keep `xs` as fallback; enable `tablet/laptop/desktop/wide`.
-- Disable or avoid MUI default `sm/md/lg/xl`.
+- Disable or avoid antd default `sm/md/lg/xl`; use the shared token values.
 - No per-app `createTheme` breakpoint overrides.
-- Tailwind `tablet:` and MUI `theme.breakpoints.up('tablet')` must resolve to the same pixel value.
+- CSS `@media (min-width: ...)` and antd breakpoint config must resolve to the same pixel value.
 
 ## Adaptation Order
 
@@ -52,7 +52,7 @@ When handling PC/Mobile or multi-resolution differences, decide in this order an
 1. Whole-page structural difference (e.g. PC sidebar + table vs Mobile filter button + card stream) -- fork the page tree.
 2. Visual-parameter difference (spacing, font size, density) -- prefer CSS variables or `app-*` utilities, do not fork the tree.
 3. Component-local width difference -- use container queries, not the whole-page viewport.
-4. Small global change -- use the shared Tailwind breakpoints.
+4. Small global change -- use the shared CSS breakpoints.
 
 ### SPA two-terminal selection
 
@@ -75,7 +75,7 @@ The server cannot reliably know the client viewport. SSR/BFF projects follow:
 
 | Case                                 | Recommended                                                                  |
 | ------------------------------------ | ---------------------------------------------------------------------------- |
-| Visual difference only               | Single component tree + Tailwind breakpoints / CSS variables                 |
+| Visual difference only               | Single component tree + native CSS breakpoints / CSS variables                 |
 | SEO-critical + structural difference | CSS-only dual-render: both structures in the HTML, show/hide via media query |
 | Non-SEO + structural difference      | Deferred dispatch inside a Client Component                                  |
 | Heavy Client Component on one side   | SEO-critical: `dynamic({ ssr: true })`; only non-SEO may use `ssr: false`    |
@@ -94,7 +94,7 @@ Hard forbidden:
 Ownership:
 
 - Shared CSS template lives in `packages/ui/src/styles/responsive.css` (or the project's single style entry).
-- MUI breakpoint override lives in `packages/ui` (or the project's single MUI theme entry).
+- antd breakpoint override lives in the shared theme entry.
 - Each app only imports/reuses; it never re-declares these.
 
 Applies to:
@@ -106,7 +106,7 @@ Forbidden:
 
 - Stacking page-level `transform: scale(...)` on top of `app-scale`.
 - Using `app-*` on fixed parameters that should not scale (stroke width, pixel-aligned icons).
-- Re-declaring MUI breakpoints per app.
+- Re-declaring breakpoints per app.
 
 ## Acceptance Viewports
 
