@@ -5,9 +5,13 @@ import { DEFAULT_PUBLIC_URL_LOCALE, PUBLIC_LOCALE_HEADER, isLocaleCode } from '@
 import { readAllowedOrigin } from '@/shared/config/edge-env';
 import { resolveUrlLocale } from '@/shared/i18n/public-locale-routing';
 import { PRIVATE_ROUTE_PREFIXES } from '@/shared/navigation/public-route-visibility';
+import { buildContentSecurityPolicy } from '@/shared/security/content-security-policy';
 
 const ALLOWED_METHODS = 'GET, POST, OPTIONS';
 const ALLOWED_HEADERS = 'content-type, x-request-id, x-trace-id, traceparent';
+
+/** 把 nonce 透传给 RSC/客户端读取的请求头；Next 也会从响应 CSP 中解析同一个 nonce。 */
+const NONCE_HEADER = 'x-nonce';
 
 /** 根路径 308 响应的缓存时长（秒）；不用 immutable，保留调整默认公开语言的余地。 */
 const ROOT_REDIRECT_MAX_AGE = 3600;
@@ -47,24 +51,38 @@ const NON_LOCALE_TOP_LEVEL_SEGMENTS = [
  * @returns 带安全头的响应、根路径重定向、非法语言前缀的 404 改写或 CORS 预检响应。
  */
 export function proxy(request: NextRequest): NextResponse {
+  const nonce = createNonce();
+
   if (request.method === 'OPTIONS') {
-    return createCorsPreflightResponse(request);
+    return createCorsPreflightResponse(request, nonce);
   }
 
-  const rootRedirect = createRootRedirect(request);
+  const rootRedirect = createRootRedirect(request, nonce);
   if (rootRedirect) {
     return rootRedirect;
   }
 
-  const unknownLocaleRejection = createUnknownLocaleRejection(request);
+  const unknownLocaleRejection = createUnknownLocaleRejection(request, nonce);
   if (unknownLocaleRejection) {
     return unknownLocaleRejection;
   }
 
-  const response = NextResponse.next({ request: { headers: buildForwardedRequestHeaders(request) } });
-  applySecurityHeaders(response, request);
+  const response = NextResponse.next({ request: { headers: buildForwardedRequestHeaders(request, nonce) } });
+  applySecurityHeaders(response, request, nonce);
   applyCorsHeaders(response, request);
   return response;
+}
+
+/**
+ * 生成每请求一次的 CSP nonce。
+ *
+ * 用 `crypto.randomUUID()` 而不是 Node 的 `randomBytes`：这段代码运行在 Edge runtime，没有 Node API；
+ * UUID v4 的随机性对本用途足够，且两个 UUID 去掉横线后仍是合法的 base64 字符集。
+ *
+ * @returns 32 位十六进制字符串形式的 nonce。
+ */
+function createNonce(): string {
+  return crypto.randomUUID().replace(/-/gu, '');
 }
 
 /**
@@ -93,7 +111,7 @@ export function proxy(request: NextRequest): NextResponse {
  * @param request - 当前请求。
  * @returns 改写响应；路径首段是合法语言码、`_next` 内部路径或真实非语言路由时返回 undefined。
  */
-function createUnknownLocaleRejection(request: NextRequest): NextResponse | undefined {
+function createUnknownLocaleRejection(request: NextRequest, nonce: string): NextResponse | undefined {
   const { pathname } = request.nextUrl;
   const [firstSegment] = pathname.split('/').filter(Boolean);
 
@@ -113,8 +131,8 @@ function createUnknownLocaleRejection(request: NextRequest): NextResponse | unde
     `${pathname.replace(/\/$/, '')}/${UNKNOWN_LOCALE_SENTINEL}${request.nextUrl.search}`,
     request.url,
   );
-  const response = NextResponse.rewrite(target, { request: { headers: buildForwardedRequestHeaders(request) } });
-  applySecurityHeaders(response, request);
+  const response = NextResponse.rewrite(target, { request: { headers: buildForwardedRequestHeaders(request, nonce) } });
+  applySecurityHeaders(response, request, nonce);
   return response;
 }
 
@@ -127,7 +145,7 @@ function createUnknownLocaleRejection(request: NextRequest): NextResponse | unde
  * @param request - 当前请求。
  * @returns 重定向响应；非根路径或非 GET/HEAD 时返回 undefined。
  */
-function createRootRedirect(request: NextRequest): NextResponse | undefined {
+function createRootRedirect(request: NextRequest, nonce: string): NextResponse | undefined {
   if (request.nextUrl.pathname !== '/' || (request.method !== 'GET' && request.method !== 'HEAD')) {
     return undefined;
   }
@@ -135,7 +153,7 @@ function createRootRedirect(request: NextRequest): NextResponse | undefined {
   const target = new URL(`/${DEFAULT_PUBLIC_URL_LOCALE}${request.nextUrl.search}`, request.url);
   const response = NextResponse.redirect(target, 308);
   response.headers.set('Cache-Control', `public, max-age=${ROOT_REDIRECT_MAX_AGE}`);
-  applySecurityHeaders(response, request);
+  applySecurityHeaders(response, request, nonce);
   return response;
 }
 
@@ -153,9 +171,10 @@ function createRootRedirect(request: NextRequest): NextResponse | undefined {
  * @param request - 当前请求。
  * @returns 转发给 RSC / Route Handler 的请求头。
  */
-function buildForwardedRequestHeaders(request: NextRequest): Headers {
+function buildForwardedRequestHeaders(request: NextRequest, nonce: string): Headers {
   const forwardedHeaders = new Headers(request.headers);
   forwardedHeaders.delete(PUBLIC_LOCALE_HEADER);
+  forwardedHeaders.set(NONCE_HEADER, nonce);
 
   const urlLocale = resolveUrlLocale(request.nextUrl.pathname);
   if (urlLocale) {
@@ -171,9 +190,9 @@ function buildForwardedRequestHeaders(request: NextRequest): Headers {
  * @param request - 当前预检请求。
  * @returns 允许或拒绝的预检响应。
  */
-function createCorsPreflightResponse(request: NextRequest): NextResponse {
+function createCorsPreflightResponse(request: NextRequest, nonce: string): NextResponse {
   const response = new NextResponse(null, { status: isAllowedOrigin(request) ? 204 : 403 });
-  applySecurityHeaders(response, request);
+  applySecurityHeaders(response, request, nonce);
   applyCorsHeaders(response, request);
   response.headers.set('Cache-Control', 'no-store');
   return response;
@@ -185,8 +204,8 @@ function createCorsPreflightResponse(request: NextRequest): NextResponse {
  * @param response - 待返回的 NextResponse。
  * @param request - 当前请求，用于判断是否写入 HSTS。
  */
-function applySecurityHeaders(response: NextResponse, request: NextRequest): void {
-  response.headers.set('Content-Security-Policy', buildContentSecurityPolicy());
+function applySecurityHeaders(response: NextResponse, request: NextRequest, nonce: string): void {
+  response.headers.set('Content-Security-Policy', buildContentSecurityPolicy({ nonce }));
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
   response.headers.set('X-Content-Type-Options', 'nosniff');
   response.headers.set('X-Frame-Options', 'DENY');
@@ -230,33 +249,6 @@ function isAllowedOrigin(request: NextRequest): boolean {
   const origin = request.headers.get('origin');
   const allowedOrigin = readAllowedOrigin();
   return origin === allowedOrigin;
-}
-
-/**
- * 构造 CSP。`script-src` 生产环境不含 `unsafe-eval`（收紧，相对基线修正）；
- * 仅开发环境为 React Refresh 注入 `unsafe-eval`。`unsafe-inline` 暂保留以兼容
- * Emotion SSR 注入，nonce 化为后续硬化项（见骨架 ADR）。
- *
- * @returns Content-Security-Policy 头值。
- */
-function buildContentSecurityPolicy(): string {
-  const isDevelopment = process.env.NODE_ENV !== 'production';
-  const scriptSrc = isDevelopment
-    ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'"
-    : "script-src 'self' 'unsafe-inline'";
-
-  return [
-    "default-src 'self'",
-    "base-uri 'self'",
-    "frame-ancestors 'none'",
-    "form-action 'self'",
-    "img-src 'self' data: blob: https:",
-    "media-src 'self' blob: https:",
-    "font-src 'self' data:",
-    "style-src 'self' 'unsafe-inline'",
-    scriptSrc,
-    "connect-src 'self'",
-  ].join('; ');
 }
 
 export const config = {

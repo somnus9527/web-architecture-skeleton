@@ -76,6 +76,41 @@ async function checkSitemap() {
   expect(xml.includes('x-default'), '/sitemap.xml 缺少 x-default alternates');
 }
 
+/**
+ * 校验 CSP nonce 真的生效：生产响应头带 nonce、script-src 不含 unsafe-inline、页面内联 script 带同一 nonce。
+ *
+ * 只查响应头不够——Next 必须把 nonce 打到它自己的 bootstrap/inline script 上，否则部署后页面直接白屏。
+ *
+ * @returns {void}
+ */
+async function checkContentSecurityPolicy() {
+  const first = await get(`/${locales[0]}`);
+  const firstHtml = await first.text();
+  const policy = first.headers.get('content-security-policy') ?? '';
+  expect(Boolean(policy), '响应缺少 Content-Security-Policy 头');
+
+  const scriptDirective =
+    policy
+      .split(';')
+      .map((part) => part.trim())
+      .find((part) => part.startsWith('script-src')) ?? '';
+  expect(!scriptDirective.includes("'unsafe-inline'"), '生产 script-src 仍包含 unsafe-inline');
+  expect(!scriptDirective.includes('unsafe-eval'), '生产 script-src 仍包含 unsafe-eval');
+
+  const nonce = /'nonce-([^']+)'/u.exec(scriptDirective)?.[1];
+  expect(Boolean(nonce), 'CSP 缺少 nonce');
+
+  if (nonce) {
+    const applies = new RegExp(`<script[^>]*nonce=["']${nonce}["']`, 'u').test(firstHtml);
+    expect(applies, `页面内联 script 未带 CSP nonce（${nonce}）`);
+  }
+
+  const second = await get(`/${locales[0]}`);
+  const secondPolicy = second.headers.get('content-security-policy') ?? '';
+  const secondNonce = /'nonce-([^']+)'/u.exec(secondPolicy)?.[1];
+  expect(Boolean(secondNonce) && secondNonce !== nonce, 'CSP nonce 未做到每请求不同');
+}
+
 async function checkRobots() {
   const response = await get('/robots.txt');
   const text = await response.text();
@@ -92,6 +127,7 @@ await check404('/zh-CN/login');
 await check404('/wp-login.php');
 await checkSitemap();
 await checkRobots();
+await checkContentSecurityPolicy();
 
 if (failures.length > 0) {
   process.stderr.write(`SEO 运行时检查失败（${failures.length} 项）：\n`);
