@@ -1,0 +1,7 @@
+# pnpm 11 起 strictDepBuilds 默认开启：未在 allowBuilds 里批准的依赖，安装阶段会以
+# ERR_PNPM_IGNORED_BUILDS 失败。Next.js 的这几条构建脚本是构建所必需的，显式批准。
+# 只允许列出的依赖执行安装脚本，其余一律不执行，避免供应链风险。
+allowBuilds:
+  '@parcel/watcher': true
+  '@scarf/scarf': true
+  '@swc/core': true

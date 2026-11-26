@@ -11,12 +11,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: 24
+          node-version-file: .nvmrc
+
+      - name: Toolchain versions
+        run: node tools/check-toolchain.mjs
 
       - name: Materialized artifacts match sources
         run: |
@@ -30,5 +33,5 @@ jobs:
         run: node tools/check-init-smoke.mjs
 
       - name: Monorepo template boundaries
-        working-directory: templates/monorepo
+        working-directory: skeletons/monorepo
         run: node scripts/check-workspace.mjs

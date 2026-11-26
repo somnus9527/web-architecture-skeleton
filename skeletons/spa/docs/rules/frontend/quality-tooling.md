@@ -4,6 +4,28 @@
 
 新建前端项目默认 `pnpm`；生成脚本、lockfile 预期和脚手架下一步输出必须用 pnpm 命令。已有项目保持现有包管理器,除非用户明确批准迁移。
 
+## 工具链版本(Node / pnpm)
+
+Node 与 pnpm 的版本各自只有一个权威来源,不允许在 CI 里再写一份:
+
+| 项   | 权威来源                                        | 取值                          |
+| ---- | ----------------------------------------------- | ----------------------------- |
+| Node | 仓库根 `.nvmrc` + `package.json` `engines.node` | 24(engines 写 `>=24.0.0 <25`) |
+| pnpm | `package.json` `packageManager`                 | `pnpm@12.4.1`                 |
+
+落地要求:
+
+- 新机器、服务器、CI 一律通过 `bash scripts/install-toolchain.sh` 获取 pnpm；只校验版本用 `--check`。脚本从 `.nvmrc` 与 `packageManager` 读版本，装完再断言一次，版本不符就非零退出。
+- 禁止 `npm i -g pnpm`、`npm i -g pnpm@latest`、`corepack prepare pnpm@latest` 这类不带精确版本的安装：npm 的 `latest` tag 会漂，2026-11 在测试服务器上实测装出过 pnpm 7。pnpm 7 不认识 `packageManager` 字段、也读不了新版锁文件，装错不会当场报错，而是等到构建或产物阶段才炸。
+- 症状对照：锁文件版本/格式报错、依赖解析结果异常、`pnpm install` 行为与 CI 不一致时，先跑 `bash scripts/install-toolchain.sh --check` 排除版本问题，再查别的。
+- CI 用 `actions/setup-node` 的 `node-version-file: .nvmrc` 读取版本,不得写死 `node-version: 24`。
+- CI 用 `pnpm/action-setup` 的 `package_json_file`(monorepo 多应用时)或根 `packageManager` 读取 pnpm 版本,不得写死 `version:`。
+- GitHub Action 自身必须跑在 node24 运行时: `actions/checkout`、`actions/setup-node` 不低于 `v5`,`pnpm/action-setup` 不低于 `v5`。低于该 major 会被 GitHub 强制降级并刷 Node 20 弃用告警。
+- 升级 Node 或 pnpm 时,`.nvmrc`、`engines.node`、`packageManager` 三处同步改;任一处漂移都会被门禁拦下。
+- monorepo 的 `.nvmrc` 只在 workspace 根保留,应用内不得留副本;应用 `engines.node` 必须与根 `.nvmrc` 主版本一致。
+
+`node scripts/verify-gates.mjs` 会校验以上声明与 CI 配置一致,`node tools/check-toolchain.mjs` 在骨架仓库内一次校验全部变体与 workflow。
+
 ## Single App Versus Monorepo(配置放置策略)
 
 工具链配置的放置位置是本文唯一的项目专属决策:

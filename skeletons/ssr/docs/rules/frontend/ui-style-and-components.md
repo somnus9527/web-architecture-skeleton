@@ -10,8 +10,8 @@
 
 下表是骨架自带、可直接复用且不许在业务里再抄一份的组件。派生项目删除或改名，等同于制造第二套视觉语言。
 
-| 组件         | 位置                                       | 职责                                 |
-| ------------ | ------------------------------------------ | ------------------------------------ |
+| 组件         | 位置                            | 职责                                 |
+| ------------ | ------------------------------- | ------------------------------------ |
 | `StatusPill` | `src/shared/ui/status-pill.tsx` | 短文本状态胶囊，接受 `tone` 与子节点 |
 | `Button`     | `src/shared/ui/button.tsx`      | 统一 pending 语义的按钮              |
 | `AsyncState` | `src/shared/ui/async-state.tsx` | 加载/错误/空/内容三态出口            |
@@ -19,8 +19,8 @@
 | `PageHeader` | `src/shared/ui/page-header.tsx` | 页面标题与操作区                     |
 | `StatCard`   | `src/shared/ui/stat-card.tsx`   | 指标卡                               |
 | `FieldRow`   | `src/shared/ui/field-row.tsx`   | 只读字段行                           |
-| `Input`      | `src/shared/ui/input.tsx`      | antd Input 薄出口                     |
-| `Select`     | `src/shared/ui/select.tsx`     | antd Select 薄出口                    |
+| `Input`      | `src/shared/ui/input.tsx`       | antd Input 薄出口                    |
+| `Select`     | `src/shared/ui/select.tsx`      | antd Select 薄出口                   |
 
 `src/shared/components/providers/**` 与 `router/**` 属于应用级共享组件，可以持有文案与路由逻辑；
 `src/shared/ui/**` 下的原语则不许调用 `t()`、不许 import `@/features/**`，也不许直接 import `antd` 以外的业务依赖。

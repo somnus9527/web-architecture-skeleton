@@ -18,26 +18,25 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - variant: spa
-            pnpm: 11.9.0
-          - variant: ssr
-            pnpm: 10.7.1
-          - variant: rn
-            pnpm: 11.9.0
+        # 三个变体共用同一套工具链版本：Node 取各 skeleton 的 .nvmrc，pnpm 取各自
+        # package.json 的 packageManager，不在 matrix 里另写一份。
+        variant:
+          - spa
+          - ssr
+          - rn
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
         with:
-          version: ${{ matrix.pnpm }}
+          package_json_file: skeletons/${{ matrix.variant }}/package.json
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: 24
+          node-version-file: skeletons/${{ matrix.variant }}/.nvmrc
           cache: pnpm
           cache-dependency-path: skeletons/${{ matrix.variant }}/pnpm-lock.yaml
 

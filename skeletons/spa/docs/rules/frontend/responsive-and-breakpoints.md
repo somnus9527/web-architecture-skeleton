@@ -75,7 +75,7 @@ The server cannot reliably know the client viewport. SSR/BFF projects follow:
 
 | Case                                 | Recommended                                                                  |
 | ------------------------------------ | ---------------------------------------------------------------------------- |
-| Visual difference only               | Single component tree + native CSS breakpoints / CSS variables                 |
+| Visual difference only               | Single component tree + native CSS breakpoints / CSS variables               |
 | SEO-critical + structural difference | CSS-only dual-render: both structures in the HTML, show/hide via media query |
 | Non-SEO + structural difference      | Deferred dispatch inside a Client Component                                  |
 | Heavy Client Component on one side   | SEO-critical: `dynamic({ ssr: true })`; only non-SEO may use `ssr: false`    |

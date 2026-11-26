@@ -4,6 +4,20 @@
 
 本文件描述 React Native 项目的依赖引入流程、Expo SDK 升级节奏、native module 评估、`patch-package` 政策与 lock file 审查。
 
+## 工具链版本(Node / pnpm)
+
+RN 不继承前端通用层规则，因此工具链版本在这里单独约定，且与 SPA/SSR 变体保持一致：
+
+| 项   | 权威来源                                        | 取值                            |
+| ---- | ----------------------------------------------- | ------------------------------- |
+| Node | 仓库根 `.nvmrc` + `package.json` `engines.node` | 24(`engines` 写 `>=24.0.0 <25`) |
+| pnpm | `package.json` `packageManager`                 | `pnpm@12.4.1`                   |
+
+- CI 用 `node-version-file: .nvmrc` 读 Node，用根 `packageManager` 决定 pnpm，不在 workflow 里写死版本。
+- GitHub Action 必须跑在 node24 运行时（`actions/checkout`、`actions/setup-node`、`pnpm/action-setup` 均不低于 `v5`）。
+- Expo SDK 有自己的 Node 下限；升级 Expo 前先确认 `.nvmrc` 仍满足，不满足就整体提 Node 大版本并同步三处声明。
+- `node scripts/verify-gates.mjs` 校验 `.nvmrc`、`engines.node` 与 CI 配置一致。
+
 ## 依赖引入流程
 
 ### 引入前评估

@@ -63,6 +63,26 @@ function listFiles(directory, pattern) {
     .map((name) => join(directory, name));
 }
 
+/**
+ * 判断 workflow 是否在 pnpm/action-setup 步骤里写死了 version。
+ *
+ * pnpm 版本只允许由 package.json 的 packageManager 声明，workflow 里再写一份必然漂移。
+ *
+ * @param {string} text - workflow 原文。
+ * @returns {boolean} 是否写死。
+ */
+function hasPnpmVersionPin(text) {
+  const lines = text.split('\n');
+
+  return lines.some((line, index) => {
+    if (!/^\s*(?:-\s*)?uses:\s*['"]?pnpm\/action-setup@/u.test(line)) {
+      return false;
+    }
+
+    return lines.slice(index + 1, index + 6).some((next) => /^\s+version:/u.test(next));
+  });
+}
+
 const packageJson = readJson('package.json') ?? {};
 const scripts = packageJson.scripts ?? {};
 const sourceConfig = readJson('.agents/architecture-source.json');
@@ -88,6 +108,16 @@ for (const script of requiredScripts) {
 
 check('packageManager 已固定', typeof packageJson.packageManager === 'string');
 
+const enginesNode = typeof packageJson.engines?.node === 'string' ? packageJson.engines.node : '';
+const nodeMajor = /(\d+)/u.exec(enginesNode)?.[1] ?? '';
+const nvmrc = existsSync(join(ROOT, '.nvmrc')) ? readFileSync(join(ROOT, '.nvmrc'), 'utf8').trim() : '';
+check('package.json 声明 engines.node', Boolean(enginesNode), enginesNode);
+check(
+  '.nvmrc 与 engines.node 主版本一致',
+  Boolean(nvmrc) && nvmrc === nodeMajor,
+  `.nvmrc=${nvmrc || '缺失'} / engines.node=${enginesNode || '缺失'}`,
+);
+
 for (const script of ['check-repo-hygiene.mjs', 'verify-gates.mjs', 'init-local-env.mjs']) {
   check(`scripts/${script} 存在`, existsSync(join(ROOT, 'scripts', script)));
 }
@@ -108,6 +138,7 @@ if (isWebVariant) {
     'check-architecture-staged.mjs',
     'build.sh',
     'deploy.sh',
+    'install-toolchain.sh',
   ]) {
     check(`scripts/${script} 存在`, existsSync(join(ROOT, 'scripts', script)));
   }
@@ -143,6 +174,9 @@ check('存在 CI workflow', workflows.length > 0);
 for (const command of ciCommands) {
   check(`CI 包含 ${command}`, workflowText.includes(`pnpm ${command}`));
 }
+check('CI 不在 workflow 里写死 node-version', !/node-version:\s*['"]?\d/u.test(workflowText));
+check('CI 用 node-version-file 读取 .nvmrc', /node-version-file:\s*['"]?[^\n]*\.nvmrc/u.test(workflowText));
+check('CI 不写死 pnpm 版本（统一由 packageManager 声明）', !hasPnpmVersionPin(workflowText));
 
 const eslintConfig = ['eslint.config.js', 'eslint.config.mjs'].find((file) => existsSync(join(ROOT, file)));
 check('存在 ESLint 配置', Boolean(eslintConfig));

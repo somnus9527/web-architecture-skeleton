@@ -157,7 +157,16 @@ function checkMonorepo() {
       if (manifest.private !== true) {
         failures.push(`${directory}: 必须声明 private: true`);
       }
-      for (const hoisted of ['.github', '.husky', '.prettierrc.json', '.editorconfig', 'README.md', 'AGENTS.md', 'pnpm-lock.yaml']) {
+      for (const hoisted of [
+        '.github',
+        '.husky',
+        '.nvmrc',
+        '.prettierrc.json',
+        '.editorconfig',
+        'README.md',
+        'AGENTS.md',
+        'pnpm-lock.yaml',
+      ]) {
         if (existsSync(join(appDirectory, hoisted))) {
           failures.push(`${directory}: 根级配置 ${hoisted} 未被剥离`);
         }

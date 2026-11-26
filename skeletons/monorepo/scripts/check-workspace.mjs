@@ -191,6 +191,7 @@ function checkInheritance(entry) {
   const hoisted = [
     '.github',
     '.husky',
+    '.nvmrc',
     '.prettierrc.json',
     '.prettierignore',
     '.editorconfig',
@@ -242,6 +243,20 @@ for (const script of ['check', 'typecheck', 'lint', 'test', 'format:check', 'bui
   if (typeof rootManifest.scripts?.[script] !== 'string') {
     fail(`根 package.json 缺少 ${script} 聚合脚本`);
   }
+}
+
+const rootNvmrc = existsSync(join(ROOT, '.nvmrc')) ? readFileSync(join(ROOT, '.nvmrc'), 'utf8').trim() : '';
+const enginesNode = typeof rootManifest.engines?.node === 'string' ? rootManifest.engines.node : '';
+if (!rootNvmrc) {
+  fail('缺少根 .nvmrc：Node 版本只在 workspace 根声明');
+}
+if (!enginesNode) {
+  fail('根 package.json 缺少 engines.node');
+} else if (rootNvmrc && !enginesNode.includes(rootNvmrc)) {
+  fail(`根 package.json 的 engines.node=${enginesNode} 与 .nvmrc=${rootNvmrc} 不一致`);
+}
+if (typeof rootManifest.packageManager !== 'string' || !rootManifest.packageManager.startsWith('pnpm@')) {
+  fail('根 package.json 必须以 packageManager 固定 pnpm 版本');
 }
 
 if (failures.length === 0) {

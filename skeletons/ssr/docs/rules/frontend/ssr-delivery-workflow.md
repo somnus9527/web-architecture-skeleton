@@ -81,11 +81,11 @@ mock/
 | Auth           | session source、authorization header 映射                                                                                  |
 | Security       | header 来源、cookie/CSRF/CORS/validation/redirect/upload/source map/private cache 策略                                     |
 | Runtime config | env key 清单、敏感级别、server/client 分界、注入方式、校验方式、PM2 env                                                    |
-| UI library     | antd/icons/registry 依赖、provider 入口、`AntdRegistry`、`ConfigProvider`、CSS 变量、client leaf 边界和兼容例外     |
+| UI library     | antd/icons/registry 依赖、provider 入口、`AntdRegistry`、`ConfigProvider`、CSS 变量、client leaf 边界和兼容例外            |
 | Cache          | revalidate/tag/path/no-store 和失效点                                                                                      |
 | Observability  | logger 落点、request id、普通日志/接口日志、上游摘要、降级/异常日志、脱敏、生产 client console、PM2、Web Vitals/客户端错误 |
 | Deployment     | standalone、runtime、cache handler、多实例缓存一致性和 healthcheck                                                         |
-| Runtime assets | image/font/script/link/CSS/antd registry/CSS 变量/polyfill/bundle 处理证据                                            |
+| Runtime assets | image/font/script/link/CSS/antd registry/CSS 变量/polyfill/bundle 处理证据                                                 |
 | I18n           | next-intl、locale 来源、无 locale route、语言切换刷新范围、loading 状态、BFF header、cache key                             |
 | Boundary       | 静态扫描或单测覆盖的禁止依赖                                                                                               |
 | UX             | loading/error/empty/not-found/redirect/unauthorized                                                                        |

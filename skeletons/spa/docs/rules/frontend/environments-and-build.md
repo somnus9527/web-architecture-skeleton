@@ -84,7 +84,7 @@ git rm --cached .env.dev .env.prod .env.test
   "build:dev": "pnpm typecheck && node scripts/run-vite-with-env.mjs .env.dev build --mode dev",
   "build:test": "pnpm typecheck && node scripts/run-vite-with-env.mjs .env.test build --mode test",
   "build:prod": "pnpm typecheck && node scripts/run-vite-with-env.mjs .env.prod build --mode prod",
-  "preview": "vite preview"
+  "preview": "vite preview",
 }
 ```
 

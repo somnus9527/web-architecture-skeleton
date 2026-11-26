@@ -32,11 +32,11 @@ Nginx location 按 base path 配置，API upstream 与正式域名由发布环�
 
 当前 SPA 骨架使用以下占位值，初始化时必须替换：
 
-| Variable                  | Placeholder      |
-| ------------------------- | ---------------- |
+| Variable                  | Placeholder       |
+| ------------------------- | ----------------- |
 | `<project-name>`          | `SPA Application` |
-| `<project-id>`            | `spa-app`        |
-| `<frontend-package-name>` | `spa-app-web`    |
+| `<project-id>`            | `spa-app`         |
+| `<frontend-package-name>` | `spa-app-web`     |
 
 复制为正式应用后执行：
 

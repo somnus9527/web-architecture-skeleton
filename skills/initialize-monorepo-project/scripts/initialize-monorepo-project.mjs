@@ -33,6 +33,7 @@ const WORKSPACE_ONLY_ENTRIES = new Set([
   'README.md',
   'AGENTS.md',
   '.gitignore',
+  '.nvmrc',
   '.repo-hygiene.json',
   'node_modules',
   '.next',
