@@ -18,6 +18,7 @@ const DEFAULT_CONFIG = {
   maxFileBytes: 2 * 1024 * 1024,
   maxAssetBytes: 300 * 1024,
   maxTextBytes: 300 * 1024,
+  textSizeAllowList: [],
   envFileAllowList: ['.env.example', '.env.mock'],
   envFileSuffixAllowList: ['.example'],
   envVarAllowPatterns: ['^APP_ENV$', '^VITE_[A-Z0-9_]+$', '^MOCK_[A-Z0-9_]+$', '^DEV_SERVER_PORT$'],
@@ -205,6 +206,20 @@ function checkTracked() {
 
     if (stat.size > config.maxFileBytes && basename(file) !== config.lockFile) {
       violations.push(`文件超过 ${Math.round(config.maxFileBytes / 1024 / 1024)}MB: ${file}`);
+    }
+
+    // 文本体积上限：2MB 只防「异常大文件」，日常真正该拦的是几十上百 KB 的巨型源码/文档/夹具。
+    // 锁文件是依赖解析产物，体积由依赖数决定，单独豁免。
+    const isTextFile = !config.binaryExtensions.includes(extension);
+    if (
+      isTextFile &&
+      basename(file) !== config.lockFile &&
+      stat.size > config.maxTextBytes &&
+      !config.textSizeAllowList.some((prefix) => file.startsWith(prefix))
+    ) {
+      violations.push(
+        `文本文件超过 ${Math.round(config.maxTextBytes / 1024)}KB: ${file}（${Math.round(stat.size / 1024)}KB）`,
+      );
     }
     if (file.startsWith('public/') && /\.(png|jpe?g|webp|gif|svg)$/iu.test(file) && stat.size > config.maxAssetBytes) {
       violations.push(`图片超过 ${Math.round(config.maxAssetBytes / 1024)}KB: ${file}`);

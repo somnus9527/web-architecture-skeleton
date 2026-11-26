@@ -978,3 +978,29 @@ Dependabot/renovate 跟踪。SPA/SSR 的骨架内 CI（派生项目用）同步�
 
 - `SRI` 与许可证检查：需要在构建产物层面接，且要先定「哪些依赖允许进入产物」的策略。
 - 错误码/事件名**目录化**（把散落字面量收敛成常量表）：属于迁移型改造，动的是各业务调用点，应与事件命名规范一起排期，不适合和本轮门禁混做。
+
+## 21. 大文件管控补口（2026-11-26）
+
+复盘「大文件怎么管」时发现两个口子：一是 `maxTextBytes` 配了但脚本只读不用，二是 `--history` 从来没接门禁。本批只补前者，后者按决定不做。
+
+### 21.1 `maxTextBytes` 真正生效
+
+`check-repo-hygiene.mjs` 现在对**非二进制扩展名**的文件校验 `maxTextBytes`（默认 300 KB）：
+
+- 锁文件按 basename 豁免——它是依赖解析产物，体积由依赖数量决定（RN 的 `pnpm-lock.yaml` 就有 391 KB）；
+- 新增 `textSizeAllowList`（默认空）用于显式放行业务上确实需要的大文本（例如离线词典、长夹具），按路径前缀匹配；
+- 2 MB 的 `maxFileBytes` 保留，两者分工不同：2 MB 防异常大文件，300 KB 防「几十上百 KB 的巨型源码/文档/夹具」逐步失控。
+
+验证在**独立仓库副本**里做，因为 `--staged`/`--tracked` 走 `git diff --cached` / `git ls-files`，在 skeleton 子目录里拿到的是仓库根相对路径，会被路径拼接全部跳过、静默「通过」：
+
+- 391 KB 的普通 Markdown → `--staged` 失败并报出体积；
+- 391 KB 的 `pnpm-lock.yaml` → 通过（豁免生效）；
+- 干净的工作区 → 通过（无误报）。
+
+### 21.2 `--history` 不由门禁接管
+
+历史大对象扫描（`git rev-list --objects --all` + `cat-file --batch-check`）保留为手动诊断命令，不接 CI。原因：仓库已经确定不引入 LFS、也不做历史重写，把一个「必然报警且无法在当次提交里修复」的检查放进 CI 只会制造长期红灯。
+
+### 21.3 顺带记一个验证陷阱
+
+骨架仓库里直接 `cd skeletons/<variant> && node scripts/check-repo-hygiene.mjs --tracked` 是**假通过**——git 返回的路径带 `skeletons/<variant>/` 前缀，`existsSync` 找不到文件就跳过。真正验证要复制到独立目录并 `git init`（本批即如此验证）。称职的结论只能来自后者。
