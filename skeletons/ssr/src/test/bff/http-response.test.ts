@@ -25,3 +25,19 @@ describe('BFF response cache policy', () => {
     expect(response.headers.get('Cache-Control')).toBe('no-store');
   });
 });
+
+describe('BFF trace headers', () => {
+  it('回填后端 TLog traceId 到响应头', () => {
+    const response = createBffSuccessResponse({ ok: true }, { ...CONTEXT, tlogTraceId: 'tlog-abc' });
+
+    expect(response.headers.get('X-Request-Id')).toBe('req-test');
+    expect(response.headers.get('X-TLog-Trace-Id')).toBe('tlog-abc');
+  });
+
+  it('没有 tlogTraceId 时不下发空头', () => {
+    const response = createBffErrorResponse('internal_error', 'failed', CONTEXT, 500);
+
+    expect(response.headers.get('X-Request-Id')).toBe('req-test');
+    expect(response.headers.get('X-TLog-Trace-Id')).toBeNull();
+  });
+});

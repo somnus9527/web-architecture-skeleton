@@ -121,6 +121,29 @@ describe('FrontendVersionWatcher', () => {
     vi.useRealTimers();
   });
 
+  it('把首屏 meta 里的 request id 带到后续请求', async () => {
+    const meta = document.createElement('meta');
+    meta.setAttribute('name', 'request-id');
+    meta.setAttribute('content', 'req-from-meta-123456');
+    document.head.append(meta);
+
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(createVersionResponse('release-current'));
+    vi.stubGlobal('fetch', fetchMock);
+
+    try {
+      render(<FrontendVersionWatcher currentReleaseId="release-current" />);
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(60_000);
+      });
+
+      const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+      expect((init.headers as Record<string, string>)['X-Request-Id']).toBe('req-from-meta-123456');
+    } finally {
+      meta.remove();
+    }
+  });
+
   it('checks visible pages every 60 seconds and reloads after stable confirmation', async () => {
     const fetchMock = vi
       .fn<typeof fetch>()

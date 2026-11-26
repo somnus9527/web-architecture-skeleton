@@ -8,6 +8,22 @@ import { reloadBrowserPage } from '@/shared/utils/reload-browser-page';
 const VERSION_ENDPOINT = '/ssr-app-api/version';
 const VERSION_CHECK_INTERVAL_MS = 60_000;
 const VERSION_CONFIRM_DELAY_MS = 4_000;
+/**
+ * 从首屏 HTML 的 `meta[name=request-id]` 取本次请求的关联 ID。
+ *
+ * 浏览器后续请求带上它，运维就能用同一个 requestId 串起首屏 RSC 与客户端请求的日志。
+ *
+ * @returns 带 `X-Request-Id` 的请求头；meta 缺失时返回空对象。
+ */
+function requestIdHeader(): Record<string, string> {
+  if (typeof document === 'undefined') {
+    return {};
+  }
+
+  const requestId = document.querySelector('meta[name="request-id"]')?.getAttribute('content');
+  return requestId ? { 'X-Request-Id': requestId } : {};
+}
+
 const VERSION_REQUEST_TIMEOUT_MS = 5_000;
 const VERSION_CHANNEL_NAME = 'ssr-app-frontend-version';
 const REFRESHED_VERSION_STORAGE_KEY = 'ssr-app:last-refreshed-version';
@@ -157,6 +173,7 @@ export function FrontendVersionWatcher({ currentReleaseId }: IFrontendVersionWat
               Accept: 'application/json',
               'Cache-Control': 'no-cache',
               Pragma: 'no-cache',
+              ...requestIdHeader(),
             },
             signal: requestController?.signal,
           });

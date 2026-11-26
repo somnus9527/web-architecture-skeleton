@@ -1,11 +1,14 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
+import type { ITraceContext } from '@/shared/trace/trace-context';
+
 import { DEFAULT_PUBLIC_URL_LOCALE, PUBLIC_LOCALE_HEADER, isLocaleCode } from '@/i18n/locale-config';
 import { readAllowedOrigin } from '@/shared/config/edge-env';
 import { resolveUrlLocale } from '@/shared/i18n/public-locale-routing';
 import { PRIVATE_ROUTE_PREFIXES } from '@/shared/navigation/public-route-visibility';
 import { buildContentSecurityPolicy } from '@/shared/security/content-security-policy';
+import { resolveTraceContext } from '@/shared/trace/trace-context';
 
 const ALLOWED_METHODS = 'GET, POST, OPTIONS';
 const ALLOWED_HEADERS = 'content-type, x-request-id, x-trace-id, traceparent';
@@ -52,23 +55,24 @@ const NON_LOCALE_TOP_LEVEL_SEGMENTS = [
  */
 export function proxy(request: NextRequest): NextResponse {
   const nonce = createNonce();
+  const trace = resolveTraceContext(request.headers);
 
   if (request.method === 'OPTIONS') {
-    return createCorsPreflightResponse(request, nonce);
+    return createCorsPreflightResponse(request, nonce, trace);
   }
 
-  const rootRedirect = createRootRedirect(request, nonce);
+  const rootRedirect = createRootRedirect(request, nonce, trace);
   if (rootRedirect) {
     return rootRedirect;
   }
 
-  const unknownLocaleRejection = createUnknownLocaleRejection(request, nonce);
+  const unknownLocaleRejection = createUnknownLocaleRejection(request, nonce, trace);
   if (unknownLocaleRejection) {
     return unknownLocaleRejection;
   }
 
-  const response = NextResponse.next({ request: { headers: buildForwardedRequestHeaders(request, nonce) } });
-  applySecurityHeaders(response, request, nonce);
+  const response = NextResponse.next({ request: { headers: buildForwardedRequestHeaders(request, nonce, trace) } });
+  applySecurityHeaders(response, request, nonce, trace);
   applyCorsHeaders(response, request);
   return response;
 }
@@ -111,7 +115,11 @@ function createNonce(): string {
  * @param request - 当前请求。
  * @returns 改写响应；路径首段是合法语言码、`_next` 内部路径或真实非语言路由时返回 undefined。
  */
-function createUnknownLocaleRejection(request: NextRequest, nonce: string): NextResponse | undefined {
+function createUnknownLocaleRejection(
+  request: NextRequest,
+  nonce: string,
+  trace: ITraceContext,
+): NextResponse | undefined {
   const { pathname } = request.nextUrl;
   const [firstSegment] = pathname.split('/').filter(Boolean);
 
@@ -131,8 +139,10 @@ function createUnknownLocaleRejection(request: NextRequest, nonce: string): Next
     `${pathname.replace(/\/$/, '')}/${UNKNOWN_LOCALE_SENTINEL}${request.nextUrl.search}`,
     request.url,
   );
-  const response = NextResponse.rewrite(target, { request: { headers: buildForwardedRequestHeaders(request, nonce) } });
-  applySecurityHeaders(response, request, nonce);
+  const response = NextResponse.rewrite(target, {
+    request: { headers: buildForwardedRequestHeaders(request, nonce, trace) },
+  });
+  applySecurityHeaders(response, request, nonce, trace);
   return response;
 }
 
@@ -145,7 +155,7 @@ function createUnknownLocaleRejection(request: NextRequest, nonce: string): Next
  * @param request - 当前请求。
  * @returns 重定向响应；非根路径或非 GET/HEAD 时返回 undefined。
  */
-function createRootRedirect(request: NextRequest, nonce: string): NextResponse | undefined {
+function createRootRedirect(request: NextRequest, nonce: string, trace: ITraceContext): NextResponse | undefined {
   if (request.nextUrl.pathname !== '/' || (request.method !== 'GET' && request.method !== 'HEAD')) {
     return undefined;
   }
@@ -153,7 +163,7 @@ function createRootRedirect(request: NextRequest, nonce: string): NextResponse |
   const target = new URL(`/${DEFAULT_PUBLIC_URL_LOCALE}${request.nextUrl.search}`, request.url);
   const response = NextResponse.redirect(target, 308);
   response.headers.set('Cache-Control', `public, max-age=${ROOT_REDIRECT_MAX_AGE}`);
-  applySecurityHeaders(response, request, nonce);
+  applySecurityHeaders(response, request, nonce, trace);
   return response;
 }
 
@@ -171,10 +181,21 @@ function createRootRedirect(request: NextRequest, nonce: string): NextResponse |
  * @param request - 当前请求。
  * @returns 转发给 RSC / Route Handler 的请求头。
  */
-function buildForwardedRequestHeaders(request: NextRequest, nonce: string): Headers {
+function buildForwardedRequestHeaders(request: NextRequest, nonce: string, trace: ITraceContext): Headers {
   const forwardedHeaders = new Headers(request.headers);
   forwardedHeaders.delete(PUBLIC_LOCALE_HEADER);
   forwardedHeaders.set(NONCE_HEADER, nonce);
+  forwardedHeaders.set('X-Request-Id', trace.requestId);
+  forwardedHeaders.set('traceparent', trace.traceparent);
+  if (trace.tracestate) {
+    forwardedHeaders.set('tracestate', trace.tracestate);
+  } else {
+    forwardedHeaders.delete('tracestate');
+  }
+  // 入站 tlogTraceId 只可能是伪造或上一跳残留，统一剥离，后端才是唯一来源。
+  forwardedHeaders.delete('tlogTraceId');
+  forwardedHeaders.delete('X-TLog-Trace-Id');
+  forwardedHeaders.delete('x-trace-id');
 
   const urlLocale = resolveUrlLocale(request.nextUrl.pathname);
   if (urlLocale) {
@@ -190,9 +211,9 @@ function buildForwardedRequestHeaders(request: NextRequest, nonce: string): Head
  * @param request - 当前预检请求。
  * @returns 允许或拒绝的预检响应。
  */
-function createCorsPreflightResponse(request: NextRequest, nonce: string): NextResponse {
+function createCorsPreflightResponse(request: NextRequest, nonce: string, trace: ITraceContext): NextResponse {
   const response = new NextResponse(null, { status: isAllowedOrigin(request) ? 204 : 403 });
-  applySecurityHeaders(response, request, nonce);
+  applySecurityHeaders(response, request, nonce, trace);
   applyCorsHeaders(response, request);
   response.headers.set('Cache-Control', 'no-store');
   return response;
@@ -204,8 +225,9 @@ function createCorsPreflightResponse(request: NextRequest, nonce: string): NextR
  * @param response - 待返回的 NextResponse。
  * @param request - 当前请求，用于判断是否写入 HSTS。
  */
-function applySecurityHeaders(response: NextResponse, request: NextRequest, nonce: string): void {
+function applySecurityHeaders(response: NextResponse, request: NextRequest, nonce: string, trace: ITraceContext): void {
   response.headers.set('Content-Security-Policy', buildContentSecurityPolicy({ nonce }));
+  response.headers.set('X-Request-Id', trace.requestId);
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
   response.headers.set('X-Content-Type-Options', 'nosniff');
   response.headers.set('X-Frame-Options', 'DENY');

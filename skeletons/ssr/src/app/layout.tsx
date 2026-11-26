@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { NextIntlClientProvider } from 'next-intl';
+import { headers } from 'next/headers';
 import { getLocale, getMessages, getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
 
@@ -27,6 +28,8 @@ import './globals.css';
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('metadata');
   const { appOrigin } = getPublicConfig();
+  // proxy 每请求写入的关联 ID：首屏 HTML 带上它，浏览器后续请求与 SLS 日志才能对上。
+  const requestId = (await headers()).get('x-request-id');
 
   return {
     metadataBase: new URL(appOrigin),
@@ -43,6 +46,7 @@ export async function generateMetadata(): Promise<Metadata> {
     twitter: {
       card: 'summary_large_image',
     },
+    other: requestId ? { 'request-id': requestId } : undefined,
   };
 }
 

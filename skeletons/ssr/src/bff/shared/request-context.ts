@@ -2,6 +2,8 @@ import 'server-only';
 
 import { randomUUID } from 'node:crypto';
 
+import { isValidTraceparent, normalizeRequestId, normalizeTracestate } from '@/shared/trace/trace-context';
+
 /**
  * 单次请求的追踪上下文，串联 RSC / service / gateway / 上游调用。
  */
@@ -22,6 +24,10 @@ export interface IRequestContext {
    * W3C traceparent，存在时透传给上游以对齐分布式追踪。
    */
   traceparent?: string;
+  /**
+   * W3C tracestate，仅在 traceparent 合法时随之下发。
+   */
+  tracestate?: string;
 }
 
 const MAX_TRACE_ID_LENGTH = 64;
@@ -35,11 +41,14 @@ const SAFE_TRACE_ID_PATTERN = /^[A-Za-z0-9._:-]+$/;
  * @returns 请求上下文。
  */
 export function createRequestContext(requestHeaders: Headers, locale: string): IRequestContext {
-  const requestId = requestHeaders.get('x-request-id') ?? requestHeaders.get('x-trace-id') ?? randomUUID();
-  const tlogTraceId = normalizeTraceId(requestHeaders.get('tlogTraceId'));
-  const traceparent = requestHeaders.get('traceparent') ?? undefined;
+  // requestId / traceparent 由 proxy 注入并已校验；这里再校验一次，避免绕过 proxy 的调用点（如测试）拿到脏值。
+  const requestId = normalizeRequestId(requestHeaders.get('x-request-id')) ?? randomUUID();
+  const inboundTraceparent = requestHeaders.get('traceparent');
+  const traceparent = isValidTraceparent(inboundTraceparent) ? inboundTraceparent.trim() : undefined;
+  const tracestate = traceparent ? normalizeTracestate(requestHeaders.get('tracestate')) : undefined;
 
-  return { requestId, tlogTraceId, locale, traceparent };
+  // tlogTraceId 只允许来自后端响应头（rememberTlogTraceId），入站值一律忽略。
+  return tracestate ? { requestId, locale, traceparent, tracestate } : { requestId, locale, traceparent };
 }
 
 /**

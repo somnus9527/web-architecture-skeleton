@@ -111,6 +111,33 @@ async function checkContentSecurityPolicy() {
   expect(Boolean(secondNonce) && secondNonce !== nonce, 'CSP nonce 未做到每请求不同');
 }
 
+/**
+ * 校验请求关联 ID：响应头带 X-Request-Id，首屏 HTML 带同名 meta。
+ *
+ * 只有两者一致，浏览器侧请求与 SLS 日志才能用同一个 ID 串起来。
+ *
+ * @returns {void}
+ */
+async function checkRequestId() {
+  const path = `/${locales[0]}`;
+  const response = await get(path);
+  const html = await response.text();
+  const headerId = response.headers.get('x-request-id');
+  expect(Boolean(headerId), `${path} 响应缺少 X-Request-Id`);
+
+  const metaId = /<meta name="request-id" content="([^"]+)"/u.exec(html)?.[1];
+  expect(Boolean(metaId), `${path} 缺少 <meta name="request-id">`);
+
+  if (headerId && metaId) {
+    expect(metaId === headerId, `${path} meta request-id 与响应头不一致（${metaId} != ${headerId}）`);
+  }
+
+  const inbound = await globalThis.fetch(`${baseUrl}${path}`, {
+    headers: { Accept: 'text/html', 'X-Request-Id': 'upstream-probe-123456' },
+  });
+  expect(inbound.headers.get('x-request-id') === 'upstream-probe-123456', `${path} 未透传入站合法 X-Request-Id`);
+}
+
 async function checkRobots() {
   const response = await get('/robots.txt');
   const text = await response.text();
@@ -128,6 +155,7 @@ await check404('/wp-login.php');
 await checkSitemap();
 await checkRobots();
 await checkContentSecurityPolicy();
+await checkRequestId();
 
 if (failures.length > 0) {
   process.stderr.write(`SEO 运行时检查失败（${failures.length} 项）：\n`);

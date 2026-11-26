@@ -3,6 +3,16 @@ import 'server-only';
 import type { IRequestContext } from './request-context';
 
 /**
+ * 把后端 TLog traceId 透出到浏览器响应头，缺失时不下发空头。
+ *
+ * @param context - 请求上下文。
+ * @returns 需要追加的响应头。
+ */
+function tlogTraceHeaders(context: IRequestContext): Record<string, string> {
+  return context.tlogTraceId ? { 'X-TLog-Trace-Id': context.tlogTraceId } : {};
+}
+
+/**
  * BFF 统一 JSON 响应信封。成功 `code='200'`、`codeMsg=null`；失败 `data=null`。
  */
 export interface IBffJsonResponse<T> {
@@ -43,6 +53,7 @@ export function createBffSuccessResponse<T>(data: T, context: IRequestContext, i
     headers: {
       'Cache-Control': init?.cacheControl ?? 'no-store',
       'X-Request-Id': context.requestId,
+      ...tlogTraceHeaders(context),
     },
   });
 }
@@ -69,6 +80,7 @@ export function createBffErrorResponse(
     headers: {
       'Cache-Control': 'no-store',
       'X-Request-Id': context.requestId,
+      ...tlogTraceHeaders(context),
     },
   });
 }

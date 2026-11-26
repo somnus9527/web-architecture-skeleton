@@ -16,7 +16,8 @@ import {
 
 const SUCCESS_CODE = '200';
 const DEFAULT_TIMEOUT_MS = 10_000;
-const TLOG_TRACE_ID_HEADER = 'tlogTraceId';
+/** 后端 TLog traceId 的响应头候选：兼容 TLog 默认头与网关改写后的别名。 */
+const TLOG_TRACE_ID_HEADERS = ['tlogTraceId', 'X-TLog-Trace-Id'];
 
 export type HttpMethod = 'GET' | 'POST';
 
@@ -155,7 +156,7 @@ export async function requestBackend<TData, TBody extends object | undefined = u
       body: serializeRequestBody(request.body),
       signal: abortState.signal,
     });
-    upstreamTraceId = rememberTlogTraceId(request.context, response.headers.get(TLOG_TRACE_ID_HEADER));
+    upstreamTraceId = rememberTlogTraceId(request.context, readTlogTraceId(response.headers));
 
     const payload = await parseResponseEnvelope<TData, TBody>(response, request);
     if (payload.code !== SUCCESS_CODE) {
@@ -273,7 +274,7 @@ export async function requestBackendBinary<TBody extends object>(
       body: JSON.stringify(request.body),
       signal: abortState.signal,
     });
-    upstreamTraceId = rememberTlogTraceId(request.context, response.headers.get(TLOG_TRACE_ID_HEADER));
+    upstreamTraceId = rememberTlogTraceId(request.context, readTlogTraceId(response.headers));
 
     if (isJsonResponse(response)) {
       const payload = await parseJsonResponseEnvelope<unknown, TBody>(response, request);
@@ -397,6 +398,23 @@ function resolveBaseUrl(): string {
 }
 
 /**
+ * 从后端响应头读取 TLog traceId，兼容多个别名。
+ *
+ * @param headers - 后端响应头。
+ * @returns 第一个存在的候选头值。
+ */
+function readTlogTraceId(headers: Headers): string | null {
+  for (const name of TLOG_TRACE_ID_HEADERS) {
+    const value = headers.get(name);
+    if (value) {
+      return value;
+    }
+  }
+
+  return null;
+}
+
+/**
  * 构造后端请求头。浏览器 cookie 不会透传，鉴权只能来自 BFF 已转换出的服务端 header。
  */
 function buildHeaders<TBody extends object | undefined>(request: IHttpClientRequest<TBody>): Record<string, string> {
@@ -415,6 +433,10 @@ function buildHeaders<TBody extends object | undefined>(request: IHttpClientRequ
 
   if (request.context.traceparent) {
     headers.traceparent = request.context.traceparent;
+  }
+
+  if (request.context.tracestate) {
+    headers.tracestate = request.context.tracestate;
   }
 
   if (request.authHeaders) {
