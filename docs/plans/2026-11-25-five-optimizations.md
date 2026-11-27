@@ -1456,3 +1456,24 @@ RN 之前已有 `ThemeProvider` + token + Paper 主题映射，但偏好不持�
   脚本是幂等的，已装浏览器会直接跳过下载。
 - `scripts/run-visual.sh` 的容器下载源改为 `${PLAYWRIGHT_DOWNLOAD_HOST:-npmmirror}`，与本地安装用同一套覆盖方式。
 - 明确不做的降级：不把 axe 换成 jsdom（布局与对比度结果不可信），也不把浏览器门禁塞进 pre-commit。
+
+## 31. 第十一批：移除视觉回归、axe 降级为可选（2026-11-27）
+
+结论：模板默认门禁只保留「零浏览器成本」的部分。
+
+| 项                 | 处理                                                                                                                                |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
+| 视觉回归           | 删除 `e2e/visual/**`、`playwright.visual.config.ts`、8 张基线 PNG、`scripts/run-visual.sh`、`test:visual*` 脚本、根 CI `visual` job |
+| axe 浏览器检查     | 从根 CI `a11y` job 与两个骨架 `check.yml` 移除；保留 `test:a11y`、`e2e/a11y`、夹具与文档，作为项目按需开启的能力                    |
+| 静态无障碍         | 保留 `eslint-plugin-jsx-a11y` + `check:a11y`，仍在 `quality:check`                                                                  |
+| `browsers:install` | 保留，给按需开启 axe 的项目用；默认 npmmirror 源                                                                                    |
+
+依据：
+
+- 视觉基线保护的是骨架演示页，派生项目必须重做基线，模板侧没有维护人；
+- axe 有价值（本项目抓到过暗色 token 对比度 4.44:1 / 3.13:1 两个真实缺陷），但它依赖 Chromium，且模板里的夹具主要覆盖
+  共享原语，适合「项目按需开启」而不是「模板每次 push 都装浏览器」；
+- 静态两层（eslint + `check:a11y`）留在 `quality:check`，提交期仍有可访问性兜底。
+
+验证：两个变体 `quality:check`、`check:gates`、format、repo 级 toolchain/doc-links/init-smoke/workspace、materialize 幂等全过；
+根 CI 回到 5 个 job：4 个变体 quality + 1 个 skeleton check（原来是 9 个）。

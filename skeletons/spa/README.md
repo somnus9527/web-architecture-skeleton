@@ -78,10 +78,7 @@ pnpm check:error-codes
 pnpm check:licenses
 pnpm check:sri
 pnpm licenses:notice
-pnpm browsers:install  # 首次本地跑 a11y / 视觉：默认走 npmmirror 源
-pnpm test:visual   # 关键页截图基线（Linux 容器，见 scripts/run-visual.sh）
-pnpm test:a11y   # 真实 Chromium + axe；首次需 pnpm browsers:install
-pnpm quality:check
+pnpm test:a11y   # 真实 Chromium + axe；首次需 pnpm quality:check
 ```
 
 `pnpm dev` 默认同时启动 Prism 与 Vite mock 模式。`.env.dev`、`.env.test`、`.env.prod` 不提交，

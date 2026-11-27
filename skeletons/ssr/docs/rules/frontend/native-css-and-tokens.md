@@ -74,4 +74,4 @@
 ## 明暗主题的验证
 
 - `pnpm test:a11y`：两种主题下都不允许 serious/critical 无障碍违规。
-- `pnpm test:visual`：关键页 light/dark 截图基线见 `quality-tooling.md` 的「视觉回归」。
+- 亮暗两套 token 由 `design-tokens.test.ts` 与 axe 对比度检查守住；需要像素级回归的项目按 `quality-tooling.md` 自建，模板不内置基线。

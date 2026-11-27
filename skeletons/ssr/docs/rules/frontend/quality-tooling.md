@@ -86,11 +86,11 @@ Node 与 pnpm 的版本各自只有一个权威来源,不允许在 CI 里再写�
 
 无障碍分三层，各管一段，缺一层就有盲区：
 
-| 层         | 载体                                  | 管什么                                                   | 失败条件                |
-| ---------- | ------------------------------------- | -------------------------------------------------------- | ----------------------- |
-| 编辑器     | `eslint-plugin-jsx-a11y`              | 角色、标签、alt 等静态写法                               | lint 报错               |
-| 提交期     | `pnpm check:a11y`（`check-a11y.mjs`） | 图标按钮可访问名、`onClick` 挂在非交互元素、`img` 缺 alt | 扫描命中                |
-| 真实浏览器 | `pnpm test:a11y`（Playwright + axe）  | 布局相关的对比度、可访问名、ARIA 结构                    | serious / critical 违规 |
+| 层                 | 载体                                  | 管什么                                                   | 失败条件                |
+| ------------------ | ------------------------------------- | -------------------------------------------------------- | ----------------------- |
+| 编辑器             | `eslint-plugin-jsx-a11y`              | 角色、标签、alt 等静态写法                               | lint 报错               |
+| 提交期             | `pnpm check:a11y`（`check-a11y.mjs`） | 图标按钮可访问名、`onClick` 挂在非交互元素、`img` 缺 alt | 扫描命中                |
+| 真实浏览器（可选） | `pnpm test:a11y`（Playwright + axe）  | 布局相关的对比度、可访问名、ARIA 结构                    | serious / critical 违规 |
 
 真实浏览器层的约定：
 
@@ -98,8 +98,9 @@ Node 与 pnpm 的版本各自只有一个权威来源,不允许在 CI 里再写�
 - 共享原语由夹具 `src/test/a11y/harness.tsx`（入口 `a11y.html`）统一渲染；**新增 `src/shared/ui/*.tsx`
   必须同步进夹具**，否则 `src/test/a11y/harness-coverage.test.ts` 失败。夹具不得被应用代码 import。
 - 夹具不参与生产构建：Vite 只把 `index.html` 作为入口，`a11y.html` 不会被 `build` 收录。
-- 该层不进 `quality:check`、也不进 pre-commit / pre-push：它需要下载 Chromium，只在 CI 的 a11y job 与
-  本地手动执行。派生项目如果确实没有 Web UI，可以整组移除并在 ADR 说明。
+- 该层默认**不进** `quality:check`、pre-commit、pre-push，也不进模板 CI：它需要下载 Chromium，而模板里的
+  收益主要来自共享原语。派生项目有合规或无障碍要求时，用 `pnpm browsers:install && pnpm test:a11y` 手动开启，
+  再自行接进流水线；没有 Web UI 的项目可以整组移除并在 ADR 说明。
 - 发现对比度问题先改 token（`src/shared/theme/tokens.css`）而不是在组件里写死色值；小字号语义色用
   `--color-*-strong`，tinted 背景上的正文才有 AA 余量。
 
@@ -118,39 +119,31 @@ Node 与 pnpm 的版本各自只有一个权威来源,不允许在 CI 里再写�
 - 生成物必须跨平台确定：读包内文件用列目录 + 大小写不敏感匹配，不要直接 `existsSync('LICENSE')`——
   macOS 大小写不敏感会掩盖 Linux CI 上的差异，表现为「本地最新、CI 过期」。
 
-## 视觉回归
+## 视觉回归（已移出模板默认门禁）
 
-关键页截图基线用 Playwright `toHaveScreenshot()`，只覆盖「页面结构 + 明暗主题」两个维度：
+2026-11-27 决策：**模板不再内置像素截图基线**，`test:visual`、`playwright.visual.config.ts`、基线 PNG、
+`run-visual.sh` 与 CI visual job 全部移除。理由：
 
-| 变体 | 页面                              | 主题         |
-| ---- | --------------------------------- | ------------ |
-| SPA  | 登录页、工作台（mock 会话与数据） | light / dark |
-| SSR  | 登录页、公开首页                  | light / dark |
+- 基线保护的是骨架演示页（登录页 / 工作台 / 公开首页），派生项目会整体替换这些页面，复制过去的基线必然失效；
+- 改一句文案、调一个间距就会红，判断依赖人工看 diff，模板侧没有明确负责人；
+- 跨环境脆弱：Linux 与 macOS 渲染不同、`fixed` 元素在全页截图里被裁、容差会吞掉小元素变化；
+- 真正有价值的部分已被别的门禁覆盖：token 值有单测、对比度由 axe 管（可选）、UI 边界有架构测试。
 
-- 命令：`pnpm test:visual` 校验；`bash scripts/run-visual.sh --update` 重新生成基线并写回。
-- **基线只在固定 Linux 环境生成**（`node:24-bookworm` + 官方 Chromium，与 CI visual job 同一镜像）。macOS 字体渲染不同，
-  本地直接跑会得到另一套 `-darwin` 基线；用脚本包一层 Docker，不要提交本机基线。
-- 判据：`maxDiffPixelRatio 0.002`，动画与光标冻结；动态内容（时间、随机 id）必须 route stub 或 mask，不允许靠容差蒙过去。
-- 视觉层不进 `quality:check`、不进 pre-commit / pre-push：Chromium 下载与截图成本高，只在 CI 的 visual job 与手动执行。
-- 更新基线后必须人工看 diff：截图变了要能说出原因（样式改动 / 主题改动），否则说明有未声明的回归。
+产品项目确实需要视觉回归时，按以下要点自建，不要从模板继承基线：
 
-## 浏览器类门禁的运行环境必须固定
-
-axe 与截图基线都依赖 Chromium 的系统依赖：`runs-on` / `container` 必须固定版本，不能只用 `ubuntu-latest`。
-
-- 2026-11-27 实测：`ubuntu-latest` 漂移到 26.04 后，`playwright install --with-deps` 会拉
-  `packages.microsoft.com/ubuntu/26.04` 并拿到 403，a11y job 装不上浏览器直接失败。
-- 修法：a11y job 固定 `ubuntu-24.04`；visual job 固定 `node:24-bookworm` 容器，并在 apt 上设置
-  `Acquire::Retries "10"` + 重试三次。
+- Playwright `toHaveScreenshot()` + `maxDiffPixelRatio` 0.002 起，冻结动画与光标，动态内容 route stub 或 mask；
+- 基线只在固定 Linux 镜像（如 `node:24-bookworm` + 官方 Chromium）里生成与校验，基线随项目提交、由项目自己维护；
+- 基线更新必须人工看 diff 并说明原因，否则等于给回归签字；
+- 不放 `quality:check`、pre-commit、pre-push，只进项目自己的流水线。
 
 ## 本地浏览器安装
 
-`a11y` 与 `test:visual` 都需要 Chromium，但它们**不在** `quality:check`、pre-commit、pre-push 里，日常开发不装浏览器也能正常提交。
+`test:a11y` 需要 Chromium，但它**不在** `quality:check`、pre-commit、pre-push 里，日常开发不装浏览器也能正常提交。
 
 - CI 是权威：GitHub runner 直连官方源安装，不需要梯子，也不走镜像。
 - 本地想跑一次：`pnpm browsers:install`。脚本默认把 `PLAYWRIGHT_DOWNLOAD_HOST` 指向
   `https://cdn.npmmirror.com/binaries/playwright`，无外网环境也能装；需要官方源或私有镜像时用同名环境变量覆盖。
 - 只装浏览器、不提交二进制；`~/.cache/ms-playwright`（macOS 为 `~/Library/Caches/ms-playwright`）属于本机缓存。
 - Linux 上脚本走 `playwright install --with-deps` 装系统依赖（本地需要 sudo，容器 / CI 里是 root）。
-- 视觉回归的 Linux 基线在容器里生成（`node:24-bookworm`），同样支持 `PLAYWRIGHT_DOWNLOAD_HOST` 覆盖；容器内的
-  Chromium 下载由 `scripts/run-visual.sh` 传入该变量。
+- 自己接 CI 时固定 runner / 容器版本：2026-11-27 实测 `ubuntu-latest` 漂移到 26.04 后，
+  `playwright install --with-deps` 会拉 `packages.microsoft.com/ubuntu/26.04` 并拿到 403。
