@@ -17,7 +17,9 @@
     "check:workspace": "node scripts/check-workspace.mjs",
     "check:hygiene": "node scripts/check-repo-hygiene.mjs --tracked",
     "check": "pnpm check:workspace && pnpm typecheck && pnpm lint && pnpm check:hygiene && pnpm test && pnpm format:check",
-    "prepare": "husky"
+    "prepare": "husky",
+    "verify:push": "pnpm check",
+    "verify:push:changed": "pnpm check:workspace && pnpm check:hygiene"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.0",

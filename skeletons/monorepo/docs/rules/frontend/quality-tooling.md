@@ -165,3 +165,20 @@ Node 与 pnpm 的版本各自只有一个权威来源,不允许在 CI 里再写�
   没有本地 hook 的项目，等于没有门禁。
 - hook 可以被 `git push --no-verify` 绕过，这是 Git 的固有行为；把它当「防误提交」而不是「不可绕过」，绕过时必须补跑一次。
 - pre-commit 不再承担重活：不在提交时跑 build / 覆盖率，避免每次 commit 几十秒。
+
+## 门禁三档：Full（默认）/ Fast / Changed
+
+push 门禁分三档，默认 Full；降档是**临时手段**，不是长期配置。
+
+| 档位         | 命令                       | 内容                                                        | 适用                        |
+| ------------ | -------------------------- | ----------------------------------------------------------- | --------------------------- |
+| Full（默认） | `pnpm quality:check`       | 全套：静态扫描 + 单测覆盖率 + 构建 + SRI + 许可证           | pre-push 默认；交付前必须过 |
+| Fast         | `pnpm verify:push`         | 去掉构建、SRI、覆盖率、许可证，保留静态扫描 / 单测 / format | 本地迭代想快一点            |
+| Changed      | `pnpm verify:push:changed` | 只跑本次变更命中的 lint / 安全 / 架构测试 / typecheck       | 小改动快速自检              |
+
+降档规则（AI 与人都适用）：
+
+- **允许**把 `.husky/pre-push` 临时改成 `pnpm verify:push` 或 `pnpm verify:push:changed`，但这是本地加速，不是标准配置；
+- **一旦本次实施过程中降过档，实施完成、声明完成之前必须手动跑一次 `pnpm quality:check` 并确认通过**；
+- 交付/合并前一律以 Full 档结果为准；Fast / Changed 通过不能替代 Full；
+- 不允许把 `quality:check` 删步骤来“降档”，只在三档之间切换。

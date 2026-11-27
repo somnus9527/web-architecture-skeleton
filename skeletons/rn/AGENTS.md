@@ -10,6 +10,7 @@
 
 ## Always-on
 
+- 门禁默认 Full：`pnpm quality:check`。允许临时降档到 `pnpm verify:push`（Fast）或 `pnpm verify:push:changed`（Changed）；**只要本次实施降过档，交付前必须手动跑一次 `pnpm quality:check` 并确认通过**。
 - 始终使用简体中文回复。
 - 本仓库遵循公司统一的 React Native 应用开发规范。所有规则文件位于 `docs/rules/rn/`，所有可复用模版位于 `docs/rules/rn/templates/`。新加入的开发者从本文件出发即可读全规范，不需要外部资源。
 - 技术栈基线：Expo Router + Expo SDK + React + React Native + TypeScript + React Query + Zustand + React Native Paper（仅作为底层 UI provider，业务侧通过 wrapper 使用）+ i18next + SecureStore + AsyncStorage + Jest + React Native Testing Library。所有依赖默认使用**最新稳定版**；具体版本由 `package.json` 锁定，升级遵循 `docs/rules/rn/dependencies.md`。

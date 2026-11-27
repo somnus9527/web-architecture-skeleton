@@ -1493,3 +1493,11 @@ RN 之前已有 `ThemeProvider` + token + Paper 主题映射，但偏好不持�
 
 取舍：`quality:check` 含 build / 覆盖率 / 许可证 / SRI，SSR 单次 push 约 1~2 分钟；接受这个成本，换取「换任何托管平台都不丢门禁」。
 `git push --no-verify` 仍可绕过，属 Git 固有能力，按「防误提交」定位并在文档写明补跑要求。
+
+## 33. 第十三批：门禁三档（Full / Fast / Changed，2026-11-27）
+
+- 新增脚本：`verify:push`（Fast：去掉构建、SRI、覆盖率、许可证）、`verify:push:changed`（Changed：按变更路径增量）。
+- 默认不变：四个变体的 `.husky/pre-push` 仍跑 Full（`quality:check` / monorepo `check && build`）。
+- `verify-gates.mjs`：pre-push 允许调用 `quality:check|verify:push`，并要求三档脚本齐备（monorepo 只要求自身 `check`）。
+- 规则：模板允许临时降档，但**本次实施降过档的，交付前必须手动跑一次 Full 并确认通过**；Fast/Changed 通过不能替代 Full。
+- 文档落点：`rules/frontend/quality-tooling.md`、`rules/rn/testing.md`、四个 `AGENTS.md`、spa/ssr `.agents/verification.md`。

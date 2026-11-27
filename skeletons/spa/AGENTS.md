@@ -2,6 +2,7 @@
 
 ## Always-on
 
+- 门禁默认 Full：`pnpm quality:check`。允许临时降档到 `pnpm verify:push`（Fast）或 `pnpm verify:push:changed`（Changed）；**只要本次实施降过档，交付前必须手动跑一次 `pnpm quality:check` 并确认通过**。
 - 本仓库是可复制的 React SPA 项目骨架，不是正式业务应用。
 - 本仓库承载前端与共享规则；Java 后端规则不随前端骨架分发。
 - 新应用复制后，必须先完成项目变量绑定和 SPA 初始化清单。

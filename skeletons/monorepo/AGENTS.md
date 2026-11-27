@@ -2,6 +2,7 @@
 
 ## Always-on
 
+- 门禁默认 Full：`pnpm check && pnpm build`。允许临时降档到 `pnpm verify:push`（Fast）或 `pnpm verify:push:changed`（Changed）；**只要本次实施降过档，交付前必须手动跑一次 `pnpm check && pnpm build` 并确认通过**。
 - 本仓库是 pnpm workspace 组织骨架，不是业务应用本身。
 - monorepo 只是多应用的组织方式：`apps/*` 下每个应用各自按类型遵守对应骨架的规范，workspace 层不覆盖应用变体规则。
 - `packages/*` 只放真正跨应用复用的代码；没有第二个使用方前不要拆包。

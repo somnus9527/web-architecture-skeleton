@@ -351,3 +351,13 @@ CI 触发：PR / nightly / pre-release。
 - ESLint 规则集启用 `exhaustive-deps` / `no-restricted-imports` / `import/order` / `no-console`。
 - `pnpm test` 不依赖 `--forceExit` 也能干净退出。
 - Pre-commit hook 与 PR CI 4 项门禁就位。
+
+## 门禁三档：Full（默认）/ Fast / Changed
+
+| 档位         | 命令                       | 内容                                                            |
+| ------------ | -------------------------- | --------------------------------------------------------------- |
+| Full（默认） | `pnpm quality:check`       | 门禁自检 + typecheck + lint + 卫生 + 日志目录 + 覆盖率 + format |
+| Fast         | `pnpm verify:push`         | 去掉覆盖率，保留静态检查 / 单测 / format                        |
+| Changed      | `pnpm verify:push:changed` | 只跑门禁自检 + typecheck + lint                                 |
+
+允许临时把 pre-push 降档，但本次实施完成前必须手动跑一次 `pnpm quality:check` 并确认通过；交付以 Full 为准。

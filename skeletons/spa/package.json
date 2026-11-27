@@ -54,7 +54,9 @@
     "test:a11y": "playwright test",
     "test:architecture": "vitest run src/test/architecture",
     "test:watch": "vitest",
-    "typecheck": "tsc -b --pretty false"
+    "typecheck": "tsc -b --pretty false",
+    "verify:push": "pnpm check:gates && pnpm typecheck && pnpm lint && pnpm check:hygiene && pnpm check:security && pnpm check:seo && pnpm check:ui && pnpm check:logs && pnpm check:error-codes && pnpm check:i18n && pnpm check:a11y && pnpm mock:check && pnpm check:contract && pnpm test && pnpm format:check",
+    "verify:push:changed": "node scripts/check-changed.mjs --base @{push}"
   },
   "lint-staged": {
     "*.{js,mjs,cjs,ts,mts,cts,tsx}": [

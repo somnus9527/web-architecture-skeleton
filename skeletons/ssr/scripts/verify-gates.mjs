@@ -88,6 +88,16 @@ const scripts = packageJson.scripts ?? {};
 const sourceConfig = readJson('.agents/architecture-source.json');
 const variant = sourceConfig?.variant ?? sourceConfig?.architecture;
 const isWebVariant = variant === 'spa' || variant === 'ssr';
+
+/**
+ * 门禁三档脚本是否齐备：Full（quality:check）/ Fast / Changed。
+ *
+ * @param scripts - package.json scripts。
+ * @returns 三档是否都存在。
+ */
+function hasPushTiers(scripts) {
+  return ['quality:check', 'verify:push', 'verify:push:changed'].every((name) => typeof scripts[name] === 'string');
+}
 const requiredScripts = [
   'typecheck',
   'lint',
@@ -161,11 +171,13 @@ if (isWebVariant) {
   check('commit-msg 调用提交证据检查', /check-commit-evidence/u.test(commitMsg));
 
   const prePush = existsSync(join(ROOT, '.husky/pre-push')) ? readFileSync(join(ROOT, '.husky/pre-push'), 'utf8') : '';
-  check('pre-push 跑与 CI 相同的全量门禁', /quality:check/u.test(prePush));
+  check('pre-push 调用门禁档位', /quality:check|verify:push/u.test(prePush));
+  check('存在 Full / Fast / Changed 三档脚本', hasPushTiers(scripts));
   check('quality:check 串联安全扫描', /check:security/u.test(scripts['quality:check'] ?? ''));
 } else {
   const prePush = existsSync(join(ROOT, '.husky/pre-push')) ? readFileSync(join(ROOT, '.husky/pre-push'), 'utf8') : '';
-  check('pre-push 跑全量门禁', /quality:check|pnpm check/u.test(prePush));
+  check('pre-push 调用门禁档位', /quality:check|verify:push|pnpm check/u.test(prePush));
+  check('存在 Full / Fast / Changed 三档脚本', hasPushTiers(scripts));
 }
 
 const gateConfig = readJson('.repo-gates.json') ?? {};

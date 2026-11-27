@@ -32,7 +32,9 @@
     "build:mock": "node --env-file=env/.env.mock scripts/build-env.mjs",
     "build:staging": "node --env-file=env/.env.staging scripts/build-env.mjs",
     "build:test": "node --env-file=env/.env.test scripts/build-env.mjs",
-    "build:production": "node --env-file=env/.env.production scripts/build-env.mjs"
+    "build:production": "node --env-file=env/.env.production scripts/build-env.mjs",
+    "verify:push": "pnpm check:gates && pnpm typecheck && pnpm lint && pnpm check:hygiene && pnpm check:logs && pnpm test && pnpm format:check",
+    "verify:push:changed": "pnpm check:gates && pnpm typecheck && pnpm lint"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^3.1.1",
