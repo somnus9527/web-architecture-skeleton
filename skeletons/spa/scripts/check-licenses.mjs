@@ -16,14 +16,13 @@
 import { Buffer } from 'node:buffer';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import process from 'node:process';
 
 const POLICY_PATH = '.license-policy.json';
 const DEFAULT_NOTICE_FILE = 'THIRD_PARTY_NOTICES.md';
 const NOTICE_SIZE_LIMIT = 280_000;
-const LICENSE_FILE_PATTERN = /^(?:licen[cs]e|copying|copyright)(?:\.(?:md|txt|markdown))?$/iu;
 
 /**
  * 读取命令行参数。
@@ -144,6 +143,44 @@ function findReviewedProblem(entry) {
 }
 
 /**
+ * 在包目录里按大小写不敏感匹配许可证文件。
+ *
+ * 必须列目录再匹配：macOS 文件系统大小写不敏感，直接 `existsSync('LICENSE')` 能读到 `license`，
+ * 而 Linux CI 读不到——同一份代码会生成两份声明，门禁在本地通过、在 CI 失败。先按标准名匹配，
+ * 匹配不到再收 `LICENSE-MIT`、`license.md`、`CopyrightNotice.txt` 这类变体。
+ *
+ * @param directory - 包目录。
+ * @returns 许可证文件路径；没有时返回 undefined。
+ */
+function findLicenseFile(directory) {
+  let files;
+
+  try {
+    files = readdirSync(directory, { withFileTypes: true })
+      .filter((entry) => entry.isFile())
+      .map((entry) => entry.name);
+  } catch {
+    return undefined;
+  }
+
+  const canonical = ['LICENSE', 'LICENSE.md', 'LICENSE.txt', 'LICENCE', 'COPYING', 'COPYING.md'];
+
+  for (const target of canonical) {
+    const hit = files.find((name) => name.toLowerCase() === target.toLowerCase());
+
+    if (hit) {
+      return join(directory, hit);
+    }
+  }
+
+  const variants = files
+    .filter((name) => /^(?:licen[cs]e|copying|copyright)(?:[.\-_][^/]*)?$/iu.test(name))
+    .sort((left, right) => left.localeCompare(right));
+
+  return variants.length > 0 ? join(directory, variants[0]) : undefined;
+}
+
+/**
  * 读取某个包自带的许可证全文。
  *
  * @param pathsByVersion - pnpm 提供的安装路径列表。
@@ -155,12 +192,10 @@ function readLicenseText(pathsByVersion) {
       continue;
     }
 
-    for (const file of ['LICENSE', 'LICENSE.md', 'LICENSE.txt', 'LICENCE', 'COPYING', 'COPYING.md']) {
-      const candidate = join(directory, file);
+    const file = findLicenseFile(directory);
 
-      if (existsSync(candidate) && LICENSE_FILE_PATTERN.test(file)) {
-        return readFileSync(candidate, 'utf8').trim();
-      }
+    if (file) {
+      return readFileSync(file, 'utf8').trim();
     }
   }
 

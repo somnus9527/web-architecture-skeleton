@@ -1225,3 +1225,14 @@ Dependabot/renovate 跟踪。SPA/SSR 的骨架内 CI（派生项目用）同步�
 | SRI 负向探针                       | 未登记 → 失败；补登记 + integrity/crossorigin 一致 → 通过；缺 `crossorigin` → 失败；条目过期 → 失败                            |
 | 许可证负向探针                     | 声明文件被改 → 失败；MIT 移入 deny → 75 个包报「命中禁止许可」；MIT 移入 review 未登记 → 75 个包报「需要人工复核」；恢复后通过 |
 | 构建                               | `build:prod` 会把声明写入 `dist/` 与 `.next/standalone/`                                                                       |
+
+### 25.5 跨平台一致性（首轮 CI 失败的根因）
+
+首个提交在 CI 上失败，本地却全绿：macOS 文件系统大小写不敏感，`existsSync('LICENSE')` 能读到小写的
+`license`；Linux CI 大小写敏感，读不到，于是同一份代码生成两份声明——本地最新、CI 判定「已过期」。
+
+修法是列目录后按大小写不敏感匹配：先按标准名（`LICENSE` / `LICENSE.md` / …）比对，匹配不到再收
+`LICENSE-MIT`、`license.md`、`CopyrightNotice.txt` 这类变体。已在真实大小写敏感的 Linux 容器里验证：
+macOS 与 Linux 生成的声明逐字节一致，两端自检都通过。
+
+结论写进规则：**生成物必须跨平台确定**，不要依赖大小写不敏感的文件系统，也不要把「本地能过」当成门禁成立。
