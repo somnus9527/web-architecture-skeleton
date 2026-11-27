@@ -28,7 +28,10 @@ function fail(message) {
   failures.push(message);
 }
 
-const EVENTS_FILE = 'src/shared/observability/events.ts';
+// 事件目录位置按变体选择：Web 变体在 shared/observability，RN 在 api/observability。
+const EVENTS_FILE_CANDIDATES = ['src/shared/observability/events.ts', 'src/api/observability/events.ts'];
+const EVENTS_FILE =
+  EVENTS_FILE_CANDIDATES.find((candidate) => existsSync(join(process.cwd(), candidate))) ?? EVENTS_FILE_CANDIDATES[0];
 const EVENT_NAME_PATTERN = /^[a-z0-9]+(?:\.[a-z0-9]+(?:_[a-z0-9]+)*)+$/u;
 
 /**
@@ -55,6 +58,7 @@ const LOGGER_FILES = new Set([
   'src/shared/services/logger.ts',
   'src/shared/logger/client-logger.ts',
   'src/bff/shared/logger/server-logger.ts',
+  'src/api/logger.ts',
 ]);
 const PII_PATTERN = /\b(?:password|passwd|token|authorization|cookie|email|phone|idCard|bankCard)\b/iu;
 

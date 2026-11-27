@@ -75,6 +75,7 @@ pnpm lint           # eslint，含 I 前缀 interface、no-console、no-restrict
 pnpm test           # jest + jest-expo + @testing-library/react-native
 pnpm format:check
 pnpm check:hygiene  # 仓库卫生：env、密钥、体积、包管理器混用
+pnpm check:logs     # 日志事件目录：dot.case + 必须登记
 pnpm check:gates    # 门禁自检：脚本、CI、架构测试、变体绑定
 pnpm quality:check  # 一键跑完全部门禁
 ```

@@ -1,3 +1,5 @@
+import type { LogEventName } from '@api/observability/events';
+
 /**
  * 日志级别。
  */
@@ -18,13 +20,13 @@ export interface IErrorReporter {
  */
 export interface ILogger {
   /** 调试日志，仅 dev 输出。 */
-  debug(event: string, payload?: Record<string, unknown>): void;
+  debug(event: LogEventName, payload?: Record<string, unknown>): void;
   /** 信息日志，仅 dev 输出。 */
-  info(event: string, payload?: Record<string, unknown>): void;
+  info(event: LogEventName, payload?: Record<string, unknown>): void;
   /** 警告日志，dev 输出并上报。 */
-  warn(event: string, payload?: Record<string, unknown>): void;
+  warn(event: LogEventName, payload?: Record<string, unknown>): void;
   /** 错误日志，dev 输出并上报。 */
-  error(event: string, payload?: Record<string, unknown>): void;
+  error(event: LogEventName, payload?: Record<string, unknown>): void;
 }
 
 /**

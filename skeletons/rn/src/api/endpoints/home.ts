@@ -2,6 +2,7 @@ import { getJson } from '@api/client';
 import type { ApiHelperOptions } from '@api/client';
 import { ApiError } from '@api/errors';
 import { logger } from '@api/logger';
+import { LOG_EVENTS } from '@api/observability/events';
 import type { JavaApiEnvelope } from '@domain/contracts/envelope';
 import type { IHomeSummary } from '@domain/contracts/home';
 
@@ -25,7 +26,7 @@ const SUCCESS_CODE = '200';
  */
 function unwrapEnvelope<TData>(envelope: JavaApiEnvelope<TData>): TData {
   if (envelope.code !== SUCCESS_CODE) {
-    logger.warn('home_envelope_rejected', { code: envelope.code });
+    logger.warn(LOG_EVENTS.HOME_ENVELOPE_REJECTED, { code: envelope.code });
     throw new ApiError(envelope.codeMsg ?? 'Business error', 200, envelope);
   }
 

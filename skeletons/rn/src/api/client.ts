@@ -1,6 +1,7 @@
 import { readApiConfig } from '@api/config';
 import { ApiError } from '@api/errors';
 import { logger, previewResponseText } from '@api/logger';
+import { LOG_EVENTS } from '@api/observability/events';
 
 /**
  * 支持的 HTTP 方法。
@@ -115,7 +116,7 @@ async function sendJson<TResponse>(
   const fetchImpl = resolveFetch(options.fetchImpl);
 
   try {
-    logger.debug('api_request', { method, url });
+    logger.debug(LOG_EVENTS.API_REQUEST, { method, url });
 
     const response = await fetchImpl(url, {
       body: body === undefined ? undefined : JSON.stringify(body),
@@ -124,7 +125,7 @@ async function sendJson<TResponse>(
     });
     const text = await response.text();
 
-    logger.debug('api_response', {
+    logger.debug(LOG_EVENTS.API_RESPONSE, {
       method,
       preview: previewResponseText(text),
       status: response.status,
@@ -141,7 +142,7 @@ async function sendJson<TResponse>(
   } catch (error) {
     if (error instanceof ApiError) throw error;
 
-    logger.warn('api_error', { error, method, url });
+    logger.warn(LOG_EVENTS.API_ERROR, { error, method, url });
     throw new ApiError('Network error', 0, error);
   }
 }

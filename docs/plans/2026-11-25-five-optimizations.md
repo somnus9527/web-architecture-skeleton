@@ -1324,3 +1324,38 @@ macOS 与 Linux 生成的声明逐字节一致，两端自检都通过。
 
 正向验证：SPA 24 个测试文件 / 67 用例、SSR 37 / 171 全部通过；两端 typecheck、lint、`check:logs`、
 `check:error-codes` 通过。日志字段值 `binary` 不是错误码，已在生成器里显式豁免并注明原因。
+
+## 27. 第七批：RN 事件名目录（2026-11-27）
+
+补齐最后一段不一致：RN 之前用 `snake_case`（`api_request`、`api_error`、`home_envelope_rejected`），
+且没有日志门禁。本批把三端事件命名彻底对齐到 `dot.case` + 目录。
+
+### 27.1 落地内容
+
+| 项   | 内容                                                                                                                        |
+| ---- | --------------------------------------------------------------------------------------------------------------------------- |
+| 目录 | `src/api/observability/events.ts`：`api.request` / `api.response` / `api.error` / `home.envelope.rejected`                  |
+| 类型 | `ILogger` 四个方法的首参收紧为 `LogEventName`                                                                               |
+| 迁移 | `src/api/client.ts`（3 处）、`src/api/endpoints/home.ts`（1 处）改为 `LOG_EVENTS.*`                                         |
+| 门禁 | `check-logging.mjs` 支持 RN：事件目录候选路径增加 `src/api/observability/events.ts`，logger 白名单加入 `src/api/logger.ts`  |
+| 接线 | RN `package.json` 增加 `check:logs`，`quality:check` 与 `ci.yml` 都串上；`manifests/rn.json` 的 `projectScripts` 增加该脚本 |
+
+`check-logging` 的 SPA/SSR 专属检查（Terser `drop_console`、Next `removeConsole`）按文件存在性跳过，
+RN 只跑「裸 console + 事件目录 + dot.case + PII」四项。
+
+### 27.2 验证
+
+| 项                   | 结果                                                                           |
+| -------------------- | ------------------------------------------------------------------------------ |
+| RN `pnpm check:logs` | 通过（事件目录 4 个，标量检查通过）                                            |
+| RN `quality:check`   | 通过（31/31 门禁、16 套 76 用例、覆盖率达标、format 通过）                     |
+| 负向探针             | 未登记事件名、`Bad Name Here`、`LOG_EVENTS.NOT_DEFINED` → 5 项失败，恢复后通过 |
+| 仓库级               | toolchain、doc-links、init-smoke、workspace、materialize 幂等                  |
+
+### 27.3 三端最终口径
+
+| 变体 | 目录文件                             | 事件数 | 错误码目录                         |
+| ---- | ------------------------------------ | ------ | ---------------------------------- |
+| SPA  | `src/shared/observability/events.ts` | 12     | `src/shared/errors/codes.ts`（4）  |
+| SSR  | `src/shared/observability/events.ts` | 20     | `src/shared/errors/codes.ts`（14） |
+| RN   | `src/api/observability/events.ts`    | 4      | 暂不做（无 HTTP 信封错误码体系）   |

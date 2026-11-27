@@ -212,10 +212,19 @@ logger 内部已设计为同时支持三条输出路径，互不冲突：
 | `warn`  | 业务异常但已 fallback | ✓   | ✓    | ✓    |
 | `error` | 真实错误              | ✓   | ✓    | ✓    |
 
+## 事件名目录
+
+事件名统一 `dot.case`，并集中登记在 `src/api/observability/events.ts` 的 `LOG_EVENTS`：
+
+- 调用侧写 `logger.warn(LOG_EVENTS.API_ERROR, { ... })`，不要直接写字符串字面量；
+- `ILogger` 的首参类型是 `LogEventName`，写错或漏登记会在 `pnpm typecheck` 阶段失败；
+- `pnpm check:logs`（`scripts/check-logging.mjs`）再校验一次「引用必须在目录里 / 字面量必须登记且符合命名」；
+- 名字一旦发布就是上报平台（Sentry / Crashlytics）与看板的契约，改名要同步告警规则。
+
 ## 完成检查
 
 - 业务代码 0 处直接 `console.*`。
-- 所有 `logger.*` 调用走 `@api/logger` 模块。
+- 所有 `logger.*` 调用走 `@api/logger` 模块，事件名来自 `LOG_EVENTS`。
 - 敏感字段在 logger 与响应预览中 redact。
 - ErrorBoundary 与关键 catch 调 `logger.error`。
 - 测试覆盖 redaction、dev gate、reporter 注入路径。

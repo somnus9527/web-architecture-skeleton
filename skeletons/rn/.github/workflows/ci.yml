@@ -37,6 +37,9 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+      - name: Logging boundary
+        run: pnpm check:logs
+
       - name: Format
         run: pnpm format:check
 
