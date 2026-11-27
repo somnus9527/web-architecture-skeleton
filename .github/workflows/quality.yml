@@ -87,3 +87,40 @@ jobs:
       - name: Quality gate
         working-directory: skeletons/${{ matrix.variant }}
         run: ${{ matrix.gate }}
+
+  a11y:
+    name: ${{ matrix.variant }} a11y
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [spa, ssr]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          package_json_file: skeletons/${{ matrix.variant }}/package.json
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: skeletons/${{ matrix.variant }}/.nvmrc
+          cache: pnpm
+          cache-dependency-path: skeletons/${{ matrix.variant }}/pnpm-lock.yaml
+
+      - name: Install dependencies
+        working-directory: skeletons/${{ matrix.variant }}
+        run: pnpm install --frozen-lockfile
+
+      # 浏览器只在 a11y job 里装：quality 矩阵不背这 100 MB 和安装时间。
+      - name: Install Chromium
+        working-directory: skeletons/${{ matrix.variant }}
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Accessibility (axe, serious/critical must be zero)
+        working-directory: skeletons/${{ matrix.variant }}
+        run: pnpm test:a11y

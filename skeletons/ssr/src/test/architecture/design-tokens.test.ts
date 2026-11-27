@@ -35,6 +35,11 @@ describe('design tokens', () => {
     expect(light['--color-danger']).toBe(designTokens.light.danger);
     expect(light['--color-success']).toBe(designTokens.light.success);
     expect(light['--color-warning']).toBe(designTokens.light.warning);
+    expect(light['--color-info']).toBe(designTokens.light.info);
+    expect(light['--color-success-strong']).toBe(designTokens.light.successStrong);
+    expect(light['--color-warning-strong']).toBe(designTokens.light.warningStrong);
+    expect(light['--color-danger-strong']).toBe(designTokens.light.dangerStrong);
+    expect(light['--color-info-strong']).toBe(designTokens.light.infoStrong);
   });
 
   it('keeps dark color variables in sync with the TS source', () => {
@@ -43,5 +48,9 @@ describe('design tokens', () => {
     expect(dark['--color-surface']).toBe(designTokens.dark.surface);
     expect(dark['--color-text']).toBe(designTokens.dark.text);
     expect(dark['--color-border']).toBe(designTokens.dark.border);
+    expect(dark['--color-success-strong']).toBe(designTokens.dark.successStrong);
+    expect(dark['--color-warning-strong']).toBe(designTokens.dark.warningStrong);
+    expect(dark['--color-danger-strong']).toBe(designTokens.dark.dangerStrong);
+    expect(dark['--color-info-strong']).toBe(designTokens.dark.infoStrong);
   });
 });

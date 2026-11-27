@@ -4,7 +4,7 @@
   "app.badge": "SPA Scaffold",
   "app.updated": "Local mock data",
   "auth.login.title": "Sign in",
-  "auth.login.subtitle": "Sign in with your business account. The token is persisted to browser storage so a refresh keeps the session.",
+  "auth.login.subtitle": "Sign in with your business account. The session lives in an HttpOnly cookie, so a refresh keeps you signed in.",
   "auth.login.username": "Account",
   "auth.login.password": "Password",
   "auth.login.submit": "Sign in",

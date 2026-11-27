@@ -81,3 +81,24 @@ Node 与 pnpm 的版本各自只有一个权威来源,不允许在 CI 里再写�
 - 执行入口是 `pnpm test:coverage`，已接进 `quality:check` 与 CI 的 Test 步骤；pre-push 的增量检查不带覆盖率，
   避免每次推送都多跑一遍全量统计。
 - 覆盖率只证明「这行被执行过」，不证明断言有效；它不能替代 `check:architecture` 的静态边界检查。
+
+## 无障碍测试
+
+无障碍分三层，各管一段，缺一层就有盲区：
+
+| 层         | 载体                                  | 管什么                                                   | 失败条件                |
+| ---------- | ------------------------------------- | -------------------------------------------------------- | ----------------------- |
+| 编辑器     | `eslint-plugin-jsx-a11y`              | 角色、标签、alt 等静态写法                               | lint 报错               |
+| 提交期     | `pnpm check:a11y`（`check-a11y.mjs`） | 图标按钮可访问名、`onClick` 挂在非交互元素、`img` 缺 alt | 扫描命中                |
+| 真实浏览器 | `pnpm test:a11y`（Playwright + axe）  | 布局相关的对比度、可访问名、ARIA 结构                    | serious / critical 违规 |
+
+真实浏览器层的约定：
+
+- 只拦 `serious` / `critical`；`moderate` / `minor` 写进测试标注但不阻塞，避免样式迭代期长期红灯。
+- 共享原语由夹具 `src/test/a11y/harness.tsx`（入口 `a11y.html`）统一渲染；**新增 `src/shared/ui/*.tsx`
+  必须同步进夹具**，否则 `src/test/a11y/harness-coverage.test.ts` 失败。夹具不得被应用代码 import。
+- 夹具不参与生产构建：Vite 只把 `index.html` 作为入口，`a11y.html` 不会被 `build` 收录。
+- 该层不进 `quality:check`、也不进 pre-commit / pre-push：它需要下载 Chromium，只在 CI 的 a11y job 与
+  本地手动执行。派生项目如果确实没有 Web UI，可以整组移除并在 ADR 说明。
+- 发现对比度问题先改 token（`src/shared/theme/tokens.css`）而不是在组件里写死色值；小字号语义色用
+  `--color-*-strong`，tinted 背景上的正文才有 AA 余量。

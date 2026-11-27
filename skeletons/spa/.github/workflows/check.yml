@@ -74,6 +74,12 @@ jobs:
       - name: Build production assets
         run: pnpm build:prod
 
+      - name: Install Playwright browser
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Accessibility (axe)
+        run: pnpm test:a11y
+
       - name: Validate production assets and reload entrypoint
         run: |
           test -f dist/index.html

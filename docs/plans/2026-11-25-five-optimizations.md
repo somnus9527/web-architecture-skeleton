@@ -604,7 +604,8 @@ node tools/check-init-smoke.mjs
 - P2 覆盖率门槛：已在 §23 落地（三端都接了 `test:coverage`，阈值按实测值下浮 2 个点）。
 - RN 架构测试：已在 §23 落地（`file-split-boundary`、`button-action-state-boundary`、`expo-app-identity`、`expo-app-assets`）。
 - SPA 包体：已在 §23 落地（入口 chunk 594 kB → 340 kB，React 运行时独立成 vendor chunk）。
-- 仍未做：SRI/许可证检查、错误码/事件名目录化、axe 组件级测试、暗色模式与视觉回归、RN `android/`/`ios/` prebuild。
+- 仍未做：SRI/许可证检查、错误码/事件名目录化、暗色模式与视觉回归、RN `android/`/`ios/` prebuild。
+- axe 真实浏览器层：已在 §24 落地（Playwright + axe，SPA 组件夹具 + 登录页，SSR 公开页）。
 - Phase 2：复用体系按 2026-11-26 决策暂缓。
 
 ## 13. 鉴权接口：为什么需要 `/auth/session`
@@ -1119,3 +1120,55 @@ Dependabot/renovate 跟踪。SPA/SSR 的骨架内 CI（派生项目用）同步�
 | SPA `build:prod`               | 入口 339.86 kB、`vendor-react` 308.42 kB，无大 chunk 告警    |
 | 负向探针                       | 6 组（行数×3、按钮状态、标识不一致、资源缺失）全部按预期失败 |
 | 文档                           | `materialize` 幂等，新增两条规则已下发到各变体               |
+
+## 24. 第四批实施记录：axe 真实浏览器无障碍（2026-11-26）
+
+此前 axe 一直没做，理由成立但结论不完整：jsdom 里跑 axe 算不出布局与对比度，结论不可信。这一批补的是
+**真实 Chromium 里的 axe**，而不是把 jsdom 版塞进单测假装有门禁。
+
+### 24.1 分层与边界
+
+| 层     | 载体                                                    | 管什么                                                 |
+| ------ | ------------------------------------------------------- | ------------------------------------------------------ |
+| 编辑器 | `eslint-plugin-jsx-a11y`                                | 角色、标签、alt 等静态写法                             |
+| 提交期 | `check-a11y.mjs`                                        | 图标按钮可访问名、非交互元素挂 `onClick`、`img` 缺 alt |
+| 浏览器 | `pnpm test:a11y`（Playwright + `@axe-core/playwright`） | 布局相关对比度、可访问名、ARIA 结构                    |
+
+- 只拦 `serious` / `critical`；`moderate` / `minor` 进测试标注不阻塞，「读不出来 / 点不到」类问题必须为零。
+- 不进 `quality:check`、不进 pre-commit / pre-push：Chromium 有下载成本，只在 CI 的 a11y job 与本地手动跑。
+- 共享原语只测一份：SPA 夹具覆盖 `src/shared/ui/**` 全部 9 个 primitive，SSR 复用同一份物化代码，因此 SSR 只测
+  自己的公开页，不再重复搭组件夹具。
+- 夹具入口是 `a11y.html`，Vite 生产构建只收 `index.html`，夹具不会进产物；`harness-coverage.test.ts` 守两件事：
+  新增共享组件必须进夹具、夹具不得被应用源码 import。
+
+### 24.2 axe 直接抓到两个真问题
+
+| 问题                                    | 实测对比度                                         | 修法                                                                                       |
+| --------------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `--color-text-muted` 在 `--color-bg` 上 | `#64748b` on `#f6f7f9` = **4.44:1**（AA 要求 4.5） | 浅色主题 muted 改为 `#5b6b80`（5.08:1），深色主题不变                                      |
+| 状态胶囊四个语义色直接当文字色          | success `#059669` on 10% tint = **3.13:1**         | 新增 `--color-{success,warning,danger,info}-strong`（浅/深两套），胶囊文字改用 strong 变体 |
+
+这两条都是纯 CSS/token 问题，jsdom 永远测不出来——也正是当初拒绝 jsdom axe 的理由。
+
+顺带修掉一处内容与实现矛盾：SPA 登录副标题原文写「登录成功后 token 持久化在浏览器存储」，与 HttpOnly cookie
+迁移后的实现相反，已改为「会话保存在 HttpOnly cookie」（中英两版）。
+
+### 24.3 落地细节
+
+- SPA：`playwright.config.ts` + `a11y.html` + `src/test/a11y/harness.tsx` + `e2e/a11y/{components,login}.a11y.ts`；
+  用 `vite --mode mock` 起服务，不需要 Prism（登录页不发请求）。
+- SSR：`playwright.config.ts` + `e2e/a11y/pages.a11y.ts`，用 `PORT=9401 pnpm dev:mock` 起 Prism + Next；
+  选 9401 而不是 `.env.mock` 的 9001，因为本机 9001 常被 MinIO 容器占用（本轮就撞上了）。
+- CI：仓库 `quality.yml` 新增 `a11y` job（matrix spa/ssr，单独装 Chromium）；两个 skeleton 的 `check.yml` 也各加
+  同两步，派生项目沿用。浏览器安装只在 a11y 步骤，不摊到 quality 矩阵。
+- `@playwright/test`、`@axe-core/playwright` 均为 devDependency；`.gitignore` 忽略 `test-results/`、
+  `playwright-report/`、`blob-report/`。
+
+### 24.4 验证
+
+| 项                   | 结果                                                                            |
+| -------------------- | ------------------------------------------------------------------------------- |
+| SPA `pnpm test:a11y` | 3 passed（夹具 + 输入可访问名 + 登录页）                                        |
+| SSR `pnpm test:a11y` | 2 passed（登录页 + `/zh-CN` 首页）                                              |
+| 负向探针             | 夹具插入 `#d6d6d6` 文本后 `color-contrast (serious)` 失败，退出码 1；恢复后通过 |
+| 规则                 | `rules/frontend/quality-tooling.md` 新增「无障碍测试」一节，已物化到各变体      |

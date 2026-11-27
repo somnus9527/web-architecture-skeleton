@@ -194,6 +194,9 @@ importers:
         specifier: ^5.1.0
         version: 5.1.0(@types/react@19.3.0)(react@19.3.1)(use-sync-external-store@1.6.0(react@19.3.1))
     devDependencies:
+      '@axe-core/playwright':
+        specifier: ^4.14.1
+        version: 4.14.1(playwright-core@1.65.1)
       '@commitlint/cli':
         specifier: ^21.2.0
         version: 21.2.4(conventional-commits-parser@7.1.4)(typescript@6.0.3)
@@ -203,6 +206,9 @@ importers:
       '@eslint/js':
         specifier: ^10.0.1
         version: 10.0.1(eslint@10.15.0(jiti@2.7.0)(supports-color@8.1.1))
+      '@playwright/test':
+        specifier: ^1.65.1
+        version: 1.65.1
       '@stoplight/prism-cli':
         specifier: ^5.15.11
         version: 5.15.11(supports-color@8.1.1)
@@ -324,6 +330,12 @@ packages:
 
   '@asamuzakjp/nwsapi@2.3.9':
     resolution: {integrity: sha512-n8GuYSrI9bF7FFZ/SjhwevlHc8xaVlb/7HmHelnc/PZXBD2ZR49NnN9sMMuDdEGPeeRQ5d0hqlSlEpgCX3Wl0Q==}
+
+  '@axe-core/playwright@4.14.1':
+    resolution: {integrity: sha512-cSN1ijrWLnlOof22sPN4RtWGSoPpt7GzOVyOKomyhnPsy1fPNoRdBiJAUziuCRs8KoK50kKufiMUFt7itAuwOg==}
+    engines: {node: '>=22.12.0'}
+    peerDependencies:
+      playwright-core: '>= 1.0.0'
 
   '@babel/code-frame@7.29.7':
     resolution: {integrity: sha512-Aup7aUOfpbAUg2ROOJN6Iw5f9DMBlzu0mIkm/malLQFN/YQgO48wCj0Kxa3sEHJvPVFg7siR+qRInwXd2qhQKw==}
@@ -678,6 +690,11 @@ packages:
 
   '@oxc-project/types@0.133.0':
     resolution: {integrity: sha512-KzkdCd6Uxqnf6l3HOw1xfatAlUURA0g14cvBYFyJ5SaNOQbOUvBr9PKArcPcrNIeRsBdgcUzOGrhKveVpvOIGA==}
+
+  '@playwright/test@1.65.1':
+    resolution: {integrity: sha512-y+NCIRm2LvY4slUVWvGh1nujJ8RF/hEisIsq2mtUPgdQC4L701bq5hZGMhrpeXjACvwvO9tj5dJqhvM6TP9lbw==}
+    engines: {node: '>=20'}
+    hasBin: true
 
   '@rc-component/async-validator@6.0.0':
     resolution: {integrity: sha512-D3AGQwdyE58gmvx6waVSXJ80JGO+IY5L2O8HDnSOex7JNlzB3GuN/4hyHNTdhy2qtOhkpbIjmeAN3tL993wKbA==}
@@ -2784,6 +2801,16 @@ packages:
     resolution: {integrity: sha512-C+VUP+8jis7EsQZIhDYmS5qlNtjv2yP4SNtjXK9AP1ZcTRlnSfuumaTnRfYZnYgUUYVIKqL0fRvmUGDV2fmp6g==}
     engines: {node: '>=4'}
 
+  playwright-core@1.65.1:
+    resolution: {integrity: sha512-hqPpz7blSMPxWVdoeE1yiBSzXsKiVOd2k+kjCvmUywD2GPO2Dd9HfcWnq9NN0GHbNZDFgZ9JfBFr+X5/BLo0qw==}
+    engines: {node: '>=20'}
+    hasBin: true
+
+  playwright@1.65.1:
+    resolution: {integrity: sha512-vJ1FuoOrNwOKHUIVEvSt3jT1L+wjjDpwhwIstKtfvTh8XIG4FG4bIFuvNdMxi81LGfAhUgUZleVFaOLY4RIUUw==}
+    engines: {node: '>=20'}
+    hasBin: true
+
   possible-typed-array-names@1.1.0:
     resolution: {integrity: sha512-/+5VFTchJDoVj3bhoqi6UeymcD00DAwb1nJwamzPvHEszJ4FpF6SNNbUbOS8yI56qHzdV8eK0qEfOSiodkTdxg==}
     engines: {node: '>= 0.4'}
@@ -3615,6 +3642,11 @@ snapshots:
 
   '@asamuzakjp/nwsapi@2.3.9': {}
 
+  '@axe-core/playwright@4.14.1(playwright-core@1.65.1)':
+    dependencies:
+      axe-core: 4.14.1
+      playwright-core: 1.65.1
+
   '@babel/code-frame@7.29.7':
     dependencies:
       '@babel/helper-validator-identifier': 7.29.7
@@ -4004,6 +4036,10 @@ snapshots:
   '@nodable/entities@2.2.0': {}
 
   '@oxc-project/types@0.133.0': {}
+
+  '@playwright/test@1.65.1':
+    dependencies:
+      playwright: 1.65.1
 
   '@rc-component/async-validator@6.0.0':
     dependencies:
@@ -6395,6 +6431,12 @@ snapshots:
     dependencies:
       find-up: 2.1.0
       load-json-file: 4.0.0
+
+  playwright-core@1.65.1: {}
+
+  playwright@1.65.1:
+    dependencies:
+      playwright-core: 1.65.1
 
   possible-typed-array-names@1.1.0: {}
 

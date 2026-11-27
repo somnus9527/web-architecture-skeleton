@@ -7,12 +7,17 @@
   --color-surface: #ffffff;
   --color-surface-muted: #f8fafc;
   --color-text: #0f172a;
-  --color-text-muted: #64748b;
+  --color-text-muted: #5b6b80;
   --color-border: #e2e8f0;
   --color-danger: #dc2626;
   --color-success: #059669;
   --color-warning: #d97706;
   --color-info: #2563eb;
+  /* 浅色底上的小字号语义色：用于 tinted 背景（状态胶囊等），保证 AA 对比度。 */
+  --color-success-strong: #036c4e;
+  --color-warning-strong: #92400e;
+  --color-danger-strong: #991b1b;
+  --color-info-strong: #1e40af;
 
   --space-1: 4px;
   --space-2: 8px;
@@ -57,4 +62,8 @@
   --color-success: #34d399;
   --color-warning: #fbbf24;
   --color-info: #60a5fa;
+  --color-success-strong: #6ee7b7;
+  --color-warning-strong: #fcd34d;
+  --color-danger-strong: #fca5a5;
+  --color-info-strong: #93c5fd;
 }

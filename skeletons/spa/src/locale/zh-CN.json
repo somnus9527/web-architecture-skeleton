@@ -4,7 +4,7 @@
   "app.badge": "SPA Scaffold",
   "app.updated": "本地 mock 数据",
   "auth.login.title": "登录工作台",
-  "auth.login.subtitle": "使用业务账号登录；登录成功后 token 持久化在浏览器存储，刷新页面不会掉登录。",
+  "auth.login.subtitle": "使用业务账号登录；会话保存在 HttpOnly cookie，刷新页面不会掉登录。",
   "auth.login.username": "账号",
   "auth.login.password": "密码",
   "auth.login.submit": "登录",

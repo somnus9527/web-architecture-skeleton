@@ -146,25 +146,25 @@
 .aui-status-pill--success {
   border-color: color-mix(in srgb, var(--color-success) 30%, transparent);
   background: color-mix(in srgb, var(--color-success) 10%, transparent);
-  color: var(--color-success);
+  color: var(--color-success-strong);
 }
 
 .aui-status-pill--warning {
   border-color: color-mix(in srgb, var(--color-warning) 30%, transparent);
   background: color-mix(in srgb, var(--color-warning) 10%, transparent);
-  color: var(--color-warning);
+  color: var(--color-warning-strong);
 }
 
 .aui-status-pill--danger {
   border-color: color-mix(in srgb, var(--color-danger) 30%, transparent);
   background: color-mix(in srgb, var(--color-danger) 10%, transparent);
-  color: var(--color-danger);
+  color: var(--color-danger-strong);
 }
 
 .aui-status-pill--info {
   border-color: color-mix(in srgb, var(--color-info) 30%, transparent);
   background: color-mix(in srgb, var(--color-info) 10%, transparent);
-  color: var(--color-info);
+  color: var(--color-info-strong);
 }
 
 .aui-status-pill--neutral {

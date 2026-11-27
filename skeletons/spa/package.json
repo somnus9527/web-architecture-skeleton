@@ -45,6 +45,7 @@
     "quality:check": "pnpm check:gates && pnpm typecheck && pnpm lint && pnpm check:hygiene && pnpm check:security && pnpm check:seo && pnpm check:ui && pnpm check:logs && pnpm check:i18n && pnpm check:a11y && pnpm mock:check && pnpm check:contract && pnpm test:coverage && pnpm format:check && pnpm build:prod",
     "test:coverage": "vitest run --coverage",
     "test": "vitest run",
+    "test:a11y": "playwright test",
     "test:architecture": "vitest run src/test/architecture",
     "test:watch": "vitest",
     "typecheck": "tsc -b --pretty false"
@@ -70,9 +71,11 @@
     "zustand": "^5.1.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.1",
     "@commitlint/cli": "^21.2.0",
     "@commitlint/config-conventional": "^21.2.0",
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.65.1",
     "@stoplight/prism-cli": "^5.15.11",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",

@@ -48,6 +48,7 @@
     "start:prod": "node .next/standalone/server.js",
     "test:coverage": "vitest run --coverage",
     "test": "vitest run",
+    "test:a11y": "playwright test",
     "typecheck": "tsc -b"
   },
   "lint-staged": {
@@ -75,10 +76,12 @@
   },
   "devDependencies": {
     "@apidevtools/swagger-parser": "^12.1.0",
+    "@axe-core/playwright": "^4.14.1",
     "@commitlint/cli": "^21.2.0",
     "@commitlint/config-conventional": "^21.2.0",
     "@eslint/js": "^10.0.1",
     "@next/eslint-plugin-next": "^16.2.9",
+    "@playwright/test": "^1.65.1",
     "@stoplight/prism-cli": "^5.15.11",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
