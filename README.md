@@ -6,6 +6,7 @@
 ## 结构
 
 ```text
+AGENTS.md        本仓库自身的 Agent 入口：编辑边界、路由与自检
 skeletons/      工程级模板：复制一个目录即得到完整项目
   spa/          Vite + React SPA
   ssr/          Next.js SSR/BFF（固定 BFF-only）
@@ -20,12 +21,12 @@ templates/      文件级模板：单文件 / 单模块骨架
   frontend/     业务模块参考模板
 skills/         initialize-project（spa/ssr/rn/monorepo 统一入口）、sync-architecture-rules
 tools/          materialize、check-init-smoke、check-doc-links、check-toolchain、project/
-manifests/      每个变体消费的规则层、技能与门禁
+manifests/      每个变体消费的规则层与门禁集合
 docs/           本仓库自身的迁移记录、规则归因与审计
 ```
 
 `rules/`、`templates/`、`skills/`、`tools/`、`manifests/` 是源，只在这里编辑；RN 的代码模板刻意放在
-`rules/rn/templates/`：规则里有 45 处引用它们，必须与规则一起交付，不能留在仓库级 `templates/`；
+`rules/rn/templates/`：规则里有 27 处引用它们，必须与规则一起交付，不能留在仓库级 `templates/`；
 `skeletons/<variant>/docs/rules/` 与 `scripts/` 是物化产物，由脚本生成，CI 校验一致。
 
 > 注意 `skeletons/*/scripts/` 的源在 `tools/project/scripts/`（`verify-gates.mjs`、`deploy.sh` 等都在那）。
@@ -36,11 +37,18 @@ docs/           本仓库自身的迁移记录、规则归因与审计
 先安装技能，再由技能调用仓库里的脚手架：
 
 ```bash
-ov skills add <this-repo> --skill initialize-project --skill sync-architecture-rules
+npx skills add somnus9527/web-architecture-skeleton \
+  --skill initialize-project --skill sync-architecture-rules
+
+# 只列出仓库里可装的技能，不安装
+npx skills add somnus9527/web-architecture-skeleton --list
 
 # 由技能完成提问与确认后执行，等价于：
 node tools/scaffold.mjs --type spa --name my-app --target ../my-app
 ```
+
+技能按仓库根 `skills/<name>/SKILL.md` 的标准布局摆放，任何识别该约定的安装器都能装（上面用的是
+[skills](https://skills.sh) CLI：默认装进当前项目，加 `-g` 装到用户目录）。
 
 `--type` 支持 `spa` / `ssr` / `rn` / `monorepo`；monorepo 用 `--apps spa:web,ssr:site` 指定子应用。
 脚手架按最新 tag 拉取模板，完成后自动执行 `pnpm quality:check`（monorepo 为 `pnpm check`）。
@@ -54,7 +62,7 @@ node tools/scaffold.mjs --type spa --name my-app --target ../my-app
 | `skeletons/spa`        | 完整可运行，初始化后通过 `quality:check`                  |
 | `skeletons/ssr`        | 完整可运行，固定 BFF-only，不提供 `next-backend`          |
 | `skeletons/rn`         | 完整可运行，规则与骨架对齐中                              |
-| `rules/`               | 已经抽取为单源，54 份共用/变体规则 + RN 30 份 + 19 份模板 |
+| `rules/`               | 已经抽取为单源，57 份共用/变体规则 + RN 30 份 + 19 份模板 |
 | `skeletons/monorepo`   | 组织骨架：workspace + catalog + 根工具链 + 继承校验       |
 | `templates/`           | 只剩 `frontend/` 业务模块参考模板                         |
 | backend / next-backend | 不再分发；文档不再引用仓库外文件                          |
@@ -63,16 +71,17 @@ node tools/scaffold.mjs --type spa --name my-app --target ../my-app
 
 ## 工具链版本
 
-Node 24（`.nvmrc` + `engines.node` 写 `>=24.0.0 <25`）、pnpm 12.4.1（`package.json` 的
-`packageManager`）。node 与 pnpm 在这两处各自只有一份权威声明：CI 用
-`node-version-file: .nvmrc` 与 `pnpm/action-setup` 的 `package_json_file` 读取，不在 workflow 里
-写死版本；GitHub Action 自身也统一到 node24 运行时（`actions/checkout`、`actions/setup-node`、
+Node 24（各 `skeletons/<变体>/.nvmrc` + `engines.node` 写 `>=24.0.0 <25`）、pnpm 12.4.1（各
+`skeletons/<变体>/package.json` 的 `packageManager`）。node 与 pnpm 在这两处各自只有一份权威声明：
+CI 用 `node-version-file: .nvmrc` 与 `pnpm/action-setup` 的 `package_json_file` 读取，不在 workflow
+里写死版本；GitHub Action 自身也统一到 node24 运行时（`actions/checkout`、`actions/setup-node`、
 `pnpm/action-setup` 均不低于 `v5`）。升级时三处同步改，细则见
 [`rules/frontend/quality-tooling.md`](./rules/frontend/quality-tooling.md)。
 
-新机器与服务器不要裸装 pnpm：跑 `bash scripts/install-toolchain.sh`（只校验加 `--check`），它按
-`.nvmrc` 与 `packageManager` 装精确版本并断言。`npm i -g pnpm` 会跟着漂移的 `latest` tag 走，
-2026-11 在测试服务器上实测装出过 pnpm 7。
+新机器与服务器不要裸装 pnpm：生成后的项目跑 `bash scripts/install-toolchain.sh`（只校验加
+`--check`），它按 `.nvmrc` 与 `packageManager` 装精确版本并断言；`npm i -g pnpm` 会跟着漂移的
+`latest` tag 走。脚本源在 `tools/project/scripts/install-toolchain.sh`，物化到各 skeleton 的
+`scripts/`。
 
 ## 自检
 
@@ -83,7 +92,7 @@ Node 24（`.nvmrc` + `engines.node` 写 `>=24.0.0 <25`）、pnpm 12.4.1（`packa
 node tools/materialize.mjs && git diff --exit-code   # 物化产物与源一致
 node tools/check-doc-links.mjs                       # 文档不引用仓库外/不存在的文件
 node tools/check-toolchain.mjs                       # Node/pnpm 版本与 Action 运行时一致
-node tools/check-init-smoke.mjs                      # 三个变体能初始化且通过门禁自检
+node tools/check-init-smoke.mjs                      # 四个变体能初始化且通过门禁自检
 ```
 
 第一条防止有人手改 `skeletons/*/docs/rules`；第二条防止跨仓库/跨变体死链；第三条防止 Node 与 pnpm

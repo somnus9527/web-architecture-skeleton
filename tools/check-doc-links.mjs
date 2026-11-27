@@ -5,8 +5,8 @@
  * 规则：仓库内 Markdown 的文件引用只能指向当前仓库内真实存在的文件；不允许 `..` 逃出仓库，
  * 也不允许指向不存在的跨变体/跨仓库文档。外部 http(s) 链接不在此检查范围。
  *
- * 检查范围是交付物（skeletons）、技能、模板与仓库文档；rules/ 是源，先经 materialize 生成
- * 交付物后再检查，避免把「物化后才成立的跨层链接」误报。
+ * 检查范围是仓库根 README/AGENTS、交付物（skeletons）、技能、模板与仓库文档；rules/ 是源，先经
+ * materialize 生成交付物后再检查，避免把「物化后才成立的跨层链接」误报。
  *
  * 用法：node tools/check-doc-links.mjs
  */
@@ -90,6 +90,7 @@ function targetExists(absolute) {
 
 const files = [
   join(ROOT, 'README.md'),
+  join(ROOT, 'AGENTS.md'),
   ...SCAN_ROOTS.flatMap((root) => collectMarkdown(join(ROOT, root))),
 ].filter((file) => existsSync(file));
 

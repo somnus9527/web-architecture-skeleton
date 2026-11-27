@@ -10,16 +10,16 @@
 
 ## 2. 关键决策
 
-| 项         | 决定                                                                                                       |
-| ---------- | ---------------------------------------------------------------------------------------------------------- |
-| 暴露技能   | 只有 `initialize-project`（spa/ssr/rn/monorepo 统一入口）与 `sync-architecture-rules`                      |
-| 模板来源   | 远程仓库最新语义化 tag；无 tag 直接失败，不回退 main                                                       |
-| 安装方式   | `ov skills add <repo> --skill initialize-project --skill sync-architecture-rules`；不引入自定义 npx 安装器 |
-| 单应用后端 | 初始化不问，默认 `--no-backend`；后端绑定是后续独立动作                                                    |
-| monorepo   | 先问子应用数量（1–6），再按 `类型:名称` 结构化填写；共享包固定 `types` / `tools` / `ui`                    |
-| 目标目录   | 默认 `./<name>`，允许绝对路径；必须不存在或为空                                                            |
-| 检查失败   | 初始化成功与检查失败分开：退出码 2 表示项目已生成但 `quality:check` 未通过                                 |
-| 失败处理   | 保留目标目录供排查；临时目录与半成品目录清理                                                               |
+| 项         | 决定                                                                                             |
+| ---------- | ------------------------------------------------------------------------------------------------ |
+| 暴露技能   | 只有 `initialize-project`（spa/ssr/rn/monorepo 统一入口）与 `sync-architecture-rules`            |
+| 模板来源   | 远程仓库最新语义化 tag；无 tag 直接失败，不回退 main                                             |
+| 安装方式   | `npx skills add <owner>/<repo> --skill <name>`；标准 `skills/<name>/SKILL.md` 布局，不自造安装器 |
+| 单应用后端 | 初始化不问，默认 `--no-backend`；后端绑定是后续独立动作                                          |
+| monorepo   | 先问子应用数量（1–6），再按 `类型:名称` 结构化填写；共享包固定 `types` / `tools` / `ui`          |
+| 目标目录   | 默认 `./<name>`，允许绝对路径；必须不存在或为空                                                  |
+| 检查失败   | 初始化成功与检查失败分开：退出码 2 表示项目已生成但 `quality:check` 未通过                       |
+| 失败处理   | 保留目标目录供排查；临时目录与半成品目录清理                                                     |
 
 ## 3. 最终结构
 
@@ -39,7 +39,7 @@ tools/
 
 ```bash
 # 安装两个技能
-ov skills add <repo> --skill initialize-project --skill sync-architecture-rules
+npx skills add <owner>/<repo> --skill initialize-project --skill sync-architecture-rules
 
 # 技能内部执行（也可直接调用）
 git clone --depth 1 --branch <tag> <repo> /tmp/wa
