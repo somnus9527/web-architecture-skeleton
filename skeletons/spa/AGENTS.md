@@ -17,11 +17,7 @@
 
 ## Routing
 
-- 用户要求初始化复制后的 SPA 骨架并提供一个 kebab-case 项目名时，使用
-  `.agents/skills/initialize-spa-project/SKILL.md`，并确认 `--backend-root` 或 `--no-backend`，不要手工
-  进行全仓库替换。
-- 用户要求检查或同步上游架构规范时，使用
-  `.agents/skills/sync-architecture-rules/SKILL.md`，不得直接合并骨架分支。
+- 用户要求检查或同步上游架构规范时，使用已安装的 `sync-architecture-rules` 技能，不得直接合并骨架分支。
 - 修改应用结构、路由、Provider 或 feature 分层前，读取 `.agents/spa-project.md`。
 - 修改环境变量、base path、构建或 Nginx 前，读取 `docs/deployment/online-release.md`。
 - 修改 release ID、`version.json` 或自动刷新前，读取 `docs/rules/frontend/frontend-release-refresh.md`。

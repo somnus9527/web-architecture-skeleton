@@ -60,8 +60,7 @@ pnpm --filter @repo/tools typecheck   # 单包窄验证
 在骨架仓库里运行组合初始化，不要手工复制：
 
 ```bash
-node skills/initialize-monorepo-project/scripts/initialize-monorepo-project.mjs \
-  --id acme --target ../acme --app spa:web --app ssr:site
+node tools/scaffold.mjs --type monorepo --name acme --target ../acme --apps spa:web,ssr:site
 ```
 
 它会复制本骨架、逐个把变体骨架装进 `apps/<name>`、剥离应用内的根级配置、按 catalog 改写依赖，

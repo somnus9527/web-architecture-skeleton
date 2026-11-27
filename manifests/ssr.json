@@ -1,12 +1,20 @@
 {
   "variant": "ssr",
   "kind": "project",
-  "ruleLayers": ["shared", "frontend", "ssr"],
+  "ruleLayers": [
+    "shared",
+    "frontend",
+    "ssr"
+  ],
   "substitutions": {
     "mockDir": "mock"
   },
-  "skills": ["initialize-ssr-project", "sync-architecture-rules"],
-  "gates": ["hygiene", "arch-tests", "quality-check", "ci"],
+  "gates": [
+    "hygiene",
+    "arch-tests",
+    "quality-check",
+    "ci"
+  ],
   "mustRead": [
     "frontend/ssr-project-baseline.md",
     "frontend/ssr-frontend-architecture.md",

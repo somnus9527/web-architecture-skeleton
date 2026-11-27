@@ -3,8 +3,17 @@ import { dirname, join, resolve } from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
-const SCRIPT_DIRECTORY = dirname(fileURLToPath(import.meta.url));
-const ROOT_DIRECTORY = resolve(SCRIPT_DIRECTORY, '../../../..');
+/**
+ * 读取 --root 指定的项目目录。
+ *
+ * @returns {string|null} 绝对路径；未指定时返回 null。
+ */
+function readRootArgument() {
+  const index = process.argv.indexOf('--root');
+  return index >= 0 && process.argv[index + 1] ? resolve(process.argv[index + 1]) : null;
+}
+
+const ROOT_DIRECTORY = resolve(readRootArgument() ?? process.cwd());
 const PLACEHOLDER_PROJECT_ID = 'spa-app';
 const PLACEHOLDER_APP_NAME = `${PLACEHOLDER_PROJECT_ID}-web`;
 const RUNTIME_IDENTITY_FILES = [
@@ -70,7 +79,9 @@ function parseArguments() {
 
   for (let index = 0; index < argumentsList.length; index += 1) {
     const argument = argumentsList[index];
-    if (argument === '--dry-run') {
+    if (argument === '--root') {
+      index += 1;
+    } else if (argument === '--dry-run') {
       dryRun = true;
     } else if (argument === '--no-backend') {
       noBackend = true;
@@ -100,7 +111,7 @@ function parseArguments() {
 
   if (projectArguments.length !== 1) {
     throw new Error(
-      '用法: node initialize-spa-project.mjs [--dry-run] [--package-name <name>] (--backend-root <path>|--no-backend) <project-id>',
+      '用法: node tools/init/spa.mjs [--dry-run] [--root <dir>] [--package-name <name>] (--backend-root <path>|--no-backend) <project-id>',
     );
   }
   if (Boolean(backendRoot) === noBackend) {
@@ -322,13 +333,7 @@ function updateAgents(source, values) {
     'AGENTS.md',
   );
 
-  return updated.replace(
-    `- 用户要求初始化复制后的 SPA 骨架并提供一个 kebab-case 项目名时，使用
-  \`.agents/skills/initialize-spa-project/SKILL.md\`，并确认 \`--backend-root\` 或 \`--no-backend\`，不要手工
-  进行全仓库替换。
-`,
-    '',
-  );
+  return updated;
 }
 
 /**

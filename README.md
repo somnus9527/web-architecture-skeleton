@@ -18,7 +18,7 @@ rules/          规则单源，物化进各 skeleton 的 docs/rules/
   rn/           RN 规则，模板同层放在 rules/rn/templates/
 templates/      文件级模板：单文件 / 单模块骨架
   frontend/     业务模块参考模板
-skills/         initialize-{spa,ssr,rn}-project、initialize-monorepo-project、sync-architecture-rules
+skills/         initialize-project（spa/ssr/rn/monorepo 统一入口）、sync-architecture-rules
 tools/          materialize、check-init-smoke、check-doc-links、check-toolchain、project/
 manifests/      每个变体消费的规则层、技能与门禁
 docs/           本仓库自身的迁移记录、规则归因与审计
@@ -26,28 +26,26 @@ docs/           本仓库自身的迁移记录、规则归因与审计
 
 `rules/`、`templates/`、`skills/`、`tools/`、`manifests/` 是源，只在这里编辑；RN 的代码模板刻意放在
 `rules/rn/templates/`：规则里有 45 处引用它们，必须与规则一起交付，不能留在仓库级 `templates/`；
-`skeletons/<variant>/docs/rules/`、`.agents/skills/` 与 `scripts/` 是物化产物，由脚本生成，CI 校验一致。
+`skeletons/<variant>/docs/rules/` 与 `scripts/` 是物化产物，由脚本生成，CI 校验一致。
 
 > 注意 `skeletons/*/scripts/` 的源在 `tools/project/scripts/`（`verify-gates.mjs`、`deploy.sh` 等都在那）。
 > 直接改 `skeletons/*/scripts/` 会被下一次 `materialize` 覆盖回源版本，改完记得重新物化并核 diff。
 
 ## 使用方式
 
-```bash
-git clone <this-repo> skeleton
-cp -R skeleton/skeletons/spa ../my-app
-cd ../my-app
-rm -rf .git
-# 在本项目内运行 initialize-spa-project，完成身份绑定与门禁自检
-```
-
-monorepo 在骨架仓库内组合生成（不需要先复制目录）：
+先安装技能，再由技能调用仓库里的脚手架：
 
 ```bash
-node skills/initialize-monorepo-project/scripts/initialize-monorepo-project.mjs \
-  --id acme --target ../acme --app spa:web --app ssr:site
-cd ../acme && pnpm install && pnpm check
+ov skills add <this-repo> --skill initialize-project --skill sync-architecture-rules
+
+# 由技能完成提问与确认后执行，等价于：
+node tools/scaffold.mjs --type spa --name my-app --target ../my-app
 ```
+
+`--type` 支持 `spa` / `ssr` / `rn` / `monorepo`；monorepo 用 `--apps spa:web,ssr:site` 指定子应用。
+脚手架按最新 tag 拉取模板，完成后自动执行 `pnpm quality:check`（monorepo 为 `pnpm check`）。
+
+维护者本地调试可直接用 `--source <本仓库路径>` 跳过远程拉取。
 
 ## 当前状态
 

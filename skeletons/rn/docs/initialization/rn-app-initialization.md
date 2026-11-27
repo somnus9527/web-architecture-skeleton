@@ -4,7 +4,7 @@
 
 ## 1. 项目身份
 
-- [ ] 执行 `initialize-rn-project`，项目名使用小写 kebab-case
+- [ ] 执行已安装的 `initialize-project` 技能（type=rn），项目名使用小写 kebab-case
 - [ ] `package.json` 的 `name` 已改为项目 ID
 - [ ] `app.json` 的 `expo.name`、`expo.slug`、`expo.scheme` 已与项目一致
 - [ ] `.agents/rn-project.md` 已生成

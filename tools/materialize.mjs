@@ -315,7 +315,9 @@ function materialize(variant) {
 
   const skillTarget = join(ROOT, 'skeletons', variant, '.agents', 'skills');
   rmSync(skillTarget, { recursive: true, force: true });
-  mkdirSync(skillTarget, { recursive: true });
+  if ((manifest.skills ?? []).length > 0) {
+    mkdirSync(skillTarget, { recursive: true });
+  }
 
   for (const skill of manifest.skills ?? []) {
     const source = join(ROOT, 'skills', skill);

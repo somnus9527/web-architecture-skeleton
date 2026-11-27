@@ -3,7 +3,7 @@
  * 初始化 Expo RN 项目骨架。
  *
  * 用法：
- *   node initialize-rn-project.mjs [--dry-run] <project-id>
+ *   node tools/init/rn.mjs [--dry-run] [--root <dir>] <project-id>
  */
 
 import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
@@ -11,8 +11,17 @@ import { dirname, join, resolve } from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
-const SCRIPT_DIRECTORY = dirname(fileURLToPath(import.meta.url));
-const ROOT_DIRECTORY = resolve(SCRIPT_DIRECTORY, '../../../..');
+/**
+ * 读取 --root 指定的项目目录。
+ *
+ * @returns {string|null} 绝对路径；未指定时返回 null。
+ */
+function readRootArgument() {
+  const index = process.argv.indexOf('--root');
+  return index >= 0 && process.argv[index + 1] ? resolve(process.argv[index + 1]) : null;
+}
+
+const ROOT_DIRECTORY = resolve(readRootArgument() ?? process.cwd());
 const PLACEHOLDER_PACKAGE_NAME = 'rn-app';
 const PLACEHOLDER_DISPLAY_NAME = 'RN Application';
 const PLACEHOLDER_SCHEME = 'rnapp';
@@ -26,10 +35,16 @@ const KEBAB_CASE = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u;
 function parseArguments() {
   const arguments_ = process.argv.slice(2);
   const dryRun = arguments_.includes('--dry-run');
-  const positional = arguments_.filter((argument) => !argument.startsWith('--'));
+  const rootIndex = arguments_.indexOf('--root');
+  const positional = arguments_.filter((argument, index) => {
+    if (argument.startsWith('--')) {
+      return false;
+    }
+    return rootIndex < 0 || index !== rootIndex + 1;
+  });
 
   if (positional.length !== 1) {
-    throw new Error('用法: node initialize-rn-project.mjs [--dry-run] <project-id>');
+    throw new Error('用法: node tools/init/rn.mjs [--dry-run] [--root <dir>] <project-id>');
   }
 
   const [projectId] = positional;
@@ -279,13 +294,6 @@ function updateAgents(source, values) {
 - 当前项目是基于 Expo RN 骨架初始化的正式应用，项目 ID 为 \`${values.projectId}\`。
 - 项目绑定见 \`.agents/rn-project.md\`。`;
   let updated = replaceRequired(source, skeletonState, projectState, 'AGENTS.md');
-
-  updated = replaceRequired(
-    updated,
-    `- 初始化项目身份：\`.agents/skills/initialize-rn-project/SKILL.md\`。\n`,
-    '',
-    'AGENTS.md',
-  );
 
   return updated;
 }

@@ -23,11 +23,7 @@
 
 ## Routing
 
-- 用户要求初始化复制后的 SSR 骨架并提供一个 kebab-case 项目名时，使用
-  `.agents/skills/initialize-ssr-project/SKILL.md`，并确认 `--backend-root` 或 `--no-backend`，
-  不要手工进行全仓库替换。
-- 用户要求检查或同步上游架构规范时，使用
-  `.agents/skills/sync-architecture-rules/SKILL.md`，不得直接合并骨架分支。
+- 用户要求检查或同步上游架构规范时，使用已安装的 `sync-architecture-rules` 技能，不得直接合并骨架分支。
 - 修改 `src/app`、RSC、Route Handler、metadata、图片或字体前，读取 SSR routing、SEO 和 UI runtime 规范。
 - 修改公开页语言前缀、`[locale]` 段、hreflang/canonical 或语言解析链前，读取 `docs/rules/frontend/ssr-i18n.md`
   与 `docs/rules/frontend/seo.md`；公开区路由登记的唯一事实源是

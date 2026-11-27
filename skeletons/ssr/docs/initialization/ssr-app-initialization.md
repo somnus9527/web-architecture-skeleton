@@ -1,9 +1,9 @@
 # SSR 应用初始化清单
 
-复制骨架后，先使用 `.agents/skills/initialize-ssr-project/SKILL.md`，输入一个不带 `-web`
-的小写 kebab-case 基础项目名，并通过 `--backend-root` 或 `--no-backend` 明确配套 Java 后端关系。
-skill 会自动派生 package、PM2、日志、cookie、BFF 和版本刷新标识；只有后端地址、正式域名、密钥
-和图片白名单仍需在接入时配置。
+项目由已安装的 `initialize-project` 技能生成（type=ssr），输入一个不带 `-web` 的小写 kebab-case
+基础项目名即可；技能会调用仓库里的 `tools/scaffold.mjs` 完成复制、绑定与门禁自检。
+初始化默认纯前端，配套 Java 后端在初始化后单独绑定。技能会自动派生 package、PM2、日志、cookie、
+BFF 和版本刷新标识；后端地址、正式域名、密钥和图片白名单仍需在接入时配置。
 
 SSR 骨架固定 BFF-only：仍允许 RSC、Route Handler、Server Action 和 HTTP gateway，但禁止当前仓库
 拥有领域、数据库或中间件基础设施，这些能力由配套 Java 后端仓库负责。

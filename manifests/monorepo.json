@@ -8,9 +8,6 @@
     "frontend/monorepo-workspace.md",
     "frontend/quality-tooling.md"
   ],
-  "skills": [
-    "sync-architecture-rules"
-  ],
   "projectScripts": [
     "check-repo-hygiene.mjs"
   ],

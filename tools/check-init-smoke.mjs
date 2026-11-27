@@ -11,7 +11,7 @@
  */
 
 import { execFileSync } from 'node:child_process';
-import { cpSync, existsSync, mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import process from 'node:process';
@@ -29,19 +29,9 @@ const FORBIDDEN_PATTERNS = [
 ];
 
 /**
- * 各变体的初始化参数。
+ * 各变体。
  */
-const VARIANTS = {
-  spa: { script: 'initialize-spa-project/scripts/initialize-spa-project.mjs', args: ['--no-backend', PROJECT_ID] },
-  ssr: {
-    script: 'initialize-ssr-project/scripts/initialize-ssr-project.mjs',
-    args: ['--no-backend', PROJECT_ID],
-  },
-  rn: {
-    script: 'initialize-rn-project/scripts/initialize-rn-project.mjs',
-    args: [PROJECT_ID],
-  },
-};
+const VARIANTS = ['spa', 'ssr', 'rn'];
 
 /**
  * 递归收集 markdown 文件。
@@ -69,34 +59,54 @@ function checkVariant(variant) {
   const config = VARIANTS[variant];
   const failures = [];
   const workdir = mkdtempSync(join(tmpdir(), `skeleton-${variant}-`));
+  const target = join(workdir, PROJECT_ID);
 
   try {
-    cpSync(join(ROOT, 'skeletons', variant), workdir, { recursive: true });
-
-    const script = join(workdir, '.agents', 'skills', config.script);
-    if (!existsSync(script)) {
-      return [`${variant}: 缺少初始化脚本 ${config.script}`];
-    }
-
     try {
-      execFileSync(process.execPath, [script, ...config.args], { cwd: workdir, stdio: 'pipe' });
+      execFileSync(
+        process.execPath,
+        [
+          join(ROOT, 'tools', 'scaffold.mjs'),
+          '--type',
+          variant,
+          '--name',
+          PROJECT_ID,
+          '--target',
+          target,
+          '--source',
+          ROOT,
+          '--no-install',
+          '--no-git',
+          '--skip-check',
+        ],
+        { cwd: ROOT, stdio: 'pipe' },
+      );
     } catch (error) {
       const detail = error instanceof Error ? error.message : String(error);
       return [`${variant}: 初始化失败 ${detail.split('\n')[0]}`];
     }
 
-    for (const file of listMarkdown(workdir)) {
+    if (existsSync(join(target, '.agents', 'skills'))) {
+      failures.push(`${variant}: 生成物不应再携带 .agents/skills`);
+    }
+
+    const source = JSON.parse(readFileSync(join(target, '.agents', 'architecture-source.json'), 'utf8'));
+    if (!source.ref || !source.commit) {
+      failures.push(`${variant}: architecture-source.json 缺少 ref/commit`);
+    }
+
+    for (const file of listMarkdown(target)) {
       const content = readFileSync(file, 'utf8');
       for (const { pattern, reason } of FORBIDDEN_PATTERNS) {
         if (content.includes(pattern)) {
-          failures.push(`${variant}: ${file.slice(workdir.length + 1)} 仍引用 ${pattern}（${reason}）`);
+          failures.push(`${variant}: ${file.slice(target.length + 1)} 仍引用 ${pattern}（${reason}）`);
         }
       }
     }
 
     try {
-      execFileSync(process.execPath, [join(workdir, 'scripts', 'verify-gates.mjs')], {
-        cwd: workdir,
+      execFileSync(process.execPath, [join(target, 'scripts', 'verify-gates.mjs')], {
+        cwd: target,
         stdio: 'pipe',
       });
     } catch {
@@ -123,16 +133,20 @@ function checkMonorepo() {
     execFileSync(
       process.execPath,
       [
-        join(ROOT, 'skills', 'initialize-monorepo-project', 'scripts', 'initialize-monorepo-project.mjs'),
-        '--id',
+        join(ROOT, 'tools', 'scaffold.mjs'),
+        '--type',
+        'monorepo',
+        '--name',
         'smoke-mono',
         '--target',
         target,
-        '--app',
-        'spa:web',
-        '--app',
-        'ssr:site',
+        '--apps',
+        'spa:web,ssr:site',
+        '--source',
+        ROOT,
         '--no-install',
+        '--no-git',
+        '--skip-check',
       ],
       { cwd: ROOT, stdio: 'pipe' },
     );
@@ -193,10 +207,10 @@ function checkMonorepo() {
   }
 }
 
-const failures = [...Object.keys(VARIANTS).flatMap(checkVariant), ...checkMonorepo()];
+const failures = [...VARIANTS.flatMap(checkVariant), ...checkMonorepo()];
 
 if (failures.length === 0) {
-  process.stdout.write(`初始化冒烟测试通过：${Object.keys(VARIANTS).join('、')}、monorepo\n`);
+  process.stdout.write(`初始化冒烟测试通过：${VARIANTS.join('、')}、monorepo\n`);
 } else {
   process.stderr.write(`初始化冒烟测试失败（${failures.length} 项）：\n`);
   for (const failure of failures) {

@@ -2,10 +2,10 @@
 /**
  * 生成 monorepo 项目：复制 workspace 骨架，并把各类型应用骨架装进 apps/<name>。
  *
- * 必须在骨架仓库内运行（需要同时读取 skeletons/monorepo 与 skeletons/<variant>）。
+ * 在骨架仓库内运行（需要同时读取 skeletons/monorepo 与 skeletons/<variant>）。
  *
  * 用法：
- *   node skills/initialize-monorepo-project/scripts/initialize-monorepo-project.mjs \
+ *   node tools/init/monorepo.mjs \
  *     --id acme --target ../acme --app spa:web --app ssr:site [--no-install] [--dry-run]
  */
 
@@ -16,7 +16,7 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
 const SCRIPT_DIRECTORY = dirname(fileURLToPath(import.meta.url));
-const REPOSITORY_ROOT = resolve(SCRIPT_DIRECTORY, '../../..');
+const REPOSITORY_ROOT = resolve(SCRIPT_DIRECTORY, '../..');
 const MONOREPO_SKELETON = join(REPOSITORY_ROOT, 'skeletons', 'monorepo');
 const KEBAB_CASE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
 
@@ -184,19 +184,12 @@ function stripWorkspaceOnlyEntries(appDirectory) {
  * @returns {void}
  */
 function runVariantInitializer(app, appDirectory, projectId, dryRun) {
-  const script = join(
-    appDirectory,
-    '.agents',
-    'skills',
-    `initialize-${app.variant}-project`,
-    'scripts',
-    `initialize-${app.variant}-project.mjs`,
-  );
+  const script = join(REPOSITORY_ROOT, 'tools', 'init', `${app.variant}.mjs`);
   if (!existsSync(script)) {
-    throw new Error(`${app.variant} 骨架缺少初始化脚本：${script}`);
+    throw new Error(`${app.variant} 缺少初始化脚本：${script}`);
   }
 
-  const args = [script];
+  const args = [script, '--root', appDirectory];
   if (dryRun) {
     args.push('--dry-run');
   }
@@ -207,7 +200,7 @@ function runVariantInitializer(app, appDirectory, projectId, dryRun) {
 
   const result = spawnSync(process.execPath, args, { cwd: appDirectory, stdio: 'inherit' });
   if (result.status !== 0) {
-    throw new Error(`initialize-${app.variant}-project 失败：${app.name}`);
+    throw new Error(`${app.variant} 应用初始化失败：${app.name}`);
   }
 }
 
@@ -306,7 +299,10 @@ function normalizeAppManifest(appDirectory) {
 
   for (const [name, script] of Object.entries(manifest.scripts ?? {})) {
     if (typeof script === 'string' && script.includes('prettier')) {
-      manifest.scripts[name] = script.replace(/(?<!ignore-path )\bprettier\b/u, 'prettier --ignore-path ../../.prettierignore');
+      manifest.scripts[name] = script.replace(
+        /(?<!ignore-path )\bprettier\b/u,
+        'prettier --ignore-path ../../.prettierignore',
+      );
     }
   }
 

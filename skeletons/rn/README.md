@@ -20,11 +20,10 @@ scripts/              门禁、卫生、env 初始化脚本
 
 ## 初始化
 
-复制骨架后先跑项目身份初始化，再开始业务开发：
+项目由已安装的 `initialize-project` 技能生成（type=rn），再开始业务开发：
 
 ```bash
-node .agents/skills/initialize-rn-project/scripts/initialize-rn-project.mjs --dry-run <project-id>
-node .agents/skills/initialize-rn-project/scripts/initialize-rn-project.mjs <project-id>
+node tools/scaffold.mjs --type rn --name <project-id> --target ../<project-id>
 ```
 
 它会改写 `package.json` 的 name、`app.json` 的 name / slug / scheme、两份 i18n 的 `app.title`，生成

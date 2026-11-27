@@ -21,8 +21,7 @@
 
 开始任何开发、评审、修复或新功能前，按下表读取相关规则；不要凭历史经验绕过规则。
 
-- 初始化项目身份：`.agents/skills/initialize-rn-project/SKILL.md`。
-- 检查或同步上游架构规范：`.agents/skills/sync-architecture-rules/SKILL.md`，不得直接合并骨架分支。
+- 检查或同步上游架构规范：使用已安装的 `sync-architecture-rules` 技能，不得直接合并骨架分支。
 
 ### 架构基础
 

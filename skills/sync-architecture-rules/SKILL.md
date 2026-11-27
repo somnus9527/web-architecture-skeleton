@@ -1,59 +1,53 @@
 ---
 name: sync-architecture-rules
-description: 检查并同步当前项目对应骨架变体目录中的最新架构规范。用户要求检查、拉取或更新上游 docs/rules 文档时使用；不会合并骨架代码或覆盖项目命名、ADR 和部署文档。
+description: 把上游骨架仓库的最新架构规则同步到当前项目。用户要求检查、拉取或更新 docs/rules 规范时使用；不改项目代码、不合并骨架分支。
 metadata:
-  short-description: 同步上游架构规范
+  short-description: 同步上游架构规则
 ---
 
-# 架构规范同步
+# 同步架构规则
 
 ## 适用场景
 
-用于从当前项目记录的骨架仓库与变体目录同步最新 `docs/rules/**` 规范，例如：
+当前项目由骨架仓库初始化而来，需要检查或拉取上游 `docs/rules/` 的最新规则。
 
-```text
-$sync-architecture-rules
+## 前置
+
+项目根目录必须有 `.agents/architecture-source.json`，至少包含：
+
+```json
+{ "schemaVersion": 2, "variant": "spa", "repository": "<repo>", "ref": "v1.0.0", "commit": "<sha>" }
 ```
 
-也可以直接使用自然语言：
-
-```text
-帮我同步当前项目对应架构的最新规范
-```
+缺少该文件时**停止**，要求用户显式提供 `--repo` 与 `--ref`，不要猜测上游。
 
 ## 执行方式
 
-1. 读取 `.agents/architecture-source.json` 和 `.agents/architecture-rules-lock.json`，不得根据
-   当前业务仓库的 `origin` 猜测规范来源。来源配置使用 `{ schemaVersion: 2, variant, repository, ref }`，
-   上游路径固定为 `skeletons/<variant>/docs/rules/`；不再使用分支名表达变体。
-2. 先执行只读检查：
+1. 读取来源配置，确认 `repository` 与 `ref` 合法（tag 优先，不接受分支名）。
+
+2. 浅克隆对应 ref 到临时目录：
 
    ```bash
-   node .agents/skills/sync-architecture-rules/scripts/sync-architecture-rules.mjs --check
+   git clone --depth 1 --branch <ref> <repository> <tmp>
    ```
 
-3. 用户明确要求拉取、同步或更新，且检查没有冲突时执行：
+3. 先检查差异（默认只读）：
 
    ```bash
-   node .agents/skills/sync-architecture-rules/scripts/sync-architecture-rules.mjs --apply
+   node <tmp>/tools/sync-rules.mjs --root <project> --check
    ```
 
-4. 同步后执行：
+4. 把差异摘要给用户确认；确认后再写入：
 
    ```bash
-   pnpm exec prettier --check docs/rules .agents/architecture-source.json .agents/architecture-rules-lock.json
-   git diff --check
+   node <tmp>/tools/sync-rules.mjs --root <project> --apply
    ```
 
-5. 汇报变体、来源 ref、同步前后的 commit、文件变化、本地修改和冲突。规范更新不代表业务代码
-   已经自动符合新规范，不得顺带修改业务代码。
+5. 写入后重跑一次 `--check`，确认无残留差异；汇报新增/更新/删除的规则文件数与 lock 变化。
 
-## 同步边界
+## 边界
 
-- 只同步上游 `skeletons/<variant>/docs/rules/**/*.md`。
-- 不同步 `docs/rules/shared/project-naming.md`。
-- 不同步 README、AGENTS、`.agents/**`、初始化文档、ADR、部署文档、代码、配置或脚本。
-- 不执行 `git pull`、`git merge`、`git checkout` 或上游仓库中的任何脚本。
-- 本地文件相对上次同步基线有修改，且上游也修改或删除同一文件时，停止应用并报告冲突。
-- 上游新增文件与本地同名文件内容不一致时，停止应用并报告冲突。
-- 不通过全仓库复制或字符串替换同步规范。
+- 只同步 `docs/rules/` 与 `.agents/architecture-rules-lock.json`。
+- 不合并骨架分支、不覆盖项目命名、ADR、部署文档与 `.agents/architecture-source.json`。
+- 冲突不自动解决：保留项目侧内容并逐条报告。
+- 项目侧主动改过的规则文件不静默覆盖，按脚本输出的冲突列表由用户决定。

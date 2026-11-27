@@ -1,7 +1,8 @@
 # SPA 应用初始化清单
 
-复制骨架后，先使用 `.agents/skills/initialize-spa-project/SKILL.md`，输入一个不带 `-web`
-的小写 kebab-case 基础项目名，并通过 `--backend-root` 或 `--no-backend` 明确后端关系。
+项目由已安装的 `initialize-project` 技能生成（type=spa），输入一个不带 `-web` 的小写 kebab-case
+基础项目名即可；技能会调用仓库里的 `tools/scaffold.mjs` 完成复制、绑定与门禁自检。
+初始化默认纯前端，后端绑定是初始化之后的独立动作。
 
 ## 1. 绑定项目身份
 
@@ -9,7 +10,7 @@
 - [ ] 自动派生应用名和 package 为 `<project-id>-web`
 - [ ] 自动派生 base path 为 `/<project-id>/`
 - [ ] 同步 README、AGENTS、locale、HTML title 和版本刷新标识
-- [ ] 有后端时使用 `--backend-root <relative-path>`；纯前端时使用 `--no-backend`
+- [ ] 默认纯前端（`--no-backend`）；后端绑定在初始化后单独处理
 - [ ] `docs/rules/shared/project-naming.md` 已记录 `<backend-root>` 和 `<delivery-doc-root>`；纯前端的
       `<backend-root>` 为 `N/A`，交付文档根为当前仓库 `.`
 

@@ -17,7 +17,7 @@
 - 新增应用前，先确认应用类型（spa / ssr / rn），从骨架仓库取对应骨架，不要手工拼装。
 - 修改 workspace 布局、catalog 或包边界前，读取 `docs/rules/frontend/monorepo-workspace.md`。
 - 修改应用内配置前，先确认该项是否属于必须上提到根的配置（见 README「配置继承」）。
-- 用户要求同步上游规范时，使用 `.agents/skills/sync-architecture-rules/SKILL.md`；workspace 层同步只更新 `docs/rules/`，不会改动应用代码。
+- 用户要求同步上游规范时，使用已安装的 `sync-architecture-rules` 技能；workspace 层同步只更新 `docs/rules/`，不会改动应用代码。
 
 ## Rule references
 

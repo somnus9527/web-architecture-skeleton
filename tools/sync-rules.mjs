@@ -3,14 +3,22 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, lstatSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import process from 'node:process';
-import { fileURLToPath } from 'node:url';
 
-const SCRIPT_DIRECTORY = dirname(fileURLToPath(import.meta.url));
-const ROOT_DIRECTORY = resolve(SCRIPT_DIRECTORY, '../../../..');
+const ROOT_DIRECTORY = resolve(readRootArgument() ?? process.cwd());
 const SOURCE_CONFIG_PATH = '.agents/architecture-source.json';
 const RULES_LOCK_PATH = '.agents/architecture-rules-lock.json';
 const RULES_ROOT = 'docs/rules/';
 const EXCLUDED_RULE_PATHS = new Set(['docs/rules/shared/project-naming.md']);
+
+/**
+ * 读取 --root 指定的项目目录。
+ *
+ * @returns {string|null} 绝对路径；未指定时返回 null。
+ */
+function readRootArgument() {
+  const index = process.argv.indexOf('--root');
+  return index >= 0 && process.argv[index + 1] ? resolve(process.argv[index + 1]) : null;
+}
 
 /**
  * 解析同步模式。直接运行脚本时默认只检查，只有显式 --apply 才会写文件。
@@ -19,14 +27,23 @@ const EXCLUDED_RULE_PATHS = new Set(['docs/rules/shared/project-naming.md']);
  */
 function parseArguments() {
   const argumentsList = process.argv.slice(2);
-  if (argumentsList.length === 0 || (argumentsList.length === 1 && argumentsList[0] === '--check')) {
+  const positional = [];
+  for (let index = 0; index < argumentsList.length; index += 1) {
+    if (argumentsList[index] === '--root') {
+      index += 1;
+      continue;
+    }
+    positional.push(argumentsList[index]);
+  }
+
+  if (positional.length === 0 || (positional.length === 1 && positional[0] === '--check')) {
     return { mode: 'check' };
   }
-  if (argumentsList.length === 1 && argumentsList[0] === '--apply') {
+  if (positional.length === 1 && positional[0] === '--apply') {
     return { mode: 'apply' };
   }
 
-  throw new Error('用法: node sync-architecture-rules.mjs [--check|--apply]');
+  throw new Error('用法: node sync-rules.mjs [--root <dir>] [--check|--apply]');
 }
 
 /**
