@@ -604,7 +604,8 @@ node tools/check-init-smoke.mjs
 - P2 覆盖率门槛：已在 §23 落地（三端都接了 `test:coverage`，阈值按实测值下浮 2 个点）。
 - RN 架构测试：已在 §23 落地（`file-split-boundary`、`button-action-state-boundary`、`expo-app-identity`、`expo-app-assets`）。
 - SPA 包体：已在 §23 落地（入口 chunk 594 kB → 340 kB，React 运行时独立成 vendor chunk）。
-- 仍未做：SRI/许可证检查、错误码/事件名目录化、暗色模式与视觉回归、RN `android/`/`ios/` prebuild。
+- SRI 与许可证门禁：已在 §25 落地（跨源资源登记 + 生产依赖许可策略 + 第三方声明）。
+- 仍未做：错误码/事件名目录化、暗色模式与视觉回归、RN `android/`/`ios/` prebuild。
 - axe 真实浏览器层：已在 §24 落地（Playwright + axe，SPA 组件夹具 + 登录页，SSR 公开页）。
 - Phase 2：复用体系按 2026-11-26 决策暂缓。
 
@@ -1172,3 +1173,55 @@ Dependabot/renovate 跟踪。SPA/SSR 的骨架内 CI（派生项目用）同步�
 | SSR `pnpm test:a11y` | 2 passed（登录页 + `/zh-CN` 首页）                                              |
 | 负向探针             | 夹具插入 `#d6d6d6` 文本后 `color-contrast (serious)` 失败，退出码 1；恢复后通过 |
 | 规则                 | `rules/frontend/quality-tooling.md` 新增「无障碍测试」一节，已物化到各变体      |
+
+## 25. 第五批实施记录：SRI 与许可证门禁（2026-11-27）
+
+两件事同属「产物治理」：SRI 管浏览器凭什么信任加载到的字节，许可证管有没有权把这些字节分发出去。
+
+### 25.1 SRI：只强约束跨源
+
+同一台服务器同时下发 HTML 与 JS 时，SRI 没有安全增益（攻击者能同时改哈希），反而会在 CDN 改写内容时
+把站点打白屏。因此规则是：
+
+- **跨源** `script` / `stylesheet` 必须同时带 `integrity` 与 `crossorigin`，并逐字匹配 `.sri-allowlist.json`；
+- **同源**产物不强制，脚本只统计不报错；
+- 允许项必须写 `reason` / `owner` / `expiresAt`，过期即失败；登记了却没被引用也算失败（防死条目）。
+
+检查分两种扫描口：SPA 扫构建产物 `dist/**/*.html`，SSR 扫源码 `src/**`（SSR 页面是运行时生成，没有静态 HTML
+可扫）。外链写成 `{表达式}` 会直接失败——哈希没法固定。
+
+三方 JS 的完整引入流程（自托管优先、六步登记、CSP 与 CORS 配套、禁止动态注入）写在
+`rules/frontend/frontend-security.md` 的「三方脚本与 SRI」一节。
+
+### 25.2 许可证：只查会进产物的依赖
+
+- 数据源是 `pnpm licenses list --prod --json`；devDependency 不参与判定。
+- 策略在 `.license-policy.json`：`allow` / `review` / `deny`，`review` 必须逐条登记 `reviewed`
+  （负责人 + 理由 + 期限），未知许可与 `deny` 一样直接失败。
+- `OR` 表达式按「任一分支全部满足即通过」处理，所以 `(MPL-2.0 OR Apache-2.0)` 由 Apache 分支放行；
+  `AND` 则要求全部满足。
+
+当前基线（无 GPL/AGPL/SSPL）：
+
+| 变体 | 生产依赖 | 许可分布                                                                              |
+| ---- | -------- | ------------------------------------------------------------------------------------- |
+| SPA  | 77       | MIT 75、ISC 1、MPL-2.0 OR Apache-2.0 1                                                |
+| SSR  | 109      | MIT 95、Apache-2.0 6、BSD-3-Clause 2、ISC 2、OFL-1.1 1、CC-BY-4.0 1、0BSD 1、双许可 1 |
+
+### 25.3 第三方声明
+
+- `pnpm licenses:notice` 生成 `THIRD_PARTY_NOTICES.md`：按许可表达式分组，列表 + 去重后的许可全文
+  （从各包 `LICENSE*` 读取，按内容哈希去重）。
+- `pnpm check:licenses` 会把它与当前依赖树对比，过期即失败；文件体积上限 280 KB（对齐仓库卫生的 300 KB 文本上限）。
+- 构建把同一份声明复制进发布目录：SPA `dist/THIRD_PARTY_NOTICES.md`、SSR `.next/standalone/THIRD_PARTY_NOTICES.md`。
+- 当前体积：SPA 57.8 KB、SSR 132.6 KB（SSR 大是因为 Apache-2.0 与 OFL-1.1 全文）。
+
+### 25.4 验证
+
+| 项                                 | 结果                                                                                                                           |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| SPA `check:licenses` / `check:sri` | 通过（77 个生产依赖；跨源 0 个）                                                                                               |
+| SSR `check:licenses` / `check:sri` | 通过（109 个生产依赖；跨源 0 个）                                                                                              |
+| SRI 负向探针                       | 未登记 → 失败；补登记 + integrity/crossorigin 一致 → 通过；缺 `crossorigin` → 失败；条目过期 → 失败                            |
+| 许可证负向探针                     | 声明文件被改 → 失败；MIT 移入 deny → 75 个包报「命中禁止许可」；MIT 移入 review 未登记 → 75 个包报「需要人工复核」；恢复后通过 |
+| 构建                               | `build:prod` 会把声明写入 `dist/` 与 `.next/standalone/`                                                                       |

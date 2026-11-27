@@ -44,6 +44,9 @@ jobs:
       - name: Security scan
         run: pnpm check:security
 
+      - name: License policy
+        run: pnpm check:licenses
+
       - name: Gate self-check
         run: pnpm check:gates
 
@@ -91,6 +94,9 @@ jobs:
 
       - name: Test
         run: pnpm test:coverage
+
+      - name: SRI policy
+        run: pnpm check:sri
 
       - name: Install Playwright browser
         run: pnpm exec playwright install --with-deps chromium

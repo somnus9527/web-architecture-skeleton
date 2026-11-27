@@ -1,0 +1,19 @@
+{
+  "note": "只约束会进入产物的生产依赖。allow 直接放行；review 必须逐条登记 reviewed（负责人 + 期限）；deny 与未知许可直接失败。",
+  "allow": [
+    "MIT",
+    "ISC",
+    "Apache-2.0",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "0BSD",
+    "CC0-1.0",
+    "Unlicense",
+    "OFL-1.1",
+    "CC-BY-4.0"
+  ],
+  "review": ["MPL-2.0", "LGPL-2.1-only", "LGPL-3.0-only"],
+  "deny": ["GPL-2.0-only", "GPL-3.0-only", "AGPL-3.0-only", "SSPL-1.0"],
+  "reviewed": [],
+  "noticeFile": "THIRD_PARTY_NOTICES.md"
+}

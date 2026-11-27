@@ -73,6 +73,9 @@ pnpm typecheck
 pnpm lint
 pnpm format:check
 pnpm test
+pnpm check:licenses
+pnpm check:sri
+pnpm licenses:notice
 pnpm test:a11y   # 真实 Chromium + axe；首次需 pnpm exec playwright install chromium
 pnpm check
 pnpm build

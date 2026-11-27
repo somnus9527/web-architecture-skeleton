@@ -11,3 +11,6 @@ tsconfig.tsbuildinfo
 
 # 物化产物：格式由 rules/ 源保证
 docs/rules/
+
+# 生成产物：由 pnpm licenses:notice 维护
+THIRD_PARTY_NOTICES.md

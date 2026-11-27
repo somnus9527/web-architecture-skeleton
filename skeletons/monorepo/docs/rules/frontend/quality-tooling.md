@@ -102,3 +102,16 @@ Node 与 pnpm 的版本各自只有一个权威来源,不允许在 CI 里再写�
   本地手动执行。派生项目如果确实没有 Web UI，可以整组移除并在 ADR 说明。
 - 发现对比度问题先改 token（`src/shared/theme/tokens.css`）而不是在组件里写死色值；小字号语义色用
   `--color-*-strong`，tinted 背景上的正文才有 AA 余量。
+
+## 许可证与第三方声明
+
+`pnpm check:licenses` 只读生产依赖（`pnpm licenses list --prod`）：devDependency 不进产物，不参与判定。
+
+- 策略在 `.license-policy.json`：`allow` 放行；`review` 必须逐条登记到 `reviewed`（负责人 + 理由 + 期限）；
+  `deny` 与**未知许可**直接失败，不允许「没有 license 字段」被当成放行。
+- `THIRD_PARTY_NOTICES.md` 由 `pnpm licenses:notice` 生成，禁止手改；`check:licenses` 会校验它与当前依赖树
+  是否一致，过期即失败。
+- 构建把同一份声明复制进发布目录（SPA `dist/`、SSR `.next/standalone/`），随站点分发；仓库根那份供法务核对。
+- 许可证失败时只有两条路：接受就在 `reviewed` 登记，不接受就换包。**不要**把包挪进 devDependency 绕过——
+  某个构建迟早会把 dev 依赖提升为运行时依赖。
+- `OFL-1.1`、`CC-BY-4.0` 这类要求署名的许可已放行，但声明必须真的随产物发布。

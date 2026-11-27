@@ -1,0 +1,4 @@
+{
+  "note": "跨源 script / stylesheet 的唯一登记处。新增外链必须同时：写 integrity、写 crossorigin、CDN 返回 CORS 头、CSP 放行该源。",
+  "allow": []
+}

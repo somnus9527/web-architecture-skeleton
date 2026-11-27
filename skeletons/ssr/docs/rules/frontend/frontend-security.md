@@ -94,6 +94,28 @@ SSR/BFF 专属增量(cache 投毒、出站边界、渲染注入转义、生产�
 
 ---
 
+## 三方脚本与 SRI
+
+**首选自托管**：能用 npm 依赖打进 bundle 的，就不要引跨源脚本。这样 CSP 可以保持 `script-src 'self'`，
+许可证门禁也会自动覆盖它。只有厂商只肯给 CDN SDK 时才走下面的流程。
+
+跨源脚本/样式必须同时满足六条，缺一项 `pnpm check:sri` 就失败：
+
+1. URL 带版本号且不可变：`https://cdn.vendor.com/sdk@1.2.3/sdk.min.js`；禁止 `latest`、无版本别名或带时间戳的地址。
+2. 算 SHA-384：`curl -sSL <url> | openssl dgst -sha384 -binary | openssl base64 -A`，得到 `sha384-...`。
+3. 在 `.sri-allowlist.json` 登记 `url` / `integrity` / `reason` / `owner` / `expiresAt`；外链必须有复核期限。
+4. 标签写全：`<script src="..." integrity="sha384-..." crossorigin="anonymous">`，`integrity` 与清单逐字一致；
+   样式表同理 `<link rel="stylesheet" href="..." integrity="..." crossorigin="anonymous">`。
+5. CSP 放行该源：SPA 改 `nginx.example.conf` 的 `script-src`，SSR 改 `buildContentSecurityPolicy()`；
+   同时确认 CDN 返回 `Access-Control-Allow-Origin`，否则 `crossorigin` 拿不到响应体，SRI 必然失败。
+6. 升级 SDK 时 URL、integrity、CSP 三处一起改；漏一处门禁就会拦下。
+
+禁止的写法：
+
+- `document.createElement('script')` 动态注入外链（CSP 会拦，规则也不允许；确有需要走同源反代）。
+- 用 `{表达式}` 拼外链 URL——无法固定哈希，检查会直接失败。
+- 用 iframe 绕过：iframe 不走 SRI，要单独评估来源白名单与 `sandbox`。
+
 ## Frontend Security（SSR 变体）
 
 - **Next.js Server Action 自带 CSRF 防护**：框架校验 `Origin` 与 `Host`/`X-Forwarded-Host` 匹配（可配
