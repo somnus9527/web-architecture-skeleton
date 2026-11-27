@@ -22,7 +22,7 @@ describe('rsc auth redirect helper', () => {
 
   it('redirects to login when a BFF auth error reaches an RSC read', async () => {
     await expect(
-      redirectToLoginOnBffAuthError(Promise.reject(new BffAuthError(401, 'session_expired', 'expired'))),
+      redirectToLoginOnBffAuthError(Promise.reject(new BffAuthError(401, 'auth.session_expired', 'expired'))),
     ).rejects.toThrow('NEXT_REDIRECT:/login?notice=expired');
 
     expect(redirectMock).toHaveBeenCalledWith('/login?notice=expired');
@@ -43,7 +43,7 @@ describe('rsc auth redirect helper', () => {
   });
 
   it('supports allSettled fallback flows without swallowing auth errors', () => {
-    expect(() => rethrowIfBffAuthError(new BffAuthError(401, 'session_expired', 'expired'))).toThrow(
+    expect(() => rethrowIfBffAuthError(new BffAuthError(401, 'auth.session_expired', 'expired'))).toThrow(
       'NEXT_REDIRECT:/login?notice=expired',
     );
   });

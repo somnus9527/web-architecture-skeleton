@@ -1,3 +1,5 @@
+import type { LogEventName } from '@/shared/observability/events';
+
 /**
  * 前端日志事件级别。`performance` / `marketing` 是生产允许保留的白名单类别。
  */
@@ -36,10 +38,10 @@ const isProduction = import.meta.env.PROD;
  * 写入日志；开发环境输出 console，生产环境只保留性能/营销白名单。
  *
  * @param level - 事件级别。
- * @param event - 稳定日志事件名。
+ * @param event - 已登记的稳定日志事件名。
  * @param payload - 可选上下文数据。
  */
-function appendLog(level: LogLevel, event: string, payload?: unknown): void {
+function appendLog(level: LogLevel, event: LogEventName, payload?: unknown): void {
   logBuffer.push({ level, event, payload });
 
   if (isProduction) {
@@ -81,10 +83,10 @@ function marketing(event: string, payload?: Record<string, unknown>): void {
  * 生产构建由 Vite `esbuild.drop` 删除 console；业务日志在 production 只进内存，不落浏览器控制台。
  */
 export const logger = {
-  debug: (event: string, payload?: unknown) => appendLog('debug', event, payload),
-  info: (event: string, payload?: unknown) => appendLog('info', event, payload),
-  warn: (event: string, payload?: unknown) => appendLog('warn', event, payload),
-  error: (event: string, payload?: unknown) => appendLog('error', event, payload),
+  debug: (event: LogEventName, payload?: unknown) => appendLog('debug', event, payload),
+  info: (event: LogEventName, payload?: unknown) => appendLog('info', event, payload),
+  warn: (event: LogEventName, payload?: unknown) => appendLog('warn', event, payload),
+  error: (event: LogEventName, payload?: unknown) => appendLog('error', event, payload),
   performance: performanceEvent,
   marketing,
 };

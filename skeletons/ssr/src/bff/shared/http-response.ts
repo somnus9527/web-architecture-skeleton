@@ -2,6 +2,8 @@ import 'server-only';
 
 import type { IRequestContext } from './request-context';
 
+import { SUCCESS_CODE } from '@/shared/errors/codes';
+
 /**
  * 把后端 TLog traceId 透出到浏览器响应头，缺失时不下发空头。
  *
@@ -46,7 +48,7 @@ export interface IBffSuccessInit {
  * @returns JSON Response。
  */
 export function createBffSuccessResponse<T>(data: T, context: IRequestContext, init?: IBffSuccessInit): Response {
-  const body: IBffJsonResponse<T> = { data, code: '200', codeMsg: null, requestId: context.requestId };
+  const body: IBffJsonResponse<T> = { data, code: SUCCESS_CODE, codeMsg: null, requestId: context.requestId };
 
   return Response.json(body, {
     status: init?.status ?? 200,

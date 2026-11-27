@@ -1,4 +1,7 @@
 import { t } from '@/locale';
+import { ERROR_CODES, SUCCESS_CODE } from '@/shared/errors/codes';
+import { LOG_EVENTS } from '@/shared/observability/events';
+import { resolveErrorMessageKey } from '@/shared/errors/messages';
 import { logger } from '@/shared/services/logger';
 import { clearSession } from '@/shared/store/session-store';
 
@@ -148,7 +151,7 @@ export async function apiRequest<TData>(path: string, init: RequestInit = {}): P
     /* 会话失效或越权时立刻清除持久化会话，由路由守卫把用户送回登录页。 */
     if (response.status === 401 || response.status === 403) {
       clearSession();
-      logger.warn('api_session_rejected', { path, status: response.status });
+      logger.warn(LOG_EVENTS.API_SESSION_REJECTED, { path, status: response.status });
     }
 
     const payload: unknown = await response.json();
@@ -157,21 +160,21 @@ export async function apiRequest<TData>(path: string, init: RequestInit = {}): P
     if (!response.ok) {
       throw new ApiError(t('api.error.http'), {
         status: response.status,
-        code: envelope?.code ?? 'common.http_error',
+        code: envelope?.code ?? ERROR_CODES.COMMON_HTTP_ERROR.code,
         payload,
       });
     }
 
     if (!envelope) {
-      throw new ApiError(t('api.error.http'), {
+      throw new ApiError(t(resolveErrorMessageKey(ERROR_CODES.COMMON_INVALID_RESPONSE.code)), {
         status: response.status,
-        code: 'common.invalid_response',
+        code: ERROR_CODES.COMMON_INVALID_RESPONSE.code,
         payload,
       });
     }
 
-    if (envelope.code !== '200') {
-      throw new ApiError(envelope.codeMsg ?? t('api.error.http'), {
+    if (envelope.code !== SUCCESS_CODE) {
+      throw new ApiError(envelope.codeMsg ?? t(resolveErrorMessageKey(envelope.code)), {
         status: response.status,
         code: envelope.code,
         payload,
@@ -184,10 +187,10 @@ export async function apiRequest<TData>(path: string, init: RequestInit = {}): P
       throw error;
     }
 
-    logger.warn('api_request_failed', { error, path });
-    throw new ApiError(t('api.error.network'), {
+    logger.warn(LOG_EVENTS.API_REQUEST_FAILED, { error, path });
+    throw new ApiError(t(resolveErrorMessageKey(ERROR_CODES.COMMON_NETWORK_ERROR.code)), {
       status: null,
-      code: 'common.network_error',
+      code: ERROR_CODES.COMMON_NETWORK_ERROR.code,
       payload: error,
     });
   }

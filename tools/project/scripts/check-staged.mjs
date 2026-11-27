@@ -16,6 +16,7 @@ const checks = [
   ['SEO 语义', 'check-seo-content.mjs'],
   ['UI 边界', 'check-ui-boundary.mjs'],
   ['日志边界', 'check-logging.mjs'],
+  ['错误码目录', 'generate-error-codes.mjs'],
   ['i18n 硬编码', 'check-i18n-copy.mjs'],
   ['无障碍', 'check-a11y.mjs'],
   ['架构分片', 'check-architecture-staged.mjs'],

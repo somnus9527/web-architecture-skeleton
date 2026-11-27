@@ -14,3 +14,6 @@ docs/rules/
 
 # 生成产物：由 pnpm licenses:notice 维护
 THIRD_PARTY_NOTICES.md
+
+# 生成产物：由 pnpm error-codes:table 维护
+docs/error-codes.md

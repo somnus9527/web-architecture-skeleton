@@ -29,11 +29,11 @@ export interface ILogContext {
 /**
  * 统一 logger 接口，服务端与客户端各自实现。
  */
-export interface ILogger {
-  debug(message: string, context?: ILogContext): void;
-  info(message: string, context?: ILogContext): void;
-  warn(message: string, context?: ILogContext): void;
-  error(message: string, context?: ILogContext): void;
+export interface ILogger<TEvent extends string = string> {
+  debug(event: TEvent, context?: ILogContext): void;
+  info(event: TEvent, context?: ILogContext): void;
+  warn(event: TEvent, context?: ILogContext): void;
+  error(event: TEvent, context?: ILogContext): void;
 }
 
 const LEVEL_WEIGHT: Record<LogLevel, number> = {

@@ -28,6 +28,29 @@ function fail(message) {
   failures.push(message);
 }
 
+const EVENTS_FILE = 'src/shared/observability/events.ts';
+const EVENT_NAME_PATTERN = /^[a-z0-9]+(?:\.[a-z0-9]+(?:_[a-z0-9]+)*)+$/u;
+
+/**
+ * 读取事件目录里登记的值；目录缺失时返回空集合，由调用方报错。
+ *
+ * @returns 已登记事件名集合。
+ */
+function readRegisteredEvents() {
+  const file = join(process.cwd(), EVENTS_FILE);
+
+  if (!existsSync(file)) {
+    return undefined;
+  }
+
+  const entries = [...readFileSync(file, 'utf8').matchAll(/^\s+([A-Z0-9_]+):\s*'([^']+)',/gmu)];
+
+  return {
+    keys: new Set(entries.map((match) => match[1])),
+    values: new Set(entries.map((match) => match[2])),
+  };
+}
+
 const LOGGER_FILES = new Set([
   'src/shared/services/logger.ts',
   'src/shared/logger/client-logger.ts',
@@ -53,12 +76,31 @@ function checkSource(relative) {
   }
 
   // 事件名必须是字面量：模板拼接会让 SLS 上的事件名无法聚合，也让告警规则无法写死。
+  // 同时必须是事件目录里登记过的值，否则改名/新增会绕过目录直接漂移。
   for (const call of source.matchAll(
     /(?:serverLogger|clientLogger|logger)\.(?:debug|info|warn|error)\(\s*([^\n,)]*)/gu,
   )) {
     const firstArgument = call[1].trim();
-    if (firstArgument && !/^['"][^'"]*['"]$/u.test(firstArgument)) {
-      fail(`${relative}: 日志事件名必须是字符串字面量（当前 ${firstArgument.slice(0, 40)}）`);
+    if (!firstArgument) continue;
+    const catalogReference = firstArgument.match(/^LOG_EVENTS\.([A-Z0-9_]+)$/u);
+
+    if (catalogReference) {
+      if (registeredEvents && !registeredEvents.keys.has(catalogReference[1])) {
+        fail(`${relative}: LOG_EVENTS.${catalogReference[1]} 未在 ${EVENTS_FILE} 中定义`);
+      }
+      continue;
+    }
+
+    if (!/^['"][^'"]*['"]$/u.test(firstArgument)) {
+      fail(`${relative}: 日志事件名必须是字符串字面量或 LOG_EVENTS.<KEY>（当前 ${firstArgument.slice(0, 40)}）`);
+      continue;
+    }
+    const literal = firstArgument.slice(1, -1);
+    if (!EVENT_NAME_PATTERN.test(literal)) {
+      fail(`${relative}: 事件名 '${literal}' 不符合 dot.case 规范（小写字母/数字/下划线，段间用点）`);
+    }
+    if (registeredEvents && !registeredEvents.values.has(literal)) {
+      fail(`${relative}: 事件名 '${literal}' 未登记到 ${EVENTS_FILE}`);
     }
   }
 
@@ -104,6 +146,20 @@ const relevant = files.filter((file) => /^src\/.+\.(?:ts|tsx)$/u.test(file));
 if (mode !== 'tracked' && relevant.length === 0) {
   process.stdout.write('日志边界检查：未涉及源码，跳过\n');
   process.exit(0);
+}
+
+const registeredEvents = readRegisteredEvents();
+
+if (!registeredEvents) {
+  fail(`缺少 ${EVENTS_FILE}：事件名必须集中登记，请先补齐事件目录`);
+} else {
+  for (const [key, value] of [
+    ...readFileSync(join(process.cwd(), EVENTS_FILE), 'utf8').matchAll(/^\s+([A-Z0-9_]+):\s*'([^']+)',/gmu),
+  ].map((match) => [match[1], match[2]])) {
+    if (!EVENT_NAME_PATTERN.test(value)) {
+      fail(`${EVENTS_FILE}: ${key} = '${value}' 不符合 dot.case 规范`);
+    }
+  }
 }
 
 for (const file of relevant) checkSource(file);

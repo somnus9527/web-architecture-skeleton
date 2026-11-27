@@ -47,7 +47,7 @@ describe('showcase gateway', () => {
   it('wraps shared http client errors as showcase gateway errors', async () => {
     requestBackendMock.mockRejectedValueOnce(
       new BffHttpClientError({
-        code: 'timeout',
+        code: 'bff.timeout',
         codeMsg: 'Upstream request timed out.',
         endpointId: 'showcase.list',
         kind: 'timeout',
@@ -58,7 +58,7 @@ describe('showcase gateway', () => {
     );
 
     await expect(fetchShowcaseList(createContext('req-showcase-timeout'))).rejects.toMatchObject({
-      code: 'timeout',
+      code: 'bff.timeout',
       name: 'ShowcaseGatewayError',
       status: 504,
     });
@@ -68,7 +68,7 @@ describe('showcase gateway', () => {
     requestBackendMock.mockResolvedValueOnce({ items: null, total: 1 });
 
     await expect(fetchShowcaseList(createContext('req-showcase-malformed'))).rejects.toMatchObject({
-      code: 'malformed_data',
+      code: 'bff.malformed_data',
       status: 502,
     });
   });

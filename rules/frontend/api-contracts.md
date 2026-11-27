@@ -60,12 +60,24 @@ Use this wrapper:
 
 Rules:
 
-- `code` is `"200"` on success.
+- `code` is `"200"` on success；前端比较 `SUCCESS_CODE` 常量，不写裸 `'200'`。
 - On failure, frontend displays `codeMsg` directly; do not require frontend translation when backend i18n is complete.
 - Backend business return values should focus on business data; the framework wraps `data`, `code`, and `codeMsg`.
 - Do not introduce a second response system.
 - Frontend API clients must treat responses without `{ data, code, codeMsg }` as contract errors in remote/mock/dev/test/prod modes; do not silently wrap raw payloads as successful responses.
 - Controller/service returns must not use raw `Map` for semantic response data; define response DTO/entity structures instead.
+
+## Error Codes
+
+业务错误码与前端归一错误码统一登记在 `src/shared/errors/codes.ts`，并生成可读目录 `docs/error-codes.md`：
+
+- 命名：`dot.snake_case`（`common.network_error`、`bff.upstream_failed`、`auth.session_expired`）；禁止 `UPPER_SNAKE` 与裸字符串。
+- 每个码必须声明 `httpStatus`、`owner`（`frontend` / `bff` / `backend`）、`messageKey`（无页面文案时为 `null`）与 `summary`。
+- 代码里只能引用目录常量；`pnpm check:error-codes` 会扫描 `api-client` / `http-client` / `http-response` / BFF routes / gateway / transform
+  里的裸 `code: '...'`，并校验 `docs/error-codes.md` 与代码一致。
+- 改名或新增码：先改 `codes.ts`，再跑 `pnpm error-codes:table` 生成文档并一起提交；错误码是对外契约，改名要同步前端判断与告警。
+- 后端下发的业务码（如 `auth.session_expired`）前端只做识别，不强行枚举全部后端码；前端自产码必须全部登记。
+- SPA 的用户可见文案走 `code → locale key` 映射（`src/shared/errors/messages.ts`）；BFF 响应的 `codeMsg` 由后端或 BFF 提供，页面级文案仍走 locale。
 
 ## OpenAPI Contract
 

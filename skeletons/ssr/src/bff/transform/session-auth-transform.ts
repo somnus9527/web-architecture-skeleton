@@ -1,5 +1,7 @@
 import 'server-only';
 
+import { ERROR_CODES } from '@/shared/errors/codes';
+
 const SESSION_EXPIRED_BUSINESS_CODES = new Set(['AUTH_001', '401']);
 
 /**
@@ -36,7 +38,7 @@ export function isSessionExpiredBusinessCode(code: string): boolean {
  * @returns 统一 401 登录态失效错误。
  */
 export function createSessionExpiredAuthError(codeMsg: string | null | undefined): BffAuthError {
-  return new BffAuthError(401, 'session_expired', codeMsg?.trim() || 'Session expired.');
+  return new BffAuthError(401, ERROR_CODES.AUTH_SESSION_EXPIRED.code, codeMsg?.trim() || 'Session expired.');
 }
 
 /**
@@ -88,7 +90,7 @@ export function buildBackendAuthHeaders(requestHeaders: Headers, sessionCookieNa
   const token = readCookieValue(requestHeaders.get('cookie'), sessionCookieName);
 
   if (!token) {
-    throw new BffAuthError(401, 'session_required', 'Session cookie is required.');
+    throw new BffAuthError(401, ERROR_CODES.AUTH_SESSION_REQUIRED.code, 'Session cookie is required.');
   }
 
   return {

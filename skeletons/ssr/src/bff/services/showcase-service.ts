@@ -3,6 +3,7 @@ import 'server-only';
 import { adaptShowcaseList, type IShowcaseListViewModel } from '../adapter/showcase-adapter';
 import { fetchShowcaseList, ShowcaseGatewayError } from '../gateway/showcase-gateway';
 
+import { LOG_EVENTS } from '@/shared/observability/events';
 import { serverLogger } from '@/bff/shared/logger/server-logger';
 import type { IRequestContext } from '@/bff/shared/request-context';
 
@@ -19,7 +20,7 @@ export async function getShowcaseListService(context: IRequestContext): Promise<
   const dto = await fetchShowcaseList(context);
   const viewModel = adaptShowcaseList(dto);
 
-  serverLogger.info('showcase-list service resolved', {
+  serverLogger.info(LOG_EVENTS.SHOWCASE_SERVICE_RESOLVED, {
     requestId: context.requestId,
     routeId: 'service:showcase-list',
     fields: { dependency: 'required', total: viewModel.total },
@@ -43,7 +44,7 @@ export async function getShowcaseListForHomeService(context: IRequestContext): P
     }
 
     const fallbackViewModel = adaptShowcaseList({ items: [], total: 0 });
-    serverLogger.warn('showcase-list home dependency degraded', {
+    serverLogger.warn(LOG_EVENTS.SHOWCASE_HOME_DEPENDENCY_DEGRADED, {
       requestId: context.requestId,
       routeId: 'service:showcase-list',
       fields: { code: error.code, status: error.status },

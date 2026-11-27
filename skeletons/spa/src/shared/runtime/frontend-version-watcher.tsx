@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 
+import { LOG_EVENTS } from '@/shared/observability/events';
 import { appEnv } from '@/shared/config/app-env';
 import { logger } from '@/shared/services/logger';
 
@@ -88,7 +89,7 @@ export function FrontendVersionWatcher({ currentReleaseId }: IFrontendVersionWat
         });
 
         if (!response.ok) {
-          logger.warn('frontend_version_check_failed', { status: response.status });
+          logger.warn(LOG_EVENTS.FRONTEND_VERSION_CHECK_FAILED, { status: response.status });
           return undefined;
         }
 
@@ -96,22 +97,22 @@ export function FrontendVersionWatcher({ currentReleaseId }: IFrontendVersionWat
         const age = Number(response.headers?.get('age') ?? '0');
         const cdnCacheStatus = response.headers?.get('x-cache') ?? response.headers?.get('cf-cache-status') ?? '';
         if (Number.isFinite(age) && age > 0) {
-          logger.warn('frontend_version_cache_age', { age, cacheControl, cdnCacheStatus });
+          logger.warn(LOG_EVENTS.FRONTEND_VERSION_CACHE_AGE, { age, cacheControl, cdnCacheStatus });
         }
         if (/hit/iu.test(cdnCacheStatus) || !/no-store|no-cache/iu.test(cacheControl)) {
-          logger.warn('frontend_version_cache_risk', { age, cacheControl, cdnCacheStatus });
+          logger.warn(LOG_EVENTS.FRONTEND_VERSION_CACHE_RISK, { age, cacheControl, cdnCacheStatus });
         }
 
         const payload: unknown = await response.json();
         if (!isFrontendVersionResponse(payload)) {
-          logger.warn('frontend_version_response_invalid');
+          logger.warn(LOG_EVENTS.FRONTEND_VERSION_RESPONSE_INVALID);
           return undefined;
         }
 
         return payload.releaseId.trim();
       } catch (error) {
         if (!(error instanceof DOMException && error.name === 'AbortError')) {
-          logger.warn('frontend_version_check_unavailable', { error });
+          logger.warn(LOG_EVENTS.FRONTEND_VERSION_CHECK_UNAVAILABLE, { error });
         }
         return undefined;
       } finally {

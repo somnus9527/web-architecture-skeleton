@@ -5,6 +5,7 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import { useTransition } from 'react';
 
+import { LOG_EVENTS } from '@/shared/observability/events';
 import { setLocaleAction } from '@/bff/actions/locale-actions';
 import { SUPPORTED_LOCALES, type LocaleCode } from '@/i18n/locale-config';
 import { swapPathLocale, toLocaleCode } from '@/shared/i18n/public-locale-routing';
@@ -40,11 +41,11 @@ export function PublicLocaleSwitcher() {
       void setLocaleAction(nextLocale)
         .then((result) => {
           if (!result.ok) {
-            clientLogger.warn('public locale cookie rejected', { fields: { nextLocale } });
+            clientLogger.warn(LOG_EVENTS.LOCALE_COOKIE_REJECTED, { fields: { nextLocale } });
           }
         })
         .catch((error: unknown) => {
-          clientLogger.warn('public locale cookie failed', {
+          clientLogger.warn(LOG_EVENTS.LOCALE_COOKIE_FAILED, {
             fields: { message: error instanceof Error ? error.message : String(error), nextLocale },
           });
         });

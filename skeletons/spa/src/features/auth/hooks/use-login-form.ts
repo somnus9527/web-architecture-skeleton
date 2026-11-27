@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 
+import { LOG_EVENTS } from '@/shared/observability/events';
 import { login } from '@/features/auth/services/auth-service';
 import { t } from '@/locale';
 import { ROUTE_PATHS } from '@/router/route-paths';
@@ -70,7 +71,7 @@ export function useLoginForm(): IUseLoginFormResult {
       startSession(result.user);
       navigate(safeRedirect(searchParams.get('redirect'), ROUTE_PATHS.workspace), { replace: true });
     } catch (error) {
-      logger.error('auth_login_failed', { error });
+      logger.error(LOG_EVENTS.AUTH_LOGIN_FAILED, { error });
       setErrorMessage(t('auth.login.failed'));
     } finally {
       setIsSubmitting(false);

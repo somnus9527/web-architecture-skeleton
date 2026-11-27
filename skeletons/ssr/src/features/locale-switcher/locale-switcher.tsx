@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import { useTransition } from 'react';
 
+import { LOG_EVENTS } from '@/shared/observability/events';
 import { setLocaleAction } from '@/bff/actions/locale-actions';
 import { SUPPORTED_LOCALES } from '@/i18n/locale-config';
 import { clientLogger } from '@/shared/logger/client-logger';
@@ -29,13 +30,13 @@ export function LocaleSwitcher() {
     try {
       const result = await setLocaleAction(nextLocale);
       if (!result.ok) {
-        clientLogger.warn('locale switch rejected', { fields: { nextLocale } });
+        clientLogger.warn(LOG_EVENTS.LOCALE_SWITCH_REJECTED, { fields: { nextLocale } });
         return;
       }
 
       router.refresh();
     } catch (error) {
-      clientLogger.error('locale switch failed', {
+      clientLogger.error(LOG_EVENTS.LOCALE_SWITCH_FAILED, {
         fields: { message: error instanceof Error ? error.message : String(error), nextLocale },
       });
     }

@@ -2,6 +2,8 @@ import 'server-only';
 
 import { BffAuthError, buildBackendAuthHeaders } from '../transform/session-auth-transform';
 
+import { LOG_EVENTS } from '@/shared/observability/events';
+import { ERROR_CODES } from '@/shared/errors/codes';
 import { createBffErrorResponse, createBffSuccessResponse } from '@/bff/shared/http-response';
 import { serverLogger } from '@/bff/shared/logger/server-logger';
 import { createRequestContext } from '@/bff/shared/request-context';
@@ -26,7 +28,7 @@ export async function handleGetSessionRoute(request: Request, locale: string): P
   const config = getServerConfig();
   const startedAt = Date.now();
   const hasSessionCookie = Boolean(request.headers.get('cookie'));
-  serverLogger.info('bff route request', {
+  serverLogger.info(LOG_EVENTS.BFF_ROUTE_REQUEST, {
     requestId: context.requestId,
     routeId: 'route:session',
     span: 'route_handler',
@@ -37,7 +39,7 @@ export async function handleGetSessionRoute(request: Request, locale: string): P
     const auth = buildBackendAuthHeaders(request.headers, config.sessionCookieName);
     const data: ISessionViewModel = { isAuthenticated: true, userType: auth.xUserType };
     const response = createBffSuccessResponse(data, context);
-    serverLogger.info('bff route response', {
+    serverLogger.info(LOG_EVENTS.BFF_ROUTE_RESPONSE, {
       requestId: context.requestId,
       routeId: 'route:session',
       span: 'route_handler',
@@ -46,7 +48,7 @@ export async function handleGetSessionRoute(request: Request, locale: string): P
     return response;
   } catch (error) {
     const status = error instanceof BffAuthError ? error.status : 500;
-    serverLogger[status >= 500 ? 'error' : 'warn']('bff route response', {
+    serverLogger[status >= 500 ? 'error' : 'warn'](LOG_EVENTS.BFF_ROUTE_RESPONSE, {
       requestId: context.requestId,
       routeId: 'route:session',
       span: 'route_handler',
@@ -60,6 +62,6 @@ export async function handleGetSessionRoute(request: Request, locale: string): P
       return createBffErrorResponse(error.code, error.codeMsg, context, error.status);
     }
 
-    return createBffErrorResponse('internal_error', 'Unexpected error.', context, 500);
+    return createBffErrorResponse(ERROR_CODES.BFF_INTERNAL_ERROR.code, 'Unexpected error.', context, 500);
   }
 }

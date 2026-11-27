@@ -47,6 +47,12 @@ jobs:
       - name: License policy
         run: pnpm check:licenses
 
+      - name: Logging boundary
+        run: pnpm check:logs
+
+      - name: Error code catalog
+        run: pnpm check:error-codes
+
       - name: Gate self-check
         run: pnpm check:gates
 

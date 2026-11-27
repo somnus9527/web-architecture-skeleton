@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
 
+import { LOG_EVENTS } from '@/shared/observability/events';
 import { advanceOrderStatus, getWorkspaceDashboard } from '@/features/workspace/services/workspace-service';
 import { t } from '@/locale';
 import { useAsyncAction } from '@/shared/hooks/use-async-action';
@@ -84,13 +85,13 @@ export function useWorkspaceDashboard(): IUseWorkspaceDashboardResult {
   const request = useRequest(fetchDashboard, {
     deps: [query],
     formatError: () => t('common.error.description'),
-    onError: (error) => logger.error('workspace_dashboard_load_failed', { error }),
+    onError: (error) => logger.error(LOG_EVENTS.WORKSPACE_DASHBOARD_LOAD_FAILED, { error }),
   });
 
   const advance = useAsyncAction((order: IOrderQueueItem) => advanceOrderStatus(order.id, order.status), {
     keyOf: (order) => order.id,
     formatError: () => t('common.error.description'),
-    onError: (error) => logger.error('workspace_order_advance_failed', { error }),
+    onError: (error) => logger.error(LOG_EVENTS.WORKSPACE_ORDER_ADVANCE_FAILED, { error }),
     onSuccess: (nextStatus, order) => {
       request.mutate((current) =>
         current

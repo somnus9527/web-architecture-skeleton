@@ -1236,3 +1236,91 @@ Dependabot/renovate 跟踪。SPA/SSR 的骨架内 CI（派生项目用）同步�
 macOS 与 Linux 生成的声明逐字节一致，两端自检都通过。
 
 结论写进规则：**生成物必须跨平台确定**，不要依赖大小写不敏感的文件系统，也不要把「本地能过」当成门禁成立。
+
+## 26. 第六批设计：事件名与错误码目录化（2026-11-27）
+
+### 26.1 目标与边界
+
+把「事件名」和「错误码」从散落字面量收敛成**唯一目录**，让改名、告警、文案映射、审计都有单一入口。
+只做目录与类型，不改日志格式、不引入依赖、不动后端契约：
+
+- 事件名：统一 `dot.case`（`api.request.failed`、`bff.upstream.request.started`），目录常量 + 类型 + 门禁；
+- 错误码：前端自产码统一 `dot.snake_case`（`common.network_error`、`bff.upstream_failed`、`auth.session_expired`），
+  目录带 HTTP 状态、归属方、文案 key、场景说明；
+- SPA 增加 code → i18n key 映射；SSR 的 BFF 响应码只做目录与类型（`codeMsg` 由后端下发，页面文案走 `errors.*` 页级键）；
+- 生成 `docs/error-codes.md` 作为可读目录，门禁校验它与代码一致。
+
+### 26.2 目录落点
+
+| 内容            | 路径                                 | 说明                                                                                 |
+| --------------- | ------------------------------------ | ------------------------------------------------------------------------------------ |
+| 事件名          | `src/shared/observability/events.ts` | `LOG_EVENTS as const` + `LogEventName`；logger 首参收紧为该类型                      |
+| 错误码          | `src/shared/errors/codes.ts`         | `IErrorCodeMeta`（code / httpStatus / owner / messageKey / summary）+ `SUCCESS_CODE` |
+| 文案映射（SPA） | `src/shared/errors/messages.ts`      | `resolveErrorMessageKey(code)`，未登记码回落 `api.error.http`                        |
+| 生成物          | `docs/error-codes.md`                | `pnpm error-codes:table` 生成，`pnpm check:error-codes` 校验新鲜度                   |
+
+### 26.3 迁移映射
+
+事件名（SPA 12 个 / SSR 19 个，含共享的 5 个版本事件）：
+
+| 旧值                                                                        | 新值                                                                                                           |
+| --------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `api_request_failed` / `api_session_rejected`                               | `api.request.failed` / `api.session.rejected`                                                                  |
+| `auth_login_failed` / `auth_logout_failed`                                  | `auth.login.failed` / `auth.logout.failed`                                                                     |
+| `workspace_dashboard_load_failed` / `workspace_order_advance_failed`        | `workspace.dashboard.load.failed` / `workspace.order.advance.failed`                                           |
+| `react_error_boundary_caught`                                               | `react.error_boundary.caught`                                                                                  |
+| `frontend_version_*`（5 个）                                                | `frontend.version.*`（`check.failed` / `cache.age` / `cache.risk` / `response.invalid` / `check.unavailable`） |
+| `bff route request` / `bff route response`                                  | `bff.route.request` / `bff.route.response`                                                                     |
+| `bff upstream request started` / `bff upstream payload`                     | `bff.upstream.request.started` / `bff.upstream.payload`                                                        |
+| `server action started` / `rejected` / `completed`                          | `bff.action.started` / `bff.action.rejected` / `bff.action.completed`                                          |
+| `refreshShowcaseAction failed`                                              | `bff.action.refresh_showcase.failed`                                                                           |
+| `showcase-list service resolved` / `showcase-list home dependency degraded` | `showcase.service.resolved` / `showcase.home.dependency.degraded`                                              |
+| `locale switch rejected` / `locale switch failed`                           | `locale.switch.rejected` / `locale.switch.failed`                                                              |
+| `public locale cookie rejected` / `public locale cookie failed`             | `locale.cookie.rejected` / `locale.cookie.failed`                                                              |
+
+错误码（SSR 14 个 / SPA 4 个）：
+
+| 旧值                                                                     | 新值                                                                    | 归属     |
+| ------------------------------------------------------------------------ | ----------------------------------------------------------------------- | -------- |
+| `upstream_error`                                                         | `bff.upstream_failed`                                                   | bff      |
+| `unexpected_json_response`                                               | `bff.unexpected_json_response`                                          | bff      |
+| `timeout` / `network_error` / `aborted`                                  | `bff.timeout` / `bff.network_error` / `bff.aborted`                     | bff      |
+| `malformed_wrapper` / `malformed_data` / `json_parse_error`              | `bff.malformed_wrapper` / `bff.malformed_data` / `bff.json_parse_error` | bff      |
+| `invalid_gateway_path` / `empty_data` / `binary`                         | `bff.invalid_gateway_path` / `bff.empty_data` / `bff.binary_response`   | bff      |
+| `internal_error`                                                         | `bff.internal_error`                                                    | bff      |
+| `session_expired` / `session_required`                                   | `auth.session_expired` / `auth.session_required`                        | bff      |
+| `common.http_error` / `common.invalid_response` / `common.network_error` | 值不变，进入目录                                                        | frontend |
+
+### 26.4 门禁
+
+1. **类型层**：`logger` / `serverLogger` / `clientLogger` 首参为 `LogEventName`，写错名字 typecheck 失败。
+2. **静态层**：`check-logging.mjs` 校验首参字面量必须在目录里、且值符合 `a-z0-9.` 命名；新增
+   `check-error-codes.mjs` 校验 BFF/前端代码里的裸 `code: '...'` 必须在目录中、`docs/error-codes.md` 为最新。
+3. **文档层**：错误码表由代码生成，禁止手改；派生项目改码先改目录再跑生成。
+
+### 26.5 风险
+
+- 事件名与部分错误码是**对外可观测契约**：派生项目若已按旧名字配 SLS 告警/看板，需要按 26.3 的映射迁移；
+  骨架阶段一次性改完，避免新项目继续用两套风格。
+- BFF 错误码会出现在响应体 `code` 字段：前端只按码判断（401 清理会话），不依赖具体字符串；改码不改变行为。
+
+### 26.6 实施结果（2026-11-27）
+
+| 项         | 结果                                                                                                                                             |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 事件目录   | SPA `LOG_EVENTS` 12 个、SSR 20 个（含新增 `bff.upstream.request.completed`）；logger 首参收紧为 `LogEventName`                                   |
+| 错误码目录 | SPA 4 个、SSR 14 个；`SUCCESS_CODE` 统一为常量，SPA 比较 `'200'` 也改走常量                                                                      |
+| 调用点迁移 | SPA 12 处 / SSR 23 处 logger 调用全部改为 `LOG_EVENTS.*`；SPA 错误构造改为引用目录 + `resolveErrorMessageKey()`                                  |
+| 生成物     | `docs/error-codes.md`（两个变体各一份），`pnpm error-codes:table` 生成、`pnpm check:error-codes` 校验                                            |
+| 门禁接线   | pre-commit（`check-staged.mjs` 增加错误码目录）、`quality:check`、仓库 CI 与两个 skeleton 的 `check.yml`（补 Logging / Error code catalog 两步） |
+| 规则       | `logging.md` 事件命名与目录；`api-contracts.md` 新增 Error Codes 一节；`quality-tooling.md` 门禁表补一行                                         |
+
+负向验证（全部按预期失败后恢复）：
+
+- 未登记事件名 → 「未登记到 events.ts」+ 「不符合 dot.case」；
+- 未定义目录键（`LOG_EVENTS.NOT_DEFINED`）→ 「未在 events.ts 中定义」；
+- 文档被改 → 「docs/error-codes.md 已过期」；
+- 未登记错误码（`common.unknown_code`）→ 「未登记到 codes.ts」。
+
+正向验证：SPA 24 个测试文件 / 67 用例、SSR 37 / 171 全部通过；两端 typecheck、lint、`check:logs`、
+`check:error-codes` 通过。日志字段值 `binary` 不是错误码，已在生成器里显式豁免并注明原因。

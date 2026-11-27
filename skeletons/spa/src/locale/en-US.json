@@ -48,5 +48,7 @@
   "routes.inventory.title": "Inventory placeholder",
   "routes.inventory.description": "The inventory route is reserved for card inventory, batches, and availability.",
   "routes.settings.title": "Settings placeholder",
-  "routes.settings.description": "The settings route is reserved for account, permission, and system configuration."
+  "routes.settings.description": "The settings route is reserved for account, permission, and system configuration.",
+  "api.error.invalid_response": "The API response did not match the agreed shape.",
+  "api.error.session_expired": "Your session expired. Please sign in again."
 }

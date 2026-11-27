@@ -1,5 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 
+import { LOG_EVENTS } from '@/shared/observability/events';
 import { t } from '@/locale';
 import { Button } from '@/shared/ui';
 import { logger } from '@/shared/services/logger';
@@ -55,7 +56,7 @@ export class ErrorBoundary extends Component<IErrorBoundaryProps, IErrorBoundary
    * @param info - 组件栈上下文。
    */
   componentDidCatch(error: Error, info: ErrorInfo): void {
-    logger.error('react_error_boundary_caught', { error, componentStack: info.componentStack });
+    logger.error(LOG_EVENTS.REACT_ERROR_BOUNDARY_CAUGHT, { error, componentStack: info.componentStack });
   }
 
   /**

@@ -73,6 +73,7 @@ pnpm typecheck
 pnpm lint
 pnpm format:check
 pnpm test
+pnpm check:error-codes
 pnpm check:licenses
 pnpm check:sri
 pnpm licenses:notice

@@ -5,6 +5,7 @@ import { cache } from 'react';
 import type { IShowcaseListDTO } from '../dto/showcase-dto';
 
 import { BffHttpClientError, requestBackend } from '@/bff/shared/http-client';
+import { ERROR_CODES } from '@/shared/errors/codes';
 import type { IRequestContext } from '@/bff/shared/request-context';
 
 const SHOWCASE_ENDPOINT = '/showcase';
@@ -60,7 +61,7 @@ export const fetchShowcaseList = cache(async (context: IRequestContext): Promise
     });
 
     if (!isShowcaseListDTO(data)) {
-      throw new ShowcaseGatewayError(502, 'malformed_data', 'Showcase response data is malformed.');
+      throw new ShowcaseGatewayError(502, ERROR_CODES.BFF_MALFORMED_DATA.code, 'Showcase response data is malformed.');
     }
 
     return data;

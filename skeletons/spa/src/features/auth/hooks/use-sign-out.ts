@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 
+import { LOG_EVENTS } from '@/shared/observability/events';
 import { logout } from '@/features/auth/services/auth-service';
 import { ROUTE_PATHS } from '@/router/route-paths';
 import { logger } from '@/shared/services/logger';
@@ -37,7 +38,7 @@ export function useSignOut(): IUseSignOutResult {
     try {
       await logout();
     } catch (error) {
-      logger.error('auth_logout_failed', { error });
+      logger.error(LOG_EVENTS.AUTH_LOGOUT_FAILED, { error });
     } finally {
       clearSession();
       setIsSigningOut(false);

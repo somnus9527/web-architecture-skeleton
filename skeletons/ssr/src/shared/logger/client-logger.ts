@@ -1,5 +1,7 @@
 'use client';
 
+import { type LogEventName } from '@/shared/observability/events';
+
 import { type ILogContext, type ILogger, type LogLevel, redactLogValue, shouldLog } from './logger-core';
 
 const clientThreshold: LogLevel = process.env.NODE_ENV === 'production' ? 'warn' : 'debug';
@@ -12,7 +14,7 @@ const isProduction = process.env.NODE_ENV === 'production';
  * @param message - 日志消息。
  * @param context - 结构化上下文（会脱敏）。
  */
-function log(level: LogLevel, message: string, context?: ILogContext): void {
+function log(level: LogLevel, message: LogEventName, context?: ILogContext): void {
   if (isProduction || !shouldLog(level, clientThreshold)) {
     return;
   }
@@ -26,7 +28,7 @@ function log(level: LogLevel, message: string, context?: ILogContext): void {
 /**
  * 浏览器侧结构化 logger；业务代码禁止直接调用 console。
  */
-export const clientLogger: ILogger = {
+export const clientLogger: ILogger<LogEventName> = {
   debug: (message, context) => log('debug', message, context),
   info: (message, context) => log('info', message, context),
   warn: (message, context) => log('warn', message, context),

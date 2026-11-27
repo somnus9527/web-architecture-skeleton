@@ -5,6 +5,8 @@ import { rememberTlogTraceId, type IRequestContext } from './request-context';
 import { redactLogValue } from '@/shared/logger/logger-core';
 
 import { serverLogger } from '@/bff/shared/logger/server-logger';
+import { ERROR_CODES, SUCCESS_CODE } from '@/shared/errors/codes';
+import { LOG_EVENTS } from '@/shared/observability/events';
 import { getServerConfig } from '@/bff/shared/server-config';
 import { resolveOutboundUrl } from '@/shared/security/outbound-url';
 import {
@@ -14,7 +16,6 @@ import {
   type IBackendAuthHeaders,
 } from '@/bff/transform/session-auth-transform';
 
-const SUCCESS_CODE = '200';
 const DEFAULT_TIMEOUT_MS = 10_000;
 /** 后端 TLog traceId 的响应头候选：兼容 TLog 默认头与网关改写后的别名。 */
 const TLOG_TRACE_ID_HEADERS = ['tlogTraceId', 'X-TLog-Trace-Id'];
@@ -131,7 +132,7 @@ export async function requestBackend<TData, TBody extends object | undefined = u
   });
   let upstreamTraceId: string | undefined;
 
-  serverLogger.info('bff upstream request started', {
+  serverLogger.info(LOG_EVENTS.BFF_UPSTREAM_REQUEST_STARTED, {
     requestId: request.context.requestId,
     routeId: `gateway:${request.endpointId}`,
     span: 'gateway',
@@ -176,7 +177,7 @@ export async function requestBackend<TData, TBody extends object | undefined = u
       throw createHttpClientError(request, {
         kind: 'contract',
         status: 502,
-        code: 'empty_data',
+        code: ERROR_CODES.BFF_EMPTY_DATA.code,
         codeMsg: 'Upstream response data is empty.',
       });
     }
@@ -190,7 +191,7 @@ export async function requestBackend<TData, TBody extends object | undefined = u
       responseBody: summarizePayload(payload.data),
     });
 
-    serverLogger.debug('bff upstream payload', {
+    serverLogger.debug(LOG_EVENTS.BFF_UPSTREAM_PAYLOAD, {
       requestId: request.context.requestId,
       routeId: `gateway:${request.endpointId}`,
       span: 'gateway',
@@ -250,7 +251,7 @@ export async function requestBackendBinary<TBody extends object>(
   });
   let upstreamTraceId: string | undefined;
 
-  serverLogger.info('bff upstream request started', {
+  serverLogger.info(LOG_EVENTS.BFF_UPSTREAM_REQUEST_STARTED, {
     requestId: request.context.requestId,
     routeId: `gateway:${request.endpointId}`,
     span: 'gateway',
@@ -295,7 +296,7 @@ export async function requestBackendBinary<TBody extends object>(
         throw createHttpClientError(request, {
           kind: 'http',
           status: response.status,
-          code: 'upstream_error',
+          code: ERROR_CODES.BFF_UPSTREAM_FAILED.code,
           codeMsg: `Upstream returned ${response.status}.`,
         });
       }
@@ -303,7 +304,7 @@ export async function requestBackendBinary<TBody extends object>(
       throw createHttpClientError(request, {
         kind: 'contract',
         status: 502,
-        code: 'unexpected_json_response',
+        code: ERROR_CODES.BFF_UNEXPECTED_JSON_RESPONSE.code,
         codeMsg: 'Upstream returned JSON instead of binary content.',
       });
     }
@@ -313,7 +314,7 @@ export async function requestBackendBinary<TBody extends object>(
       throw createHttpClientError(request, {
         kind: 'http',
         status: response.status,
-        code: 'upstream_error',
+        code: ERROR_CODES.BFF_UPSTREAM_FAILED.code,
         codeMsg: `Upstream returned ${response.status}.`,
       });
     }
@@ -370,7 +371,7 @@ function validateGatewayPath<TBody extends object | undefined>(path: string, req
     throw createHttpClientError(request, {
       kind: 'contract',
       status: 500,
-      code: 'invalid_gateway_path',
+      code: ERROR_CODES.BFF_INVALID_GATEWAY_PATH.code,
       codeMsg: 'Gateway path must start with a single slash.',
     });
   }
@@ -530,7 +531,7 @@ async function parseResponseEnvelope<TData, TBody extends object | undefined>(
     throw createHttpClientError(request, {
       kind: 'http',
       status: response.status,
-      code: 'upstream_error',
+      code: ERROR_CODES.BFF_UPSTREAM_FAILED.code,
       codeMsg: `Upstream returned ${response.status}.`,
     });
   }
@@ -552,7 +553,7 @@ async function parseJsonResponseEnvelope<TData, TBody extends object | undefined
     throw createHttpClientError(request, {
       kind: 'json_parse',
       status: 502,
-      code: 'json_parse_error',
+      code: ERROR_CODES.BFF_JSON_PARSE_ERROR.code,
       codeMsg: 'Upstream response JSON parse failed.',
     });
   }
@@ -561,7 +562,7 @@ async function parseJsonResponseEnvelope<TData, TBody extends object | undefined
     throw createHttpClientError(request, {
       kind: 'contract',
       status: 502,
-      code: 'malformed_wrapper',
+      code: ERROR_CODES.BFF_MALFORMED_WRAPPER.code,
       codeMsg: 'Upstream response wrapper is malformed.',
     });
   }
@@ -622,7 +623,7 @@ function normalizeRequestError<TBody extends object | undefined>(
       return createHttpClientError(request, {
         kind: 'timeout',
         status: 504,
-        code: 'timeout',
+        code: ERROR_CODES.BFF_TIMEOUT.code,
         codeMsg: 'Upstream request timed out.',
       });
     }
@@ -630,7 +631,7 @@ function normalizeRequestError<TBody extends object | undefined>(
     return createHttpClientError(request, {
       kind: 'aborted',
       status: 499,
-      code: 'aborted',
+      code: ERROR_CODES.BFF_ABORTED.code,
       codeMsg: 'Upstream request was aborted.',
     });
   }
@@ -638,7 +639,7 @@ function normalizeRequestError<TBody extends object | undefined>(
   return createHttpClientError(request, {
     kind: 'network',
     status: 502,
-    code: 'network_error',
+    code: ERROR_CODES.BFF_NETWORK_ERROR.code,
     codeMsg: 'Upstream network request failed.',
   });
 }
@@ -712,7 +713,7 @@ function logUpstream<TBody extends object | undefined>(
     responseBody?: unknown;
   },
 ): void {
-  serverLogger[level]('bff upstream request completed', {
+  serverLogger[level](LOG_EVENTS.BFF_UPSTREAM_REQUEST_COMPLETED, {
     requestId: request.context.requestId,
     upstreamTraceId: fields.upstreamTraceId,
     routeId: `gateway:${request.endpointId}`,

@@ -6,7 +6,12 @@
 
 ## Event Naming
 
-- 使用稳定英文事件名：`auth_login_failed`、`workspace_dashboard_load_failed`、`bff_upstream_request_completed`；不得用中文 UI 文案或易变页面标题当事件名。
+- 事件名统一 `dot.case`：`api.request.failed`、`auth.login.failed`、`bff.upstream.request.completed`、`showcase.service.resolved`；
+  段内允许下划线，禁止空格、大写与中文 UI 文案。
+- **事件名必须来自目录**：`src/shared/observability/events.ts` 的 `LOG_EVENTS`。调用侧写 `logger.warn(LOG_EVENTS.API_REQUEST_FAILED, ...)`，
+  不要直接写字符串字面量；名字一旦发布就是可观测契约，改名要同步 SLS 告警与看板。
+- `serverLogger` / `clientLogger` / `logger` 的首参类型是 `LogEventName`，写错或漏登记会在 typecheck 阶段失败；
+  `check-logging.mjs` 会再校验一次「引用必须在目录里 / 字面量必须登记且符合命名」。
 - 日志只记录排障需要的字段；禁止直接 `JSON.stringify` 整个 request/response/用户对象。
 - 错误日志记录 `errorKind`、业务 code、HTTP status、requestId；不记录 token、cookie、密码、完整手机号/邮箱、身份证、银行卡、支付凭证。
 
@@ -29,6 +34,7 @@
 
 ## Verification
 
-- `scripts/check-logging.mjs`：禁止业务裸 console、检查 SPA `drop_console`、检查 SSR `removeConsole`。
+- `scripts/check-logging.mjs`：事件目录登记 / `dot.case` 规范、禁止业务裸 console、检查 SPA `drop_console`、检查 SSR `removeConsole`。
+- `scripts/generate-error-codes.mjs`：错误码目录与 `docs/error-codes.md` 新鲜度（pre-commit 与 `quality:check` 都会跑）。
 - `src/test/architecture/logging-boundary.test.ts`：检查 logger 文件边界、PM2 单文件 JSONL。
 - SPA 生产构建后检查 `dist` 无业务 console；SSR 运行后检查 PM2 只有一个 `.log` 文件且为 JSONL。

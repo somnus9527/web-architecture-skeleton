@@ -2,6 +2,7 @@
 
 import { describe, expect, it } from 'vitest';
 
+import { ERROR_CODES } from '@/shared/errors/codes';
 import { createBffErrorResponse, createBffSuccessResponse } from '@/bff/shared/http-response';
 
 const CONTEXT = { requestId: 'req-test', locale: 'en-US' };
@@ -20,7 +21,7 @@ describe('BFF response cache policy', () => {
   });
 
   it('always keeps error responses no-store', () => {
-    const response = createBffErrorResponse('internal_error', 'failed', CONTEXT, 500);
+    const response = createBffErrorResponse(ERROR_CODES.BFF_INTERNAL_ERROR.code, 'failed', CONTEXT, 500);
 
     expect(response.headers.get('Cache-Control')).toBe('no-store');
   });
@@ -35,7 +36,7 @@ describe('BFF trace headers', () => {
   });
 
   it('没有 tlogTraceId 时不下发空头', () => {
-    const response = createBffErrorResponse('internal_error', 'failed', CONTEXT, 500);
+    const response = createBffErrorResponse(ERROR_CODES.BFF_INTERNAL_ERROR.code, 'failed', CONTEXT, 500);
 
     expect(response.headers.get('X-Request-Id')).toBe('req-test');
     expect(response.headers.get('X-TLog-Trace-Id')).toBeNull();

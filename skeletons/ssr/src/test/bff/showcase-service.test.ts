@@ -36,7 +36,7 @@ describe('getShowcaseListForHomeService', () => {
 
   it('showcase 上游契约异常时返回首页空态', async () => {
     fetchShowcaseListMock.mockRejectedValue(
-      new ShowcaseGatewayError(502, 'malformed_wrapper', 'Showcase response wrapper is malformed.'),
+      new ShowcaseGatewayError(502, 'bff.malformed_wrapper', 'Showcase response wrapper is malformed.'),
     );
 
     await expect(getShowcaseListForHomeService(context)).resolves.toEqual({

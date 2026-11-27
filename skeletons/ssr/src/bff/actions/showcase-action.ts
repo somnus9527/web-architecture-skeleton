@@ -5,6 +5,7 @@ import { headers } from 'next/headers';
 import { getLocale } from 'next-intl/server';
 import { z } from 'zod';
 
+import { LOG_EVENTS } from '@/shared/observability/events';
 import { serverLogger } from '@/bff/shared/logger/server-logger';
 import { createRequestContext } from '@/bff/shared/request-context';
 import { getServerConfig } from '@/bff/shared/server-config';
@@ -37,7 +38,7 @@ export async function refreshShowcaseAction(formData: FormData): Promise<IShowca
   const config = getServerConfig();
   const startedAt = Date.now();
 
-  serverLogger.info('server action started', {
+  serverLogger.info(LOG_EVENTS.BFF_ACTION_STARTED, {
     requestId: context.requestId,
     routeId: 'action:refresh-showcase',
     span: 'server_action',
@@ -51,7 +52,7 @@ export async function refreshShowcaseAction(formData: FormData): Promise<IShowca
     // 2) 入参校验。
     const parsed = refreshInputSchema.safeParse({ category: formData.get('category') });
     if (!parsed.success) {
-      serverLogger.warn('server action rejected', {
+      serverLogger.warn(LOG_EVENTS.BFF_ACTION_REJECTED, {
         requestId: context.requestId,
         routeId: 'action:refresh-showcase',
         span: 'server_action',
@@ -63,7 +64,7 @@ export async function refreshShowcaseAction(formData: FormData): Promise<IShowca
     // 3) 调 mutation service（骨架仅演示链路，无真实写操作）。
     // 4) 按影响 revalidate。
     revalidatePath('/showcase-console');
-    serverLogger.info('server action completed', {
+    serverLogger.info(LOG_EVENTS.BFF_ACTION_COMPLETED, {
       requestId: context.requestId,
       routeId: 'action:refresh-showcase',
       span: 'server_action',
@@ -72,7 +73,7 @@ export async function refreshShowcaseAction(formData: FormData): Promise<IShowca
     return { ok: true };
   } catch (error) {
     if (error instanceof BffAuthError) {
-      serverLogger.warn('server action rejected', {
+      serverLogger.warn(LOG_EVENTS.BFF_ACTION_REJECTED, {
         requestId: context.requestId,
         routeId: 'action:refresh-showcase',
         span: 'server_action',
@@ -81,7 +82,7 @@ export async function refreshShowcaseAction(formData: FormData): Promise<IShowca
       return { ok: false, errorCode: error.code };
     }
 
-    serverLogger.error('refreshShowcaseAction failed', {
+    serverLogger.error(LOG_EVENTS.BFF_ACTION_REFRESH_SHOWCASE_FAILED, {
       requestId: context.requestId,
       routeId: 'action:refresh-showcase',
       fields: { message: error instanceof Error ? error.message : String(error) },

@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 
+import { LOG_EVENTS } from '@/shared/observability/events';
 import { clientLogger } from '@/shared/logger/client-logger';
 import { reloadBrowserPage } from '@/shared/utils/reload-browser-page';
 
@@ -179,7 +180,7 @@ export function FrontendVersionWatcher({ currentReleaseId }: IFrontendVersionWat
           });
 
           if (!response.ok) {
-            clientLogger.debug('frontend_version_check_failed', {
+            clientLogger.debug(LOG_EVENTS.FRONTEND_VERSION_CHECK_FAILED, {
               span: 'frontend_version_watcher',
               fields: { status: response.status },
             });
@@ -190,13 +191,13 @@ export function FrontendVersionWatcher({ currentReleaseId }: IFrontendVersionWat
           const age = Number(response.headers?.get('age') ?? '0');
           const cdnCacheStatus = response.headers?.get('x-cache') ?? response.headers?.get('cf-cache-status') ?? '';
           if (Number.isFinite(age) && age > 0) {
-            clientLogger.warn('frontend_version_cache_age', {
+            clientLogger.warn(LOG_EVENTS.FRONTEND_VERSION_CACHE_AGE, {
               span: 'frontend_version_watcher',
               fields: { age, cacheControl, cdnCacheStatus },
             });
           }
           if (/hit/iu.test(cdnCacheStatus) || !/no-store|no-cache/iu.test(cacheControl)) {
-            clientLogger.warn('frontend_version_cache_risk', {
+            clientLogger.warn(LOG_EVENTS.FRONTEND_VERSION_CACHE_RISK, {
               span: 'frontend_version_watcher',
               fields: { age, cacheControl, cdnCacheStatus },
             });
@@ -204,7 +205,7 @@ export function FrontendVersionWatcher({ currentReleaseId }: IFrontendVersionWat
 
           const payload: unknown = await response.json();
           if (!isFrontendVersionResponse(payload)) {
-            clientLogger.warn('frontend_version_response_invalid', {
+            clientLogger.warn(LOG_EVENTS.FRONTEND_VERSION_RESPONSE_INVALID, {
               span: 'frontend_version_watcher',
             });
             return undefined;
@@ -213,7 +214,7 @@ export function FrontendVersionWatcher({ currentReleaseId }: IFrontendVersionWat
           return payload.releaseId.trim();
         } catch (error) {
           if (!(error instanceof DOMException && error.name === 'AbortError')) {
-            clientLogger.debug('frontend_version_check_unavailable', {
+            clientLogger.debug(LOG_EVENTS.FRONTEND_VERSION_CHECK_UNAVAILABLE, {
               span: 'frontend_version_watcher',
             });
           }

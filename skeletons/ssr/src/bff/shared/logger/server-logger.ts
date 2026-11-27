@@ -2,6 +2,7 @@ import 'server-only';
 
 import { getServerConfig } from '../server-config';
 
+import { type LogEventName } from '@/shared/observability/events';
 import { type ILogContext, type ILogger, type LogLevel, redactLogValue, shouldLog } from '@/shared/logger/logger-core';
 
 // 服务标识：单点定义，迁移新项目只改此处（不散落在格式化串里）。
@@ -14,7 +15,7 @@ const SERVICE_NAME = 'ssr-app-web';
  * @param message - 日志消息。
  * @param context - 结构化上下文（会脱敏）。
  */
-function log(level: LogLevel, message: string, context?: ILogContext): void {
+function log(level: LogLevel, message: LogEventName, context?: ILogContext): void {
   const config = getServerConfig();
   if (!shouldLog(level, config.logLevel)) {
     return;
@@ -49,7 +50,7 @@ function log(level: LogLevel, message: string, context?: ILogContext): void {
 /**
  * 服务端结构化 logger；业务代码禁止直接调用 console。
  */
-export const serverLogger: ILogger = {
+export const serverLogger: ILogger<LogEventName> = {
   debug: (message, context) => log('debug', message, context),
   info: (message, context) => log('info', message, context),
   warn: (message, context) => log('warn', message, context),
