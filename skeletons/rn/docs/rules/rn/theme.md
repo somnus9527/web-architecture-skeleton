@@ -209,3 +209,15 @@ export function getPaperTheme(tokens: IThemeTokens): MD3Theme {
 - 新增 token 同时给出亮 / 暗双值。
 - Provider 嵌套顺序：Theme → PaperTheme → 业务 Provider。
 - UI 业务代码不消费 Paper theme 内部结构。
+
+## 主题偏好持久化
+
+主题偏好是**非敏感**数据，按 `storage.md` 规则走 AsyncStorage，且只能经 `src/storage/*` 访问：
+
+- 存储模块：`src/storage/theme-preference.ts`，键 `app-theme-preference`，读写都吞掉异常并回落到 `system`。
+- Provider：`src/theme/theme-provider.tsx` 默认 `system`，启动后异步水合上次选择；显式传 `initialPreference`
+  时跳过水合（测试 / 演示用）。
+- 切换顺序：`light → dark → system → light`，每次切换立即持久化。
+- 入口：`src/components/ui/theme-toggle.tsx`（UI primitive），首页头部挂载；无障碍名称由调用方传入，primitive 不依赖 i18n。
+- 测试：`src/test/theme/*` 覆盖水合、持久化、非法值回落与写入失败；`src/test/components/theme-toggle.test.tsx` 覆盖循环与
+  `accessibilityLabel`。

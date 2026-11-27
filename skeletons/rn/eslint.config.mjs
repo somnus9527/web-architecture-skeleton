@@ -74,4 +74,9 @@ export default [
     files: ['src/storage/**/*.{ts,tsx}'],
     rules: { 'no-restricted-imports': 'off' },
   },
+  {
+    // 测试允许直接 import 平台 storage 做 mock，storage 规则只约束业务代码。
+    files: ['src/test/**/*.{ts,tsx}'],
+    rules: { 'no-restricted-imports': 'off' },
+  },
 ];

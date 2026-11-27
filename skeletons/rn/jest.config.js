@@ -23,6 +23,7 @@ module.exports = {
     'src/api/**/*.{ts,tsx}',
     'src/domain/**/*.{ts,tsx}',
     'src/theme/**/*.{ts,tsx}',
+    'src/storage/**/*.{ts,tsx}',
     'src/components/ui/**/*.{ts,tsx}',
     '!src/**/*.d.ts',
   ],

@@ -18,6 +18,7 @@
 | `Input`                                                                                   | 文本输入框 wrapper                                                |
 | `SearchField`                                                                             | 搜索输入                                                          |
 | `SectionHeader`                                                                           | 区块标题（title + description）                                   |
+| `ThemeToggle`                                                                             | 明暗主题切换（亮/暗/跟随系统循环，必须传 accessibilityLabel）     |
 | `Skeleton`                                                                                | 骨架屏                                                            |
 | `EmptyState`                                                                              | 空态 / 错误态，含 context（`list` / `detail` / `form` / `error`） |
 | `Badge`                                                                                   | 徽章                                                              |

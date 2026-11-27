@@ -15,6 +15,7 @@ import {
 } from '@components/ui/flat-list-performance';
 import { Screen } from '@components/ui/screen';
 import { SectionHeader } from '@components/ui/section-header';
+import { ThemeToggle } from '@components/ui/theme-toggle';
 import type { IHomeSummaryItem } from '@domain/contracts/home';
 import { useThemeTokens } from '@theme/theme-provider';
 
@@ -129,7 +130,12 @@ export function HomeScreen() {
         initialNumToRender={LOW_END_FLAT_LIST_INITIAL_RENDER_COUNT}
         keyExtractor={keyExtractor}
         ListEmptyComponent={<EmptyState context="list" testID="home-summary-empty" title={t('home.empty')} />}
-        ListHeaderComponent={<SectionHeader title={data.title} />}
+        ListHeaderComponent={
+          <View style={[styles.header, { gap: tokens.spacing.sm }]}>
+            <SectionHeader title={data.title} />
+            <ThemeToggle label={t('theme.toggle')} />
+          </View>
+        }
         maxToRenderPerBatch={LOW_END_FLAT_LIST_MAX_BATCH_COUNT}
         removeClippedSubviews
         renderItem={renderHomeSummaryRow}
@@ -142,6 +148,11 @@ export function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
+  header: {
+    alignItems: 'flex-start',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
   center: {
     alignItems: 'center',
     flex: 1,

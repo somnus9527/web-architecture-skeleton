@@ -1407,3 +1407,40 @@ RN 只跑「裸 console + 事件目录 + dot.case + PII」四项。
 
 补充测试：`shared-assets/src/test/shared/theme-mode.test.tsx` 与 `theme-toggle.test.tsx` 覆盖 parse/resolve/persist/apply、
 系统偏好变化、脱离 Provider 报错与点击切换；物化后两端共用。
+
+## 29. 第九批：RN 明暗主题（2026-11-27）
+
+RN 之前已有 `ThemeProvider` + token + Paper 主题映射，但偏好不持久化、没有切换入口，默认固定亮色。本批补齐：
+
+### 29.1 落地内容
+
+| 项       | 内容                                                                                                                |
+| -------- | ------------------------------------------------------------------------------------------------------------------- |
+| 存储     | 新增 `src/storage/theme-preference.ts`（AsyncStorage，键 `app-theme-preference`），读写失败静默回落                 |
+| 解析     | `theme-tokens.ts` 增加 `parseThemePreference`，非法值一律当未保存                                                   |
+| Provider | 默认 `system`；启动异步水合；`setThemePreference` 立即持久化；显式 `initialPreference` 时跳过水合                   |
+| 入口     | `src/components/ui/theme-toggle.tsx`：`light → dark → system` 循环，`accessibilityLabel` 由调用方传入；首页头部挂载 |
+| 测试     | 存储往返/非法值/读失败/写失败、Provider 水合与持久化/越界报错、Toggle 循环与无障碍名称                              |
+| 覆盖     | `jest.config.js` 的 `collectCoverageFrom` 纳入 `src/storage/**`；阈值不变                                           |
+
+无图标库依赖：切换控件用 Unicode 字形（☀/☾/◐）+ 44pt 触控区，避免为两个图标引入 `@expo/vector-icons`，
+也不越过 Paper boundary（`paper-controls.tsx` 仍是唯一 Paper 出口）。
+
+### 29.2 验证
+
+| 项                 | 结果                                                                              |
+| ------------------ | --------------------------------------------------------------------------------- |
+| RN `quality:check` | 通过（19 套 88 用例；覆盖率 82.15/60.71/80.59/82.83，高于 77/52/75/77 门槛）               |
+| 新增测试           | `theme-preference`、`theme-provider`、`theme-toggle` 三套                         |
+| 架构门禁           | layer boundary（storage 唯一出口）、paper boundary、test provider boundary 均通过 |
+| 仓库级             | toolchain、doc-links、init-smoke、workspace、materialize 幂等、frozen install     |
+
+### 29.3 与 Web 的差异
+
+| 项         | Web（SPA/SSR）                              | RN                                     |
+| ---------- | ------------------------------------------- | -------------------------------------- |
+| 载体       | `data-theme` + CSS token + antd algorithm   | Paper `MD3Theme` + `IThemeTokens`      |
+| 首屏防闪烁 | `public/theme-bootstrap.js` + cookie（SSR） | 原生启动屏，Provider 异步水合          |
+| 三态       | light / dark / system                       | 相同                                   |
+| 持久化     | localStorage + cookie                       | AsyncStorage（`src/storage/*`）        |
+| 视觉回归   | Playwright Linux 截图基线                   | 暂不做（RN 截图需真机/模拟器，成本高） |

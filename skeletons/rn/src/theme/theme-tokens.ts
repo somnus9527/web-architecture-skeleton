@@ -4,6 +4,21 @@
 export type ThemePreference = 'light' | 'dark' | 'system';
 
 /**
+ * 受支持的主题偏好全集；用于校验持久化里读出来的值。
+ */
+const THEME_PREFERENCES: readonly ThemePreference[] = ['light', 'dark', 'system'];
+
+/**
+ * 把任意字符串收敛为受支持的 ThemePreference。
+ *
+ * @param value - 存储或外部传入的原始值。
+ * @returns 合法偏好；非法值返回 null。
+ */
+export function parseThemePreference(value: string | null | undefined): ThemePreference | null {
+  return value && (THEME_PREFERENCES as readonly string[]).includes(value) ? (value as ThemePreference) : null;
+}
+
+/**
  * 颜色 token。语义化命名，跨亮暗色名字保持稳定。
  */
 export interface IThemeColors {
