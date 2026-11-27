@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+# push 前跑模板的完整校验与构建；宿主无关，GitHub / 云效 / Gitee 都靠这一层。
+pnpm check && pnpm build

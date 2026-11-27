@@ -161,22 +161,28 @@ if (isWebVariant) {
   check('commit-msg 调用提交证据检查', /check-commit-evidence/u.test(commitMsg));
 
   const prePush = existsSync(join(ROOT, '.husky/pre-push')) ? readFileSync(join(ROOT, '.husky/pre-push'), 'utf8') : '';
-  check('pre-push 调用增量检查', /check-changed/u.test(prePush));
+  check('pre-push 跑与 CI 相同的全量门禁', /quality:check/u.test(prePush));
   check('quality:check 串联安全扫描', /check:security/u.test(scripts['quality:check'] ?? ''));
+} else {
+  const prePush = existsSync(join(ROOT, '.husky/pre-push')) ? readFileSync(join(ROOT, '.husky/pre-push'), 'utf8') : '';
+  check('pre-push 跑全量门禁', /quality:check|pnpm check/u.test(prePush));
 }
 
 const gateConfig = readJson('.repo-gates.json') ?? {};
 const ciCommands = gateConfig.ciCommands ?? ['check:hygiene', 'check:gates', 'test', 'build'];
 
+// 门禁权威在本地 hook：CI 可能是 GitHub Actions / 云效 Flow / Gitee Go，也可能是私有构建，
+// 因此 workflow 只做「有则校验」；没有 CI 不失败，但必须有 pre-push 全量门禁。
 const workflows = listFiles('.github/workflows', /\.ya?ml$/u);
-const workflowText = workflows.map((file) => readFileSync(join(ROOT, file), 'utf8')).join('\n');
-check('存在 CI workflow', workflows.length > 0);
-for (const command of ciCommands) {
-  check(`CI 包含 ${command}`, workflowText.includes(`pnpm ${command}`));
+if (workflows.length > 0) {
+  const workflowText = workflows.map((file) => readFileSync(join(ROOT, file), 'utf8')).join('\n');
+  for (const command of ciCommands) {
+    check(`CI 包含 ${command}`, workflowText.includes(`pnpm ${command}`));
+  }
+  check('CI 不在 workflow 里写死 node-version', !/node-version:\s*['"]?\d/u.test(workflowText));
+  check('CI 用 node-version-file 读取 .nvmrc', /node-version-file:\s*['"]?[^\n]*\.nvmrc/u.test(workflowText));
+  check('CI 不写死 pnpm 版本（统一由 packageManager 声明）', !hasPnpmVersionPin(workflowText));
 }
-check('CI 不在 workflow 里写死 node-version', !/node-version:\s*['"]?\d/u.test(workflowText));
-check('CI 用 node-version-file 读取 .nvmrc', /node-version-file:\s*['"]?[^\n]*\.nvmrc/u.test(workflowText));
-check('CI 不写死 pnpm 版本（统一由 packageManager 声明）', !hasPnpmVersionPin(workflowText));
 
 const eslintConfig = ['eslint.config.js', 'eslint.config.mjs'].find((file) => existsSync(join(ROOT, file)));
 check('存在 ESLint 配置', Boolean(eslintConfig));

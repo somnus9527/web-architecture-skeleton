@@ -1477,3 +1477,19 @@ RN 之前已有 `ThemeProvider` + token + Paper 主题映射，但偏好不持�
 
 验证：两个变体 `quality:check`、`check:gates`、format、repo 级 toolchain/doc-links/init-smoke/workspace、materialize 幂等全过；
 根 CI 回到 5 个 job：4 个变体 quality + 1 个 skeleton check（原来是 9 个）。
+
+## 32. 第十二批：门禁下沉到 push，摆脱对 GitHub Actions 的依赖（2026-11-27）
+
+背景：派生项目的代码仓库可能在 GitHub、云效 Codeup、Gitee 或私有 GitLab，不能假设有 GitHub Actions。
+
+改动：
+
+| 项           | 内容                                                                                                                                                |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| pre-push     | spa/ssr 由 `check-changed` 增量改为 `pnpm quality:check`；RN 新增 pre-push 跑 `quality:check`；monorepo 新增 pre-push 跑 `pnpm check && pnpm build` |
+| pre-commit   | 不变：`lint-staged` + `check-staged.mjs`，保持秒级                                                                                                  |
+| verify-gates | CI workflow 改为「有则校验、无则不失败」；新增必须存在 pre-push 全量门禁的检查；非 Web 变体同样要求 pre-push                                        |
+| 文档         | `quality-tooling.md` 增加「门禁权威在 push」分层表；`.agents/verification.md` 更新 pre-push 说明；README 标注 quality:check 由 push 自动执行        |
+
+取舍：`quality:check` 含 build / 覆盖率 / 许可证 / SRI，SSR 单次 push 约 1~2 分钟；接受这个成本，换取「换任何托管平台都不丢门禁」。
+`git push --no-verify` 仍可绕过，属 Git 固有能力，按「防误提交」定位并在文档写明补跑要求。

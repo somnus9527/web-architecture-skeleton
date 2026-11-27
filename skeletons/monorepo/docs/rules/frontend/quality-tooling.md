@@ -147,3 +147,21 @@ Node 与 pnpm 的版本各自只有一个权威来源,不允许在 CI 里再写�
 - Linux 上脚本走 `playwright install --with-deps` 装系统依赖（本地需要 sudo，容器 / CI 里是 root）。
 - 自己接 CI 时固定 runner / 容器版本：2026-11-27 实测 `ubuntu-latest` 漂移到 26.04 后，
   `playwright install --with-deps` 会拉 `packages.microsoft.com/ubuntu/26.04` 并拿到 403。
+
+## 门禁权威在 push，而不是某个 CI 平台
+
+派生项目的托管平台不确定（GitHub / 云效 Codeup / Gitee / 私有 GitLab），所以不要把门禁押在 GitHub Actions 上：
+
+| 阶段       | 跑什么                                                            | 目的                                                               |
+| ---------- | ----------------------------------------------------------------- | ------------------------------------------------------------------ |
+| pre-commit | `lint-staged` + `check-staged.mjs`（暂存文件静态扫描 + 架构分片） | 秒级反馈，挡住能静态判定的问题                                     |
+| pre-push   | `pnpm quality:check`（与 CI 完全相同的一整套）                    | 真正门禁：不依赖任何托管平台的 CI                                  |
+| CI（可选） | 同一条 `pnpm quality:check`                                       | 第二道防线；GitHub 模板自带 workflow，换平台就换调用方式，命令不变 |
+
+约定：
+
+- **命令是契约**：任何平台（GitHub Actions、云效 Flow、Gitee Go、Jenkins）只要执行 `pnpm quality:check`，门禁就是等价的。
+- `verify-gates.mjs` 对 CI workflow 采取「有则校验、无则不失败」，但要求 `.husky/pre-push` 必须存在且跑全量门禁——
+  没有本地 hook 的项目，等于没有门禁。
+- hook 可以被 `git push --no-verify` 绕过，这是 Git 的固有行为；把它当「防误提交」而不是「不可绕过」，绕过时必须补跑一次。
+- pre-commit 不再承担重活：不在提交时跑 build / 覆盖率，避免每次 commit 几十秒。

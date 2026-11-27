@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+# push 前跑与 CI 相同的全量门禁；宿主无关，GitHub / 云效 / Gitee 都靠这一层。
+pnpm quality:check

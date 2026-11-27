@@ -10,7 +10,7 @@
 ## Routing
 
 - 代码改动：至少执行 `pnpm typecheck`、`pnpm lint` 和相关测试。
-- 代码改动：增加 `pnpm check:security`；pre-push 由 `pnpm check:changed` 只跑本次变更影响到的检查。
+- 代码改动：增加 `pnpm check:security`；pre-push 自动跑 `pnpm quality:check`（与 CI 同一套，宿主无关）。
 - 鉴权/会话改动：确认请求只走同源 HttpOnly cookie，响应不含 token，401 清理内存态；不得回退到 localStorage/Bearer。
 - API/mock 改动：增加 `pnpm mock:check`。
 - 构建发布改动：增加 `pnpm build:prod`、`bash -n scripts/deploy.sh` 和目标环境 HTTP 检查。

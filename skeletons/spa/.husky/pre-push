@@ -1,2 +1,4 @@
 #!/usr/bin/env sh
-node scripts/check-changed.mjs --base @{push}
+# push 前跑与 CI 完全相同的全量门禁：与托管平台无关，GitHub / 云效 / Gitee 都靠这一层。
+# 跳过用 git push --no-verify，仅限紧急场景，且必须补跑一次 pnpm quality:check。
+pnpm quality:check
