@@ -61,6 +61,47 @@ function run(root: string, files: string[]): { status: number; stdout: string; s
   }
 }
 
+/**
+ * 生成 N 天后的日期。
+ *
+ * @param {number} days - 天数。
+ * @returns {string} YYYY-MM-DD。
+ */
+function daysFromNow(days: number): string {
+  const date = new Date();
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
+/**
+ * 写文件到临时项目。
+ *
+ * @param {string} root - 临时项目根。
+ * @param {string} file - 相对路径。
+ * @param {string} content - 内容。
+ * @returns {void}
+ */
+function writeProjectFile(root: string, file: string, content: string): void {
+  const absolute = join(root, file);
+  mkdirSync(dirname(absolute), { recursive: true });
+  writeFileSync(absolute, content);
+}
+
+/**
+ * 生成一个足够长的函数体，用于相似度检测。
+ *
+ * @param {string} name - 函数名。
+ * @returns {string} 源码。
+ */
+function longFunction(name: string): string {
+  const lines = [`export function ${name}(input: number) {`];
+  for (let index = 0; index < 30; index += 1) {
+    lines.push(`  const value${index} = compute(input, { flag: true, mode: ${index}, label: 'x' });`);
+  }
+  lines.push('  return value0;', '}');
+  return lines.join('\n');
+}
+
 afterEach(() => {
   for (const root of roots.splice(0)) {
     rmSync(root, { recursive: true, force: true });
@@ -173,6 +214,93 @@ describe('check-reuse', () => {
 
     expect(result.status).toBe(0);
     expect(result.stdout).toContain('通过');
+  });
+
+  it('should reject copied function bodies (L2)', () => {
+    const root = createProject({
+      'src/features/alpha/helper.ts': longFunction('buildAlpha'),
+      'src/features/beta/helper.ts': longFunction('buildBeta'),
+    });
+
+    const result = run(root, ['src/features/alpha/helper.ts', 'src/features/beta/helper.ts']);
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('L2');
+    expect(result.stderr).toContain('相似度');
+  });
+
+  it('should suppress baselined violations until the code changes', () => {
+    const file = 'src/features/demo/hooks/use-demo.ts';
+    const source = [
+      "import { useEffect, useState } from 'react';",
+      'export function useDemo() {',
+      '  const [loading, setLoading] = useState(false);',
+      '  useEffect(() => {',
+      '    setLoading(true);',
+      '    void fetchDemo();',
+      '  }, []);',
+      '  return loading;',
+      '}',
+      'async function fetchDemo() {',
+      '  await Promise.resolve();',
+      '}',
+    ].join('\n');
+    const root = createProject({ [file]: source });
+
+    execFileSync(process.execPath, [SCRIPT, '--root', root, '--files', file, '--baseline'], {
+      encoding: 'utf8',
+    });
+    expect(run(root, [file]).status).toBe(0);
+
+    writeProjectFile(
+      root,
+      file,
+      source.replace('fetchDemo()', 'loadDemo()').replace('function fetchDemo', 'function loadDemo'),
+    );
+    expect(run(root, [file]).status).toBe(1);
+  });
+
+  it('should fail when the baseline has expired', () => {
+    const root = createProject({
+      'src/features/demo/panel.tsx': 'export const Panel = () => null;\n',
+    });
+    writeProjectFile(
+      root,
+      '.agents/reuse-baseline.json',
+      JSON.stringify({ generatedAt: '2026-01-01', expiresAt: '2026-01-02', items: [] }),
+    );
+
+    const result = run(root, ['src/features/demo/panel.tsx']);
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('baseline 已过期');
+  });
+
+  it('should honour a valid exception', () => {
+    const root = createProject({
+      'src/features/demo/storage.ts': "export const token = localStorage.getItem('token');\n",
+      '.agents/architecture-exceptions.json': JSON.stringify([
+        { path: 'src/features/demo/storage.ts', reason: '待迁移到 store', expiresAt: daysFromNow(30) },
+      ]),
+    });
+
+    expect(run(root, ['src/features/demo/storage.ts']).status).toBe(0);
+  });
+
+  it('should reject expired and over-long exceptions', () => {
+    const root = createProject({
+      'src/features/demo/storage.ts': "export const token = localStorage.getItem('token');\n",
+      '.agents/architecture-exceptions.json': JSON.stringify([
+        { path: 'src/features/demo/storage.ts', reason: '过期', expiresAt: daysFromNow(-1) },
+        { path: 'src/features/demo/other.ts', reason: '超长', expiresAt: daysFromNow(120) },
+      ]),
+    });
+
+    const result = run(root, ['src/features/demo/storage.ts']);
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('已过期');
+    expect(result.stderr).toContain('超过 90 天');
   });
 
   it('should print the registry (--list)', () => {

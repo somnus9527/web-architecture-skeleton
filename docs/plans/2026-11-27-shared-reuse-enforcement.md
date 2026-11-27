@@ -1,7 +1,7 @@
 # 共享复用与 UI 边界：可失败检查方案
 
 - 日期：2026-11-27
-- 状态：P0 已落地（2026-11-27）：注册表、`check-reuse` R1–R6、接线与夹具；L2 相似度、baseline、UI facade 属 P1/P2。
+- 状态：P0、P1 已落地（2026-11-27）：注册表、R1–R6、L2 相似度、baseline 与例外到期、接线与夹具；UI facade 与 catalog 属 P2。
 - 范围：`test/web-architecture-skeleton`
 - 定位：规则、注册表、脚本在本仓库定义，经 `tools/materialize.mjs` 下发到 `skeletons/{spa,ssr,rn}`；**实际生效点在据此初始化出来的项目实例**，本仓库只负责出货与自证。
 - 前置：[共享复用与 UI 基础设计](./2026-11-26-shared-reuse-and-ui-foundation.md)、[五项优化](./2026-11-25-five-optimizations.md)
@@ -67,20 +67,21 @@ R4 的 P0 名单只含已有 `src/shared/ui` 出口的 9 个名字（`button` / 
 - **归一化**：去注释、空行、import，按 token 5-gram 计算 Jaccard。
 - **阈值**：相似度 ≥ `0.82` 且 token ≥ `120` 才报，附两边片段与疑似替代。
 - **范围**：`src/{features,shared}/**`，排除 test/mock/locale。
-- 只在 `--tracked` 与增量 `--files` 上跑，不进 pre-commit。L2 属 P1，尚未实现。
+- 已实现：5-gram Jaccard，阈值 `0.82`，少于 120 token 不比；先按 token 数比值 0.77–1.3 预筛，注册表能力文件也参与比较（注册表之间互不比较）。
+- 只在 `--tracked` 与增量 `--files` 上跑，不进 pre-commit；一次最多列 10 对，其余汇总提示。
 
 L3（AST 语义级）不做，收益不抵依赖成本。
 
 ### 2.4 例外与 baseline
 
-- **例外**：沿用 `.agents/architecture-exceptions.json`，条目增加可选 `rule` 字段；`expiresAt` 距今天不得超过 90 天，过期即失败。
+- **例外**：沿用 `.agents/architecture-exceptions.json`，条目增加可选 `rule` 字段；`expiresAt` 距今天不得超过 90 天，过期、超期或缺 `reason` 都直接失败。
 - **baseline**：当规则上线晚于项目初始化（含后续新增规则）时，运行 `--baseline` 生成 `.agents/reuse-baseline.json`，记录 `rule + path + 代码片段 hash`；代码一改 hash 失配，必须重新判定，防止“一次豁免永久生效”。到期日 90 天，过期门禁失败。新初始化项目不需要 baseline。
 
 ### 2.5 接线
 
 | 位置                                                           | 改动                                                                                   |
 | -------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| `tools/project/scripts/check-reuse.mjs`                        | 新增；P0 支持 `--staged` / `--tracked` / `--files` / `--list`；`--baseline` 属 P1      |
+| `tools/project/scripts/check-reuse.mjs`                        | 新增；支持 `--staged` / `--tracked` / `--files` / `--list` / `--baseline`              |
 | `skeletons/{spa,ssr}/package.json`                             | 加 `check:reuse`、`reuse:list`，并把 `check:reuse` 加进 `quality:check`、`verify:push` |
 | `tools/project/scripts/check-staged.mjs`                       | pre-commit 分片里加“共享能力复用”一项（不直接改 husky）                                |
 | `shared-assets/src/test/architecture/reuse-registry.test.ts`   | 新增：路径存在、导出匹配、`src/shared/{hooks,ui}` 全登记                               |

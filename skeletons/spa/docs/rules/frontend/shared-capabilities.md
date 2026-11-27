@@ -52,5 +52,7 @@
   - R4 feature 内新建通用名组件（`button.tsx` 等）→ 进 `src/shared/ui`；
   - R5 深引 `@/shared/hooks/*`、`@/shared/ui/*` → 走 barrel；
   - R6 feature 内直接 `fetch` / `axios` → `api-client` + feature service。
+- L2 函数体相似度（5-gram Jaccard ≥ 0.82 且 ≥ 120 token）只在 `--tracked` 与增量检查跑，命中提示复用或上升为共享能力。
 - **无合法出口不设规则**：新增检测前必须先有对应能力，否则先补能力再上规则。
-- 例外写 `.agents/architecture-exceptions.json`，必须带 `reason` 与 90 天内到期日，过期即失败。
+- 例外写 `.agents/architecture-exceptions.json`，可带 `rule` 精确到规则；必须带 `reason` 与 90 天内到期日，过期或超期即失败。
+- 规则上线晚于项目初始化时，用 `node scripts/check-reuse.mjs --baseline` 生成 `.agents/reuse-baseline.json`（90 天到期，按片段指纹匹配）；代码一改指纹失效，必须重新处理。

@@ -2,6 +2,6 @@
   {
     "path": "src/features/showcase/showcase-page.tsx",
     "reason": "存量：showcase 直接引用 locale-switcher 的公共组件，待其上升到 shared 后移除",
-    "expiresAt": "2027-03-31"
+    "expiresAt": "2027-02-25"
   }
 ]
