@@ -133,3 +133,12 @@ Node 与 pnpm 的版本各自只有一个权威来源,不允许在 CI 里再写�
 - 判据：`maxDiffPixelRatio 0.002`，动画与光标冻结；动态内容（时间、随机 id）必须 route stub 或 mask，不允许靠容差蒙过去。
 - 视觉层不进 `quality:check`、不进 pre-commit / pre-push：Chromium 下载与截图成本高，只在 CI 的 visual job 与手动执行。
 - 更新基线后必须人工看 diff：截图变了要能说出原因（样式改动 / 主题改动），否则说明有未声明的回归。
+
+## 浏览器类门禁的运行环境必须固定
+
+axe 与截图基线都依赖 Chromium 的系统依赖：`runs-on` / `container` 必须固定版本，不能只用 `ubuntu-latest`。
+
+- 2026-11-27 实测：`ubuntu-latest` 漂移到 26.04 后，`playwright install --with-deps` 会拉
+  `packages.microsoft.com/ubuntu/26.04` 并拿到 403，a11y job 装不上浏览器直接失败。
+- 修法：a11y job 固定 `ubuntu-24.04`；visual job 固定 `node:24-bookworm` 容器，并在 apt 上设置
+  `Acquire::Retries "10"` + 重试三次。

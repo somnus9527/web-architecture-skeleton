@@ -90,7 +90,9 @@ jobs:
 
   a11y:
     name: ${{ matrix.variant }} a11y
-    runs-on: ubuntu-latest
+    # 固定 24.04：ubuntu-latest 漂移到 26.04 后，Playwright 装依赖会拉 packages.microsoft.com
+    # 的 26.04 源并拿到 403，a11y job 直接装不上 Chromium。
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     strategy:
       fail-fast: false
@@ -119,7 +121,12 @@ jobs:
       # 浏览器只在 a11y job 里装：quality 矩阵不背这 100 MB 和安装时间。
       - name: Install Chromium
         working-directory: skeletons/${{ matrix.variant }}
-        run: pnpm exec playwright install --with-deps chromium
+        run: |
+          echo 'Acquire::Retries "10";' | sudo tee /etc/apt/apt.conf.d/80retries >/dev/null
+          for attempt in 1 2 3; do
+            pnpm exec playwright install --with-deps chromium && break
+            sleep 10
+          done
 
       - name: Accessibility (axe, serious/critical must be zero)
         working-directory: skeletons/${{ matrix.variant }}
