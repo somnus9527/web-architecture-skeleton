@@ -1359,3 +1359,51 @@ RN 只跑「裸 console + 事件目录 + dot.case + PII」四项。
 | SPA  | `src/shared/observability/events.ts` | 12     | `src/shared/errors/codes.ts`（4）  |
 | SSR  | `src/shared/observability/events.ts` | 20     | `src/shared/errors/codes.ts`（14） |
 | RN   | `src/api/observability/events.ts`    | 4      | 暂不做（无 HTTP 信封错误码体系）   |
+
+## 28. 第八批：暗色模式与关键页截图基线（2026-11-27）
+
+### 28.1 暗色模式
+
+- 主题状态收敛到 `src/shared/theme/theme-mode-provider.tsx` + `theme-mode-context.ts`：`ThemeMode = light | dark | system`，
+  组件通过 `useThemeMode()` 读取，不自己碰 `document` / `localStorage`。
+- 持久化双写：localStorage（键 `app-theme-mode`）供首屏引导，cookie 供 SSR 服务端渲染；`system` 在客户端由
+  `prefers-color-scheme` 解析，并监听系统变化。
+- 首屏防闪烁用同源外部脚本 `public/theme-bootstrap.js`（在样式与 React 之前设置 `data-theme` 与 `color-scheme`）。
+  没有用 inline script：SPA 的 CSP 是 `script-src 'self'`，inline 会被直接拦掉；走外部脚本不需要放宽 CSP。
+- antd 用 `buildAntdTheme(mode)` 跟随切换（`algorithm` 用 `darkAlgorithm`/`defaultAlgorithm`），token 仍只来自
+  `design-tokens.ts`；业务组件不写死品牌色。
+- SSR 从 cookie 取初始模式传给 `AppProviders`，服务端首屏与客户端一致；`<html suppressHydrationWarning>` 允许引导脚本
+  在 hydration 前改属性。登录页与公开首页也补了 `ThemeToggle`（登录页用 `absolute` 定位，避免全页截图裁掉 fixed 元素）。
+- 共享原语 `ThemeToggle`（icon-only + `aria-label`）进 `@/shared/ui` 目录、UI catalog 与 axe 夹具；两个变体不再各写一份。
+
+### 28.2 关键页截图基线
+
+| 变体 | 页面                                               | 主题         |
+| ---- | -------------------------------------------------- | ------------ |
+| SPA  | 登录页、工作台（Playwright route stub 会话与数据） | light + dark |
+| SSR  | 登录页、公开首页（Prism mock）                     | light + dark |
+
+- 基线只在固定 Linux 环境生成：`node:24-bookworm` + 官方 Chromium，与 CI visual job 完全一致；本机 macOS 字体渲染不同，
+  因此提供 `bash scripts/run-visual.sh [--update]` 包一层 Docker，不提交 `-darwin` 基线。
+- 判据 `maxDiffPixelRatio: 0.002`，冻结动画与光标；动态内容用 route stub 固定，不靠容差蒙过去。
+- 视觉层不进 `quality:check`、不进 pre-commit / pre-push，只在 CI 的 `visual` job（matrix spa/ssr）与手动执行。
+- 过程中踩到两个坑：
+  1. 容差设 1% 时，登录页新增的主题切换图标只有 0.04% 像素变化，`--update-snapshots` 认为「在容差内」不重写基线，
+     于是基线里根本没有这个按钮；把容差收紧到 0.2% 才暴露出来。
+  2. 登录页切换按钮最初用 `position: fixed`，全页截图会把 fixed 元素裁掉；改成 `absolute` 后才稳定进入基线。
+  3. Debian apt 源偶发 5xx，容器里装浏览器依赖需要 `Acquire::Retries` + 重试循环，CI 步骤也带了同样的重试。
+  4. SSR 基线里混进了 Next dev 的开发指示器（左下角 N 徽标）；截图前用 CSS 隐藏 `nextjs-portal`，避免它随框架版本漂移。
+
+### 28.3 验证
+
+| 项                                | 结果                                                                                                                 |
+| --------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| SPA `quality:check`               | 通过（24 套 79 用例；覆盖率 77.66/62.45/74.07/77.13，高于门槛）                                                      |
+| SSR `quality:check`               | 通过（37 套 183 用例；覆盖率 70.32/57.33/65.21/70.09，高于门槛）                                                     |
+| SPA `test:a11y` / SSR `test:a11y` | 3 / 2 用例通过（含主题切换按钮）                                                                                     |
+| 截图基线                          | SPA 4 张（登录、工作台 × light/dark）、SSR 4 张（登录、首页 × light/dark），均在 `node:24-bookworm` 生成             |
+| 负向验证                          | 容差 1% 时漏掉了新增主题按钮（0.04% 像素差），收紧到 0.2% 后暴露；fixed 定位在整页截图被裁掉，改 absolute 后进入基线 |
+| 仓库级                            | toolchain、doc-links、init-smoke、workspace、materialize 幂等、两端 frozen install                                   |
+
+补充测试：`shared-assets/src/test/shared/theme-mode.test.tsx` 与 `theme-toggle.test.tsx` 覆盖 parse/resolve/persist/apply、
+系统偏好变化、脱离 Provider 报错与点击切换；物化后两端共用。

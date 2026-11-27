@@ -78,6 +78,7 @@ pnpm check:error-codes
 pnpm check:licenses
 pnpm check:sri
 pnpm licenses:notice
+pnpm test:visual   # 关键页截图基线（Linux 容器，见 scripts/run-visual.sh）
 pnpm test:a11y   # 真实 Chromium + axe；首次需 pnpm exec playwright install chromium
 pnpm quality:check
 ```

@@ -117,3 +117,19 @@ Node 与 pnpm 的版本各自只有一个权威来源,不允许在 CI 里再写�
 - `OFL-1.1`、`CC-BY-4.0` 这类要求署名的许可已放行，但声明必须真的随产物发布。
 - 生成物必须跨平台确定：读包内文件用列目录 + 大小写不敏感匹配，不要直接 `existsSync('LICENSE')`——
   macOS 大小写不敏感会掩盖 Linux CI 上的差异，表现为「本地最新、CI 过期」。
+
+## 视觉回归
+
+关键页截图基线用 Playwright `toHaveScreenshot()`，只覆盖「页面结构 + 明暗主题」两个维度：
+
+| 变体 | 页面                              | 主题         |
+| ---- | --------------------------------- | ------------ |
+| SPA  | 登录页、工作台（mock 会话与数据） | light / dark |
+| SSR  | 登录页、公开首页                  | light / dark |
+
+- 命令：`pnpm test:visual` 校验；`bash scripts/run-visual.sh --update` 重新生成基线并写回。
+- **基线只在固定 Linux 环境生成**（`node:24-bookworm` + 官方 Chromium，与 CI visual job 同一镜像）。macOS 字体渲染不同，
+  本地直接跑会得到另一套 `-darwin` 基线；用脚本包一层 Docker，不要提交本机基线。
+- 判据：`maxDiffPixelRatio 0.002`，动画与光标冻结；动态内容（时间、随机 id）必须 route stub 或 mask，不允许靠容差蒙过去。
+- 视觉层不进 `quality:check`、不进 pre-commit / pre-push：Chromium 下载与截图成本高，只在 CI 的 visual job 与手动执行。
+- 更新基线后必须人工看 diff：截图变了要能说出原因（样式改动 / 主题改动），否则说明有未声明的回归。

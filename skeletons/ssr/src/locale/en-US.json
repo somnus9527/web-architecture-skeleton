@@ -53,5 +53,8 @@
         "retry": "Try again"
       }
     }
+  },
+  "theme": {
+    "toggle": "Toggle theme"
   }
 }

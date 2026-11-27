@@ -25,6 +25,7 @@ textarea {
 }
 
 .page-center {
+  position: relative;
   display: grid;
   min-height: 100vh;
   place-items: center;
@@ -70,6 +71,13 @@ textarea {
 .app-shell__user strong {
   color: var(--color-text);
   font-weight: 500;
+}
+
+.auth-theme-toggle {
+  position: absolute;
+  top: var(--space-4);
+  right: var(--space-4);
+  z-index: 1;
 }
 
 .auth-card {

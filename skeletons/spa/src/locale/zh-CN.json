@@ -50,5 +50,6 @@
   "routes.settings.title": "设置页面占位",
   "routes.settings.description": "设置路由已经预留，后续接入账号、权限和系统配置。",
   "api.error.invalid_response": "接口响应格式不符合约定。",
-  "api.error.session_expired": "登录已过期，请重新登录。"
+  "api.error.session_expired": "登录已过期，请重新登录。",
+  "theme.toggle": "切换主题"
 }

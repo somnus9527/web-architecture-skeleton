@@ -1,6 +1,6 @@
 import { useLoginForm } from '@/features/auth/hooks/use-login-form';
 import { t } from '@/locale';
-import { Button, Input, LockKeyhole } from '@/shared/ui';
+import { Button, Input, LockKeyhole, ThemeToggle } from '@/shared/ui';
 
 /**
  * 登录页面，承载账号密码表单与登录失败反馈。
@@ -12,6 +12,9 @@ export function Component() {
 
   return (
     <main className="page-center">
+      <div className="auth-theme-toggle">
+        <ThemeToggle label={t('theme.toggle')} />
+      </div>
       <section className="auth-card">
         <p className="auth-card__icon">
           <LockKeyhole aria-hidden="true" />

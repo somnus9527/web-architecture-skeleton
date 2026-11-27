@@ -14,6 +14,7 @@ import {
   Select,
   StatCard,
   StatusPill,
+  ThemeToggle,
 } from '@/shared/ui';
 
 import '@/styles.css';
@@ -37,6 +38,7 @@ function HarnessPage() {
 
       <section aria-labelledby="buttons-heading">
         <h2 id="buttons-heading">按钮</h2>
+        <ThemeToggle label="切换主题" />
         <Button tone="primary">主要动作</Button>
         <Button>次要动作</Button>
         <Button tone="ghost">幽灵动作</Button>

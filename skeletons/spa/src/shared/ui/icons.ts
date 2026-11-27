@@ -9,8 +9,10 @@ export {
   CircleDollarSign,
   LockKeyhole,
   LogOut,
+  Moon,
   PackageCheck,
   RefreshCcw,
   Search,
   ShieldAlert,
+  Sun,
 } from 'lucide-react';

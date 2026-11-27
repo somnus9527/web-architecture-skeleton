@@ -124,3 +124,41 @@ jobs:
       - name: Accessibility (axe, serious/critical must be zero)
         working-directory: skeletons/${{ matrix.variant }}
         run: pnpm test:a11y
+
+  visual:
+    name: ${{ matrix.variant }} visual
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    # 截图基线对字体/渲染敏感：固定 node:24-bookworm + 官方 Chromium，与本地生成命令完全一致。
+    container:
+      image: node:24-bookworm
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [spa, ssr]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@12.4.1 --activate
+
+      - name: Install dependencies
+        working-directory: skeletons/${{ matrix.variant }}
+        run: pnpm install --frozen-lockfile
+
+      # apt 偶发 5xx，重试三次；浏览器只在 visual job 里装。
+      - name: Install Chromium
+        working-directory: skeletons/${{ matrix.variant }}
+        run: |
+          echo 'Acquire::Retries "10";' > /etc/apt/apt.conf.d/80retries
+          for attempt in 1 2 3; do
+            pnpm exec playwright install --with-deps chromium && break
+            sleep 10
+          done
+
+      - name: Visual regression (light + dark)
+        working-directory: skeletons/${{ matrix.variant }}
+        run: pnpm test:visual

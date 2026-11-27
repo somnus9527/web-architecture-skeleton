@@ -55,3 +55,23 @@
 - 新 token 同时存在于 `design-tokens.ts` 与 `tokens.css`。
 - 共享 UI 样式只在 `shared/ui/ui.css`，页面 CSS 没有复制一套按钮/输入框/状态胶囊。
 - SSR 首屏样式由 `AntdRegistry` 抽取，无 FOUC、无重复主题 CSS 变量类。
+
+## 明暗主题
+
+主题由 `<html data-theme="light|dark">` 驱动，token 在 `tokens.css` 里分 `:root` 与 `[data-theme='dark']` 两套：
+
+- 状态收敛在 `src/shared/theme/theme-mode-provider.tsx`：`ThemeMode` 为 `light | dark | system`，`useThemeMode()` 只读上下文，
+  组件不自己读写 `document`。
+- 持久化同时写 localStorage（键 `app-theme-mode`，供首屏引导）与 cookie（同名，供 SSR 服务端渲染），
+  `system` 由 `prefers-color-scheme` 在客户端解析。
+- 首屏防闪烁用同源外部脚本 `public/theme-bootstrap.js`：在样式与 React 之前设置 `data-theme` 与 `color-scheme`。
+  **不得**改成 inline script——SPA 的 `script-src 'self'` 会直接拦掉，SSR 还得额外维护 nonce 注入。
+- antd 主题用 `buildAntdTheme(mode)`（`antd-theme.ts`）跟随切换，不要在组件里写死 brand 色。
+- SSR 从 cookie 取初始模式传给 `AppProviders`，服务端渲染与客户端首帧保持一致；`<html suppressHydrationWarning>` 允许
+  引导脚本在 hydration 前改属性。
+- 主题切换按钮是共享原语 `ThemeToggle`：必须有 `aria-label`，并进 axe 夹具；不要在两个变体各写一份。
+
+## 明暗主题的验证
+
+- `pnpm test:a11y`：两种主题下都不允许 serious/critical 无障碍违规。
+- `pnpm test:visual`：关键页 light/dark 截图基线见 `quality-tooling.md` 的「视觉回归」。

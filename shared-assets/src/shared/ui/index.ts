@@ -7,6 +7,7 @@ export { PageHeader, type IPageHeaderProps } from './page-header';
 export { Select, type ISelectProps } from './select';
 export { StatCard, type IStatCardProps, type StatTone } from './stat-card';
 export { StatusPill, type IStatusPillProps, type StatusTone } from './status-pill';
+export { ThemeToggle, type IThemeToggleProps } from './theme-toggle';
 export {
   Activity,
   CircleDollarSign,
@@ -16,4 +17,6 @@ export {
   RefreshCcw,
   Search,
   ShieldAlert,
+  Sun,
+  Moon,
 } from './icons';

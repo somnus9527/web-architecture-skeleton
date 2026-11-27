@@ -250,6 +250,12 @@ function materialize(variant) {
   if (sharedAssets.theme !== false && (variant === 'spa' || variant === 'ssr')) {
     const sharedTheme = join(ROOT, 'shared-assets', 'src', 'shared', 'theme');
     cpSync(sharedTheme, join(ROOT, 'skeletons', variant, 'src', 'shared', 'theme'), { recursive: true });
+
+    // 首屏主题引导脚本：CSP 只允许同源脚本，因此物化成 public 静态资源而不是 inline script。
+    const bootstrap = join(ROOT, 'shared-assets', 'public', 'theme-bootstrap.js');
+    if (existsSync(bootstrap)) {
+      cpSync(bootstrap, join(ROOT, 'skeletons', variant, 'public', 'theme-bootstrap.js'), { recursive: true });
+    }
   }
 
   const sharedSecurity = join(ROOT, 'shared-assets', 'src', 'shared', 'security');

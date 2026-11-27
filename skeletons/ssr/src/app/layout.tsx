@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
+import Script from 'next/script';
 import { NextIntlClientProvider } from 'next-intl';
-import { headers } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { getLocale, getMessages, getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
 
@@ -9,6 +10,7 @@ import { AppProviders } from './providers';
 import { validateServerConfig } from '@/bff/shared/server-config';
 import { getDeploymentVersion } from '@/shared/config/deployment-version';
 import { getPublicConfig } from '@/shared/config/public-config';
+import { parseThemeMode, THEME_COOKIE_NAME } from '@/shared/theme/theme-mode';
 
 import '@fontsource/inter/400.css';
 import '@fontsource/inter/500.css';
@@ -62,11 +64,16 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   const locale = await getLocale();
   const messages = await getMessages();
   const currentReleaseId = process.env.NODE_ENV === 'production' ? getDeploymentVersion() : undefined;
+  const themeMode = parseThemeMode((await cookies()).get(THEME_COOKIE_NAME)?.value);
 
   return (
     <html lang={locale} suppressHydrationWarning>
+      <head>
+        {/* 同源外部脚本：beforeInteractive 由 Next 注入到 head 最前，深色用户不会看到白屏；CSP 不需要放宽。 */}
+        <Script src="/theme-bootstrap.js" strategy="beforeInteractive" />
+      </head>
       <body>
-        <AppProviders currentReleaseId={currentReleaseId}>
+        <AppProviders currentReleaseId={currentReleaseId} initialThemeMode={themeMode}>
           <NextIntlClientProvider locale={locale} messages={messages}>
             <div className="page-shell">{children}</div>
           </NextIntlClientProvider>

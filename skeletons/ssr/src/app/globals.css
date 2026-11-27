@@ -12,6 +12,12 @@
   --skeleton-scrollbar-thumb-hover: #7d8a96;
 }
 
+[data-theme='dark'] {
+  --skeleton-scrollbar-track: #1f242d;
+  --skeleton-scrollbar-thumb: #475569;
+  --skeleton-scrollbar-thumb-hover: #64748b;
+}
+
 html[lang='zh-CN'] {
   --font-sans: var(--font-zh);
 }

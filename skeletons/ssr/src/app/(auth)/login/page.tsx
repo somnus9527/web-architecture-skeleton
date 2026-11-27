@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { getLocale, getTranslations } from 'next-intl/server';
 
 import { LocaleSwitcher } from '@/features/locale-switcher/locale-switcher';
+import { ThemeToggleClient } from '@/features/theme/theme-toggle';
 import { localizedPath, toLocaleCode } from '@/shared/i18n/public-locale-routing';
 
 /**
@@ -23,7 +24,10 @@ export default async function LoginPage() {
           <h1 className="public-page__title">{t('title')}</h1>
           <p className="public-page__subtitle">{t('description')}</p>
         </div>
-        <LocaleSwitcher />
+        <div className="public-page__actions">
+          <ThemeToggleClient />
+          <LocaleSwitcher />
+        </div>
       </div>
       <div className="public-page__body">
         <Link className="text-link" href={localizedPath(locale, '/')} hrefLang={locale}>

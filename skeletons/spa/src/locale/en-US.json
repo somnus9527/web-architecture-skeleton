@@ -50,5 +50,6 @@
   "routes.settings.title": "Settings placeholder",
   "routes.settings.description": "The settings route is reserved for account, permission, and system configuration.",
   "api.error.invalid_response": "The API response did not match the agreed shape.",
-  "api.error.session_expired": "Your session expired. Please sign in again."
+  "api.error.session_expired": "Your session expired. Please sign in again.",
+  "theme.toggle": "Toggle theme"
 }
