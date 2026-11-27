@@ -23,7 +23,6 @@ function selectTests(files) {
   if (files.some((file) => file.startsWith('src/features/'))) {
     add(
       'src/test/architecture/feature-isolation.test.ts',
-      'src/test/architecture/hook-duplication.test.ts',
       'src/test/architecture/file-split-boundary.test.ts',
       'src/test/architecture/logging-boundary.test.ts',
     );
@@ -33,6 +32,7 @@ function selectTests(files) {
       'src/test/architecture/shared-independence.test.ts',
       'src/test/architecture/shared-ui-contract.test.ts',
       'src/test/architecture/shared-capabilities.test.ts',
+      'src/test/architecture/reuse-registry.test.ts',
       'src/test/architecture/file-split-boundary.test.ts',
       'src/test/architecture/logging-boundary.test.ts',
     );

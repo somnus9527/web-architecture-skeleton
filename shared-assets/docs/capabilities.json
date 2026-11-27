@@ -1,0 +1,46 @@
+[
+  {
+    "id": "use-request",
+    "kind": "hook",
+    "export": "useRequest",
+    "import": "@/shared/hooks",
+    "path": "src/shared/hooks/use-request.ts",
+    "purpose": "异步读取的 data / loading / error / refetch / mutate",
+    "replaces": ["手写 loading/error 三态", "feature 内自建 fetch wrapper"],
+    "owner": "frontend-platform",
+    "since": "2026-11-27"
+  },
+  {
+    "id": "use-async-action",
+    "kind": "hook",
+    "export": "useAsyncAction",
+    "import": "@/shared/hooks",
+    "path": "src/shared/hooks/use-async-action.ts",
+    "purpose": "写操作的 pending / error / 并发键",
+    "replaces": ["手写 submitting 布尔", "手写并发键"],
+    "owner": "frontend-platform",
+    "since": "2026-11-27"
+  },
+  {
+    "id": "use-debounced-value",
+    "kind": "hook",
+    "export": "useDebouncedValue",
+    "import": "@/shared/hooks",
+    "path": "src/shared/hooks/use-debounced-value.ts",
+    "purpose": "值去抖，请求交给 useRequest",
+    "replaces": ["手写 setTimeout + clearTimeout 去抖"],
+    "owner": "frontend-platform",
+    "since": "2026-11-27"
+  },
+  {
+    "id": "use-disclosure",
+    "kind": "hook",
+    "export": "useDisclosure",
+    "import": "@/shared/hooks",
+    "path": "src/shared/hooks/use-disclosure.ts",
+    "purpose": "布尔开关：isOpen / open / close / toggle / setOpen",
+    "replaces": ["手写 open/close 两个 setter"],
+    "owner": "frontend-platform",
+    "since": "2026-11-27"
+  }
+]

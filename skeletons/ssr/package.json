@@ -35,6 +35,8 @@
     "check:seo:content": "node scripts/check-seo-content.mjs --tracked",
     "check:seo:runtime": "node scripts/check-seo-runtime.mjs",
     "check:ui": "node scripts/check-ui-boundary.mjs --tracked",
+    "check:reuse": "node scripts/check-reuse.mjs --tracked",
+    "reuse:list": "node scripts/check-reuse.mjs --list",
     "deploy": "bash scripts/deploy.sh",
     "dev": "pnpm dev:mock",
     "dev:dev": "node scripts/run-next-with-env.mjs .env.dev dev -H 127.0.0.1",
@@ -47,7 +49,7 @@
     "mock:check": "node scripts/check-openapi-mock.mjs",
     "mock:serve": "prism mock mock/openapi.yaml --host 127.0.0.1 --port 4011",
     "prepare": "husky",
-    "quality:check": "pnpm check:gates && pnpm typecheck && pnpm lint && pnpm check:hygiene && pnpm check:licenses && pnpm check:security && pnpm check:seo && pnpm check:ui && pnpm check:logs && pnpm check:error-codes && pnpm check:i18n && pnpm check:a11y && pnpm mock:check && pnpm check:contract && pnpm test:coverage && pnpm format:check && pnpm build:prod && pnpm check:sri",
+    "quality:check": "pnpm check:gates && pnpm typecheck && pnpm lint && pnpm check:hygiene && pnpm check:licenses && pnpm check:security && pnpm check:seo && pnpm check:ui && pnpm check:reuse && pnpm check:logs && pnpm check:error-codes && pnpm check:i18n && pnpm check:a11y && pnpm mock:check && pnpm check:contract && pnpm test:coverage && pnpm format:check && pnpm build:prod && pnpm check:sri",
     "start:prod": "node .next/standalone/server.js",
     "test:coverage": "vitest run --coverage",
     "check:licenses": "node scripts/check-licenses.mjs",
@@ -56,7 +58,7 @@
     "test": "vitest run",
     "test:a11y": "playwright test",
     "typecheck": "tsc -b",
-    "verify:push": "pnpm check:gates && pnpm typecheck && pnpm lint && pnpm check:hygiene && pnpm check:security && pnpm check:seo && pnpm check:ui && pnpm check:logs && pnpm check:error-codes && pnpm check:i18n && pnpm check:a11y && pnpm mock:check && pnpm check:contract && pnpm test && pnpm format:check",
+    "verify:push": "pnpm check:gates && pnpm typecheck && pnpm lint && pnpm check:hygiene && pnpm check:security && pnpm check:seo && pnpm check:ui && pnpm check:reuse && pnpm check:logs && pnpm check:error-codes && pnpm check:i18n && pnpm check:a11y && pnpm mock:check && pnpm check:contract && pnpm test && pnpm format:check",
     "verify:push:changed": "node scripts/check-changed.mjs --base @{push}"
   },
   "lint-staged": {

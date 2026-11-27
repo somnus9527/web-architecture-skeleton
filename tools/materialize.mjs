@@ -8,7 +8,16 @@
  * 复制与追加之后统一做 {{placeholder}} 替换，最后按实际文件生成索引。
  */
 
-import { appendFileSync, cpSync, readdirSync, readFileSync, rmSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
+import {
+  appendFileSync,
+  cpSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+  existsSync,
+  mkdirSync,
+} from 'node:fs';
 import { join, dirname } from 'node:path';
 import process from 'node:process';
 
@@ -231,6 +240,10 @@ function materialize(variant) {
       if (entry.name === 'deployment' && variant !== 'spa' && variant !== 'ssr') {
         continue;
       }
+      // 能力注册表只对下发了共享 hook 的变体有意义，避免生成指向不存在路径的清单。
+      if (entry.name === 'capabilities.json' && sharedAssets.hooks === false) {
+        continue;
+      }
       cpSync(join(sharedDocs, entry.name), join(ROOT, 'skeletons', variant, 'docs', entry.name), { recursive: true });
     }
   }
@@ -242,8 +255,14 @@ function materialize(variant) {
 
     // SSR 专属的 next/link 链接按钮不进入 SPA；index.ts 追加导出避免维护第二份 barrel。
     if (variant === 'ssr') {
-      cpSync(join(ROOT, 'shared-assets', 'src', 'shared', 'ui-ssr', 'link-button.tsx'), join(uiTarget, 'link-button.tsx'));
-      appendFileSync(join(uiTarget, 'index.ts'), "export { LinkButton, type ILinkButtonProps } from './link-button';\n");
+      cpSync(
+        join(ROOT, 'shared-assets', 'src', 'shared', 'ui-ssr', 'link-button.tsx'),
+        join(uiTarget, 'link-button.tsx'),
+      );
+      appendFileSync(
+        join(uiTarget, 'index.ts'),
+        "export { LinkButton, type ILinkButtonProps } from './link-button';\n",
+      );
     }
   }
 

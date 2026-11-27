@@ -108,7 +108,7 @@ const requiredScripts = [
   'check:gates',
   'env:init',
   ...(isWebVariant
-    ? ['check:security', 'check:changed', 'check:architecture', 'check:seo', 'check:ui', 'check:logs']
+    ? ['check:security', 'check:changed', 'check:architecture', 'check:seo', 'check:ui', 'check:reuse', 'check:logs']
     : []),
 ];
 
@@ -174,6 +174,7 @@ if (isWebVariant) {
   check('pre-push 调用门禁档位', /quality:check|verify:push/u.test(prePush));
   check('存在 Full / Fast / Changed 三档脚本', hasPushTiers(scripts));
   check('quality:check 串联安全扫描', /check:security/u.test(scripts['quality:check'] ?? ''));
+  check('quality:check 串联共享复用检查', /check:reuse/u.test(scripts['quality:check'] ?? ''));
 } else {
   const prePush = existsSync(join(ROOT, '.husky/pre-push')) ? readFileSync(join(ROOT, '.husky/pre-push'), 'utf8') : '';
   check('pre-push 调用门禁档位', /quality:check|verify:push|pnpm check/u.test(prePush));

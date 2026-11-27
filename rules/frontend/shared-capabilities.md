@@ -40,3 +40,17 @@
 - Hook 放 `src/shared/hooks/use-<kebab>.ts`，导出 `use<Camel>`。
 - 共享组件放 `src/shared/ui/`，文件名 kebab-case，组件名 PascalCase。
 - 新增原语时同步更新本文与 `src/shared/hooks/README.md`，两处必须一致。
+
+## 注册表与检查
+
+- 能力清单位于 `docs/capabilities.json`，随骨架物化下发；新增共享 hook/util 必须登记，`pnpm check:reuse` 校验路径存在、导出名匹配、`src/shared/hooks` 下无漏登记。
+- 写业务代码前先查：`pnpm reuse:list`，或直接看注册表的 `purpose`。
+- `pnpm check:reuse` 已接入 `quality:check` 与 pre-commit，命中以下模式直接失败：
+  - R1 `useEffect` + `setLoading` 一类手写请求三态 → `useRequest` / `useAsyncAction`；
+  - R2 `setTimeout` + `clearTimeout` 手写去抖 → `useDebouncedValue`；
+  - R3 业务层直连 `localStorage` / `sessionStorage` / `matchMedia`；
+  - R4 feature 内新建通用名组件（`button.tsx` 等）→ 进 `src/shared/ui`；
+  - R5 深引 `@/shared/hooks/*`、`@/shared/ui/*` → 走 barrel；
+  - R6 feature 内直接 `fetch` / `axios` → `api-client` + feature service。
+- **无合法出口不设规则**：新增检测前必须先有对应能力，否则先补能力再上规则。
+- 例外写 `.agents/architecture-exceptions.json`，必须带 `reason` 与 90 天内到期日，过期即失败。

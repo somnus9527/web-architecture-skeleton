@@ -13,7 +13,6 @@ import process from 'node:process';
 const ARCH_TESTS = {
   features: [
     'src/test/architecture/feature-isolation.test.ts',
-    'src/test/architecture/hook-duplication.test.ts',
     'src/test/architecture/file-split-boundary.test.ts',
     'src/test/architecture/logging-boundary.test.ts',
   ],
@@ -129,6 +128,10 @@ if (sourceFiles.length > 0) {
 
   if (existsSync('scripts/check-security.mjs')) {
     run(process.execPath, ['scripts/check-security.mjs', '--files', ...sourceFiles]);
+  }
+
+  if (existsSync('scripts/check-reuse.mjs')) {
+    run(process.execPath, ['scripts/check-reuse.mjs', '--files', ...sourceFiles]);
   }
 
   const tests = new Set();
