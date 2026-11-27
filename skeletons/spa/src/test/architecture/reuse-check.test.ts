@@ -168,10 +168,10 @@ describe('check-reuse', () => {
 
   it('should reject generic component names inside features (R4)', () => {
     const root = createProject({
-      'src/features/demo/components/button.tsx': 'export const LocalButton = () => null;\n',
+      'src/features/demo/components/modal.tsx': 'export const LocalModal = () => null;\n',
     });
 
-    const result = run(root, ['src/features/demo/components/button.tsx']);
+    const result = run(root, ['src/features/demo/components/modal.tsx']);
 
     expect(result.status).toBe(1);
     expect(result.stderr).toContain('R4');

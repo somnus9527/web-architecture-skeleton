@@ -1,7 +1,7 @@
 # 共享复用与 UI 边界：可失败检查方案
 
 - 日期：2026-11-27
-- 状态：P0、P1 已落地（2026-11-27）：注册表、R1–R6、L2 相似度、baseline 与例外到期、接线与夹具；UI facade 与 catalog 属 P2。
+- 状态：P0、P1、P2 已落地（2026-11-27）：注册表、R1–R6、L2、baseline 与例外到期、四个 UI facade、component catalog。
 - 范围：`test/web-architecture-skeleton`
 - 定位：规则、注册表、脚本在本仓库定义，经 `tools/materialize.mjs` 下发到 `skeletons/{spa,ssr,rn}`；**实际生效点在据此初始化出来的项目实例**，本仓库只负责出货与自证。
 - 前置：[共享复用与 UI 基础设计](./2026-11-26-shared-reuse-and-ui-foundation.md)、[五项优化](./2026-11-25-five-optimizations.md)
@@ -57,7 +57,7 @@
 | R5  | 深引 `@/shared/hooks/*`、`@/shared/ui/*`，而非 barrel                                                                                    | 改从 `@/shared/hooks`、`@/shared/ui` 导入     |
 | R6  | `features/**` 直接 `fetch(` 或自建 axios 实例                                                                                            | `@/shared/tools/api-client` + feature service |
 
-R4 的 P0 名单只含已有 `src/shared/ui` 出口的 9 个名字（`button` / `input` / `select` / `async-state` / `empty-state` / `page-header` / `stat-card` / `field-row` / `status-pill`）；`modal` / `dialog` / `table` / `textarea` / `card` / `badge` / `pagination` 随 P2 facade 落地后再启用，避免“禁了但只能违规”。
+R4 名单已随 facade 到位扩展到 `button` / `input` / `select` / `textarea` / `checkbox` / `modal` / `dialog` / `table` / `async-state` / `empty-state` / `page-header` / `stat-card` / `field-row` / `status-pill`；`card` / `badge` / `pagination` 尚无出口，仍未启用。
 
 不新增“div 伪按钮”规则：`eslint-plugin-jsx-a11y` 的 `recommended` 已在，覆盖 `click-events-have-key-events` / `no-static-element-interactions`，避免同一约束两套实现。
 
@@ -159,8 +159,8 @@ SEO 判断：
 
 ### 3.5 规则清理
 
-- 删除 `ui-style-and-components.md` 的“派生项目自建”表（`ConsoleButton` / `ConsoleModal` / `DateFilterField` / `AnimatedProgress` 等 8 项）。
-- 文档中不得出现“骨架未提供却要求使用”的组件名；把其中通用的视觉结论（状态胶囊 5 色、tone 语义、表格列宽、禁用态色值）保留为不绑定组件名的通用规则。
+- 已删除 `ui-style-and-components.md` 的“派生项目自建”表与全部 `Console*` / `DateFilterField` / `AnimatedProgress` 强制条款（原先要求派生项目自建，和“骨架已内置”自相矛盾）。
+- 文档中不得出现“骨架未提供却要求使用”的组件名；通用视觉结论（tone 语义、表格列宽、禁用态、focus、字号层级）改写为不绑定组件名的规则保留。
 - 项目自建组件只能登记在 `ui-catalog.json` 的 `scope: "project"`，不得藏在 `features/**`。
 
 ### 3.6 UI catalog

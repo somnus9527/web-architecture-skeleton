@@ -244,6 +244,10 @@ function materialize(variant) {
       if (entry.name === 'capabilities.json' && sharedAssets.hooks === false) {
         continue;
       }
+      // UI catalog 只对下发了共享 UI 的变体有意义。
+      if (entry.name === 'ui-catalog.json' && sharedAssets.ui === false) {
+        continue;
+      }
       cpSync(join(sharedDocs, entry.name), join(ROOT, 'skeletons', variant, 'docs', entry.name), { recursive: true });
     }
   }

@@ -52,8 +52,13 @@ const MAX_SIMILARITY_REPORTS = 10;
  */
 const GENERIC_COMPONENT_NAMES = new Set([
   'button',
+  'checkbox',
+  'dialog',
   'input',
+  'modal',
   'select',
+  'table',
+  'textarea',
   'async-state',
   'empty-state',
   'page-header',

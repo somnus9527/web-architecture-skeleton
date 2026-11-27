@@ -6,6 +6,8 @@ import { AppProviders } from '@/app/providers/app-providers';
 import {
   AsyncState,
   Button,
+  Checkbox,
+  Dialog,
   EmptyState,
   FieldRow,
   Input,
@@ -14,6 +16,8 @@ import {
   Select,
   StatCard,
   StatusPill,
+  Table,
+  TextArea,
   ThemeToggle,
 } from '@/shared/ui';
 
@@ -75,6 +79,25 @@ function HarnessPage() {
             ]}
           />
         </div>
+      </section>
+
+      <section aria-labelledby="controls-heading">
+        <h2 id="controls-heading">表单控件、表格与弹窗</h2>
+        <div>
+          <span>备注</span>
+          <TextArea aria-label="备注" placeholder="请输入备注" />
+        </div>
+        <div>
+          <Checkbox defaultChecked>同意条款</Checkbox>
+        </div>
+        <Table
+          columns={[{ title: '名称', dataIndex: 'name' }]}
+          dataSource={[{ key: '1', name: '示例行' }]}
+          pagination={false}
+        />
+        <Dialog open title="示例弹窗" onClose={() => undefined} footer={<Button tone="primary">确定</Button>}>
+          <p>弹窗内容由调用方注入。</p>
+        </Dialog>
       </section>
 
       <section aria-labelledby="fields-heading">

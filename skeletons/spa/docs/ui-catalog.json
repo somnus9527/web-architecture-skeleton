@@ -1,0 +1,168 @@
+[
+  {
+    "name": "AsyncState",
+    "path": "src/shared/ui/async-state.tsx",
+    "export": "AsyncState",
+    "status": "stable",
+    "since": "2026-11-26",
+    "owner": "frontend-platform",
+    "scope": "skeleton",
+    "dom": "static",
+    "a11y": ["status-role"]
+  },
+  {
+    "name": "Button",
+    "path": "src/shared/ui/button.tsx",
+    "export": "Button",
+    "status": "stable",
+    "since": "2026-11-26",
+    "owner": "frontend-platform",
+    "scope": "skeleton",
+    "dom": "native-backed",
+    "a11y": ["keyboard", "disabled", "aria-busy"]
+  },
+  {
+    "name": "Checkbox",
+    "path": "src/shared/ui/checkbox.tsx",
+    "export": "Checkbox",
+    "status": "stable",
+    "since": "2026-11-27",
+    "owner": "frontend-platform",
+    "scope": "skeleton",
+    "dom": "native-backed",
+    "a11y": ["keyboard", "label-association"]
+  },
+  {
+    "name": "Dialog",
+    "path": "src/shared/ui/dialog.tsx",
+    "export": "Dialog",
+    "status": "stable",
+    "since": "2026-11-27",
+    "owner": "frontend-platform",
+    "scope": "skeleton",
+    "dom": "aria-pattern",
+    "a11y": ["focus-trap", "escape", "aria-modal", "labelled-by-title"]
+  },
+  {
+    "name": "EmptyState",
+    "path": "src/shared/ui/empty-state.tsx",
+    "export": "EmptyState",
+    "status": "stable",
+    "since": "2026-11-26",
+    "owner": "frontend-platform",
+    "scope": "skeleton",
+    "dom": "static",
+    "a11y": ["decorative-icon-hidden"]
+  },
+  {
+    "name": "FieldRow",
+    "path": "src/shared/ui/field-row.tsx",
+    "export": "FieldRow",
+    "status": "stable",
+    "since": "2026-11-26",
+    "owner": "frontend-platform",
+    "scope": "skeleton",
+    "dom": "static",
+    "a11y": ["label-text"]
+  },
+  {
+    "name": "Input",
+    "path": "src/shared/ui/input.tsx",
+    "export": "Input",
+    "status": "stable",
+    "since": "2026-11-26",
+    "owner": "frontend-platform",
+    "scope": "skeleton",
+    "dom": "native-backed",
+    "a11y": ["keyboard"]
+  },
+  {
+    "name": "LinkButton",
+    "path": "src/shared/ui/link-button.tsx",
+    "export": "LinkButton",
+    "status": "stable",
+    "since": "2026-11-26",
+    "owner": "frontend-platform",
+    "scope": "skeleton",
+    "dom": "native-backed",
+    "a11y": ["keyboard", "href"],
+    "variants": ["ssr"]
+  },
+  {
+    "name": "PageHeader",
+    "path": "src/shared/ui/page-header.tsx",
+    "export": "PageHeader",
+    "status": "stable",
+    "since": "2026-11-26",
+    "owner": "frontend-platform",
+    "scope": "skeleton",
+    "dom": "static",
+    "a11y": ["heading"]
+  },
+  {
+    "name": "Select",
+    "path": "src/shared/ui/select.tsx",
+    "export": "Select",
+    "status": "stable",
+    "since": "2026-11-26",
+    "owner": "frontend-platform",
+    "scope": "skeleton",
+    "dom": "aria-pattern",
+    "a11y": ["keyboard", "listbox", "combobox"]
+  },
+  {
+    "name": "StatCard",
+    "path": "src/shared/ui/stat-card.tsx",
+    "export": "StatCard",
+    "status": "stable",
+    "since": "2026-11-26",
+    "owner": "frontend-platform",
+    "scope": "skeleton",
+    "dom": "static",
+    "a11y": ["text-content"]
+  },
+  {
+    "name": "StatusPill",
+    "path": "src/shared/ui/status-pill.tsx",
+    "export": "StatusPill",
+    "status": "stable",
+    "since": "2026-11-26",
+    "owner": "frontend-platform",
+    "scope": "skeleton",
+    "dom": "static",
+    "a11y": ["text-content"]
+  },
+  {
+    "name": "Table",
+    "path": "src/shared/ui/table.tsx",
+    "export": "Table",
+    "status": "stable",
+    "since": "2026-11-27",
+    "owner": "frontend-platform",
+    "scope": "skeleton",
+    "dom": "native-backed",
+    "a11y": ["semantic-table", "keyboard"]
+  },
+  {
+    "name": "TextArea",
+    "path": "src/shared/ui/text-area.tsx",
+    "export": "TextArea",
+    "status": "stable",
+    "since": "2026-11-27",
+    "owner": "frontend-platform",
+    "scope": "skeleton",
+    "dom": "native-backed",
+    "a11y": ["keyboard", "label-association"]
+  },
+  {
+    "name": "ThemeToggle",
+    "path": "src/shared/ui/theme-toggle.tsx",
+    "export": "ThemeToggle",
+    "status": "stable",
+    "since": "2026-11-26",
+    "owner": "frontend-platform",
+    "scope": "skeleton",
+    "dom": "native-backed",
+    "a11y": ["keyboard", "aria-label"]
+  }
+]
