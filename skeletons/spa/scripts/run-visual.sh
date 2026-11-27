@@ -30,7 +30,7 @@ runner=(
   docker run --rm
   -v "$work:/work"
   -w /work
-  -e PLAYWRIGHT_DOWNLOAD_HOST=https://cdn.npmmirror.com/binaries/playwright
+  -e PLAYWRIGHT_DOWNLOAD_HOST="${PLAYWRIGHT_DOWNLOAD_HOST:-https://cdn.npmmirror.com/binaries/playwright}"
   node:24-bookworm
 )
 

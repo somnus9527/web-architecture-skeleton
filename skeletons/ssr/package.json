@@ -27,6 +27,7 @@
     "check:hygiene": "node scripts/check-repo-hygiene.mjs --tracked",
     "check:i18n": "node scripts/check-i18n-copy.mjs --tracked",
     "check:logs": "node scripts/check-logging.mjs --tracked",
+    "browsers:install": "bash scripts/install-browsers.sh",
     "check:error-codes": "node scripts/generate-error-codes.mjs",
     "error-codes:table": "node scripts/generate-error-codes.mjs --write",
     "check:security": "node scripts/check-security.mjs --tracked",

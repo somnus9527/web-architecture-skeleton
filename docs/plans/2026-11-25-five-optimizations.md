@@ -1430,7 +1430,7 @@ RN 之前已有 `ThemeProvider` + token + Paper 主题映射，但偏好不持�
 
 | 项                 | 结果                                                                              |
 | ------------------ | --------------------------------------------------------------------------------- |
-| RN `quality:check` | 通过（19 套 88 用例；覆盖率 82.15/60.71/80.59/82.83，高于 77/52/75/77 门槛）               |
+| RN `quality:check` | 通过（19 套 88 用例；覆盖率 82.15/60.71/80.59/82.83，高于 77/52/75/77 门槛）      |
 | 新增测试           | `theme-preference`、`theme-provider`、`theme-toggle` 三套                         |
 | 架构门禁           | layer boundary（storage 唯一出口）、paper boundary、test provider boundary 均通过 |
 | 仓库级             | toolchain、doc-links、init-smoke、workspace、materialize 幂等、frozen install     |
@@ -1444,3 +1444,15 @@ RN 之前已有 `ThemeProvider` + token + Paper 主题映射，但偏好不持�
 | 三态       | light / dark / system                       | 相同                                   |
 | 持久化     | localStorage + cookie                       | AsyncStorage（`src/storage/*`）        |
 | 视觉回归   | Playwright Linux 截图基线                   | 暂不做（RN 截图需真机/模拟器，成本高） |
+
+## 30. 第十批：浏览器依赖的离线安装路径（2026-11-27）
+
+反馈：a11y / 视觉回归要拉 Chromium，本机有梯子能拉，别人的电脑没有就装不上。结论与落地：
+
+- 这两个门禁是 **CI 权威、本地可选**：都不在 `quality:check` / pre-commit / pre-push，日常开发不装浏览器不受影响；
+  CI 跑在 GitHub runner 上直连官方源，不需要梯子。
+- 新增 `scripts/install-browsers.sh`（spa/ssr 共用，来自 `tools/project/scripts`），`pnpm browsers:install` 调用；
+  默认 `PLAYWRIGHT_DOWNLOAD_HOST=https://cdn.npmmirror.com/binaries/playwright`，可用同名环境变量覆盖成官方源或私有镜像。
+  脚本是幂等的，已装浏览器会直接跳过下载。
+- `scripts/run-visual.sh` 的容器下载源改为 `${PLAYWRIGHT_DOWNLOAD_HOST:-npmmirror}`，与本地安装用同一套覆盖方式。
+- 明确不做的降级：不把 axe 换成 jsdom（布局与对比度结果不可信），也不把浏览器门禁塞进 pre-commit。

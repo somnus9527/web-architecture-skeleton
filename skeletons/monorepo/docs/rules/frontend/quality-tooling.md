@@ -142,3 +142,15 @@ axe 与截图基线都依赖 Chromium 的系统依赖：`runs-on` / `container` 
   `packages.microsoft.com/ubuntu/26.04` 并拿到 403，a11y job 装不上浏览器直接失败。
 - 修法：a11y job 固定 `ubuntu-24.04`；visual job 固定 `node:24-bookworm` 容器，并在 apt 上设置
   `Acquire::Retries "10"` + 重试三次。
+
+## 本地浏览器安装
+
+`a11y` 与 `test:visual` 都需要 Chromium，但它们**不在** `quality:check`、pre-commit、pre-push 里，日常开发不装浏览器也能正常提交。
+
+- CI 是权威：GitHub runner 直连官方源安装，不需要梯子，也不走镜像。
+- 本地想跑一次：`pnpm browsers:install`。脚本默认把 `PLAYWRIGHT_DOWNLOAD_HOST` 指向
+  `https://cdn.npmmirror.com/binaries/playwright`，无外网环境也能装；需要官方源或私有镜像时用同名环境变量覆盖。
+- 只装浏览器、不提交二进制；`~/.cache/ms-playwright`（macOS 为 `~/Library/Caches/ms-playwright`）属于本机缓存。
+- Linux 上脚本走 `playwright install --with-deps` 装系统依赖（本地需要 sudo，容器 / CI 里是 root）。
+- 视觉回归的 Linux 基线在容器里生成（`node:24-bookworm`），同样支持 `PLAYWRIGHT_DOWNLOAD_HOST` 覆盖；容器内的
+  Chromium 下载由 `scripts/run-visual.sh` 传入该变量。

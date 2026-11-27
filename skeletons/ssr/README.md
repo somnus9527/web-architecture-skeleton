@@ -77,8 +77,9 @@ pnpm check:error-codes
 pnpm check:licenses
 pnpm check:sri
 pnpm licenses:notice
+pnpm browsers:install  # 首次本地跑 a11y / 视觉：默认走 npmmirror 源
 pnpm test:visual   # 关键页截图基线（Linux 容器，见 scripts/run-visual.sh）
-pnpm test:a11y   # 真实 Chromium + axe；首次需 pnpm exec playwright install chromium
+pnpm test:a11y   # 真实 Chromium + axe；首次需 pnpm browsers:install
 pnpm check
 pnpm build
 pnpm build:dist:prod
